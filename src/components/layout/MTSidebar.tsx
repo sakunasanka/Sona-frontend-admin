@@ -10,7 +10,7 @@ interface SidebarProps {
   onExpandBeforeNavigation?: (href: string) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ 
+const MTSidebar: React.FC<SidebarProps> = ({ 
   isOpen, 
   onClose, 
   isMinimized = false, 
@@ -37,7 +37,7 @@ const SidebarLogo = () => (
     { icon: ChartAreaIcon, label: 'Analytic', href: '/admin-analytics', id: 'analytics' },
     { icon: Users, label: 'Clients', href: '/client', id: 'client' },
     { icon: Users, label: 'Psychatrist', href: '/psychiatrist', id: 'psychatrists' },
-    { icon: Users, label: 'Management Team', href: '/management-team', id: 'management_team' },
+    { icon: Users, label: 'Management Team', href: '/team', id: 'management_team' },
     { icon: Users, label: 'Counsellors', href: '/counsellor', id: 'counsellors' },  
     {icon:  Blog, label:'Blogs', href:'/blogs', id: 'blogs'},
     { icon: Calendar, label: 'Calendar', href: '/calendar', id: 'calendar' },
@@ -188,7 +188,7 @@ const SidebarLogo = () => (
   );
 };
 
-export default Sidebar;
+export default MTSidebar;
 
 // import React from 'react';
 
