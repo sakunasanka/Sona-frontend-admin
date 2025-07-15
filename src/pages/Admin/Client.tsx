@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Sidebar from '../../components/layout/Sidebar';
+import Navbar from '../../components/layout/Navbar';
 import { Search, Filter, Eye, Check, X, Mail, AlertCircle, CheckCircle, XCircle, User, Phone, Calendar, MapPin, GraduationCap, Clock, BookOpen, CreditCard, DollarSign, FileText } from 'lucide-react';
 
 interface Client {
@@ -334,11 +335,15 @@ const Client: React.FC = () => {
   return (
     <div className='h-screen flex'>
       <Sidebar isOpen={sidebarOpen} onClose={closeSidebar}/>
-      <div className="min-h-screen bg-gray-50 p-6 flex-1">
+      <div className="min-h-screen bg-gray-50  flex-1">
+
+    <Navbar />
+
+      <main className="p-3 pt-[4.5rem] bg-white rounded-tl-3xl shadow-md overflow-y-auto"> 
 
         {/* Notification */}
         {notification && (
-          <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg flex items-center space-x-2 ${
+          <div className={`fixed top-5 right-4 z-50 p-4 rounded-lg shadow-lg flex items-center space-x-2 ${
             notification.type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
             notification.type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
             'bg-blue-100 text-blue-800 border border-blue-200'
@@ -851,7 +856,7 @@ const Client: React.FC = () => {
             </div>
           </div>
         )}
-
+      </main>
       </div>
     </div>
   );

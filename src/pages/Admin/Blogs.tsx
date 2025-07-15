@@ -4,6 +4,7 @@ import {
   TrendingUp, Filter, Search, X, AlertTriangle, MapPin, Mail, Tag 
 } from 'lucide-react';
 import Sidebar from '../../components/layout/Sidebar' ;
+import Navbar from '../../components/layout/Navbar';
 
 // Types
 interface Author {
@@ -862,6 +863,9 @@ export const CompleteBlogAdmin: React.FC = () => {
 <div className=" h-screen w-screen bg-gradient-to-br from-gray-50 to-blue-50 flex ">
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={closeSidebar}/>
+      <Navbar />
+
+      <main className="p-3 pt-[4.5rem] bg-white rounded-tl-3xl shadow-md overflow-y-auto"> 
 
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-y-auto flex-1">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -1022,6 +1026,7 @@ export const CompleteBlogAdmin: React.FC = () => {
         />
       )}
     </div>
+    </main>
     </div>
   );
 };

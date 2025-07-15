@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../../components/layout/Sidebar';
+import Navbar from '../../components/layout/Navbar';
 import { Search, Filter, Eye, Check, X, Mail, AlertCircle, CheckCircle, XCircle, User, Phone, Calendar, MapPin, GraduationCap, Award, Clock } from 'lucide-react';
 
 interface Psychiatrist {
@@ -277,6 +278,11 @@ const Psychiatrist: React.FC = () => {
     <div className='h-screen flex'>
     
       <Sidebar isOpen={sidebarOpen} onClose={closeSidebar}/>
+
+      <Navbar />
+      
+            <main className="p-3 pt-[4.5rem] bg-white rounded-tl-3xl w-full shadow-md overflow-y-auto"> 
+
     <div className="min-h-screen bg-gray-50 p-6">
 
       {/* Notification */}
@@ -753,6 +759,7 @@ const Psychiatrist: React.FC = () => {
         </div>
       )}
     </div>
+            </main>
     </div>
   );
 };

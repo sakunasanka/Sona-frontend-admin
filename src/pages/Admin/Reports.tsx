@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FileText, Plus, Download, Filter, Calendar, Eye } from 'lucide-react';
 import CreateReport from '../Admin/CreateReport';
 import Sidebar from '../../components/layout/Sidebar';
+import Navbar from '../../components/layout/Navbar';
 
 // Example mockReports data and Report type definition
 type Report = {
@@ -83,7 +84,11 @@ const Reports: React.FC = () => {
   return (
     <div className='flex h-screen'>
       <Sidebar isOpen={sidebarOpen} onClose={closeSidebar}/>
-    <div className="space-y-6  w-10/12 mx-auto p-6 bg-gray-50">
+
+      <Navbar />
+
+      <main className="p-3 w-full pt-[4.5rem] bg-white rounded-tl-3xl shadow-md overflow-y-auto"> 
+    <div className="space-y-6  mx-auto p-6 bg-gray-50 ">
       
 
       <div className="flex items-center justify-between">
@@ -170,6 +175,7 @@ const Reports: React.FC = () => {
         </div>
       )}
     </div>
+      </main>
     </div>
   );
 };

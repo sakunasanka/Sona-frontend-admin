@@ -94,6 +94,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       )}
    
       {/* Sidebar */}
+      
       <div className={`
         h-screen bg-[#FFE9EF] flex flex-col transition-all duration-500 ease-in-out
         fixed top-0 left-0 z-50 lg:relative lg:z-auto  
@@ -116,7 +117,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               <ArrowLeft size={20} className="text-gray-600" />
             </button>
             <img
-              src="/assets/images/th.jpg"
+              src="/assets/images/Sona.jpg"
               alt="Sona Logo"
               className="h-8 w-auto ml-3"
             />
@@ -125,6 +126,14 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Menu Items */}
         <nav className={`py-12 ${isMinimized ? 'px-2' : 'px-4'} flex-1 flex flex-col transition-all duration-500 ease-in-out`}>
+          <div className="text-center mb-4">
+        <img
+          src="public/assets/images/Sona.png" 
+          alt="SONA Logo"
+          className="mx-auto w-32 h-auto"
+        />
+      </div>
+
           <ul className="space-y-2">
             {menuItems.map((item, index) => {
               const IconComponent = item.icon;

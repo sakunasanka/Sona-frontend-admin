@@ -559,10 +559,13 @@ const Analytics: React.FC = () => {
     <div className="space-y-6 flex h-screen">
         <Sidebar isOpen={sidebarOpen} onClose={closeSidebar}/>
 
-    <div className='w-10/12 mx-auto p-6 bg-gray-100'>
-    
 
-      <div className="flex items-center justify-between">
+    <div className=' overflow-y-auto  w-full mx-auto   bg-gray-100'>
+     <Navbar />
+
+        <main className="p-3 pt-[4.5rem] bg-white rounded-tl-3xl shadow-md"> 
+
+      <div className="flex  items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
         <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="monthly">Monthly</option>
@@ -704,7 +707,9 @@ const Analytics: React.FC = () => {
           </div>
         </div>
       </div>
+      </main>
       </div>
+      
     </div>
   );
 };

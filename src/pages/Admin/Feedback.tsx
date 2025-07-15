@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import Sidebar from '../../components/layout/Sidebar'; // Add this import
+import Navbar from '../../components/layout/Navbar';
 import { 
   MessageCircle, 
   Users, 
@@ -792,8 +793,11 @@ function Feedback() {
     <div className="flex h-screen bg-gray-50">
       <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
       
+      <Navbar />
+
+      <main className="p-3 pt-[4.5rem] bg-white rounded-tl-3xl shadow-md overflow-y-auto"> 
       <div className="flex-1 overflow-auto">
-        <div className="max-w-6xl mx-auto p-6">
+        <div className="max-w-7xl mx-auto p-6">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Feedback Management</h1>
             <p className="text-gray-600">Manage and track all feedback including complaints, session feedback, and suggestions.</p>
@@ -839,6 +843,7 @@ function Feedback() {
           </div>
         </div>
       </div>
+      </main>
     </div>
   );
 }

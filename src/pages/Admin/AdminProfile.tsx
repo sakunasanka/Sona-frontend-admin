@@ -82,10 +82,11 @@ const AdminProfile: React.FC = () => {
       <Sidebar isOpen={sidebarOpen} onClose={closeSidebar}/>
 
     
-      <div className="w-10/12 mx-auto">
+      <div className="w-10/12 mx-auto overflow-y-auto">
 
-        <Navbar onMenuClick={() => { /* handle menu click here if needed */ }} />
+        <Navbar />
 
+        <main className="flex-1  pt-[4.5rem] bg-white rounded-tl-3xl shadow-md">
         {/* Success Messages */}
         {showEditSuccess && (
           <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50">
@@ -105,7 +106,7 @@ const AdminProfile: React.FC = () => {
         )}
 
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-xl mb-6 overflow-hidden m-4">
+        <div className="bg-white rounded-2xl shadow-xl mb-6  m-4">
           <div className="h-32 bg-gradient-to-r from-blue-600 to-purple-600"></div>
           <div className="px-8 pb-8">
             <div className="flex flex-col md:flex-row items-center md:items-end -mt-16 mb-6">
@@ -125,7 +126,7 @@ const AdminProfile: React.FC = () => {
                 </button>
               </div>
               <div className="md:ml-6 mt-4 md:mt-0 text-center md:text-left">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{profile.name}</h1>
+                <h1 className="text-3xl font-bold text-gray-900  ">{profile.name}</h1>
                 <p className="text-xl text-gray-600 mb-1">{profile.role}</p>
               </div>
             </div>
@@ -484,6 +485,7 @@ const AdminProfile: React.FC = () => {
             </div>
           </div>
         )}
+        </main>
       </div>
     </div>
   );

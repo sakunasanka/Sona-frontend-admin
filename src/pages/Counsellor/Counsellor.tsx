@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-// import Navbar from '../../components/layout/Navbar';
+import Navbar from '../../components/layout/Navbar';
 import Sidebar from '../../components/layout/Sidebar';
 import CounsellorFilter  from '../../components/ui/CounsellorFilter';
 import CounsellorTable from '../../components/ui/CounsellorTable';
@@ -233,8 +233,10 @@ const CounsellorManagement = () => {
       
       <main className=" w-10/12 mx-auto">
 
-        
-      {/* <Navbar onMenuClick={() => { /* handle menu click here if needed */ } 
+       <Navbar />
+
+      <main className="p-3 pt-[4.5rem] bg-white rounded-tl-3xl w-full shadow-md overflow-y-auto">  
+       
       <CounsellorFilter onSearch={handleSearch} onFilterChange={handleFilterChange} />
 
         <div className="px-6 py-6">
@@ -295,6 +297,8 @@ const CounsellorManagement = () => {
         onClose={handleCloseModal}
         onStatusUpdate={handleStatusUpdate}
       />
+
+      </main>
     </div>
   );
 };

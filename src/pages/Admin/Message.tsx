@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../../components/layout/Sidebar';
+import Navbar from '../../components/layout/Navbar';
 
 const Message = () => {
   const [users, setUsers] = useState([
@@ -131,6 +132,10 @@ const Message = () => {
 
     <div className="  bg-slate-100 flex h-screen">
       <Sidebar isOpen={sidebarOpen} onClose={closeSidebar}/>
+
+       <Navbar />
+
+      <main className="p-3 w-full pt-[4.5rem] bg-white rounded-tl-3xl shadow-md overflow-y-auto"> 
       {/* Notifications */}
       <div className="fixed top-4 right-4 z-50 space-y-2">
         {notifications.map((notification) => (
@@ -147,7 +152,7 @@ const Message = () => {
         ))}
       </div>
 
-      <div className="w-9/12 mx-auto h-[95vh] mt-4 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden flex border border-white/20">
+      <div className="w-full mx-auto h-[95vh] mt-4 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden flex border border-white/20">
         {/* Sidebar - Users List */}
         <div className="w-1/3 bg-gradient-to-b from-gray-50 to-white border-r border-gray-200 flex flex-col">
           {/* Header */}
@@ -342,6 +347,7 @@ const Message = () => {
           )}
         </div>
       </div>
+      </main>
     </div>
   );
 };

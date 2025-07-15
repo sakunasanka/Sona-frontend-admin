@@ -65,6 +65,7 @@ const CreateReport: React.FC<CreateReportProps> = ({ onCancel }) => {
   return (
     <div className='flex h-screen'>
       <Sidebar isOpen={sidebarOpen} onClose={closeSidebar}/>
+      
     <div className="space-y-6  w-10/12 mx-auto p-6 bg-gray-50">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Create New Report</h1>

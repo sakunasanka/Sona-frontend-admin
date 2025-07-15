@@ -60,7 +60,9 @@ export default function Dashboard() {
     <div className="flex h-screen">
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={closeSidebar}/>
+       <NavBar />
       
+      <main className="flex-1  overflow-y-auto pt-[4.5rem] bg-white rounded-tl-3xl shadow-md">
       {/* Main Content */}
       <main className="flex-1 bg-gray-100 p-8 overflow-auto">
         {/* First line: Metric Cards */}
@@ -149,6 +151,7 @@ export default function Dashboard() {
             </ResponsiveContainer>
           </div>
         </div>
+        </main>
       </main>
     </div>
   );

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Sidebar from '../../components/layout/Sidebar';
+import Navbar from '../../components/layout/Navbar';
 import { 
   Users, 
   X, 
@@ -526,8 +527,12 @@ HR Management Team`);
     <div className='flex w-screen h-screen from-gray-200'>
     <Sidebar isOpen={sidebarOpen} onClose={closeSidebar}/>
 
-    <div className="h-screen w-11/12 bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className=" w-11/12 mx-auto   py-8">
+      <Navbar />
+
+      <main className="p-3 pt-[4.5rem] bg-white rounded-tl-3xl w-full shadow-md overflow-y-auto"> 
+
+    <div className="h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className=" w-full mx-auto   py-8">
         {/* Header */}
         <div className="mb-8 ">
           <div className="flex items-center gap-3 mb-4">
@@ -1352,6 +1357,8 @@ HR Management Team`);
         </div>
       )}
       </div>
+
+      </main>
     </div>
  
   );
