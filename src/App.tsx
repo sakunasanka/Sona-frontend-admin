@@ -8,7 +8,6 @@ import ExampleUse from './pages/ExampleUse';
 import AdminProfile from './pages/Admin/AdminProfile';
 import Analytics from './pages/Admin/Analytics';
 import Blogs  from './pages/Admin/Blogs'; 
-import Calendar from './pages/Admin/Calendar';
 import Counsellor from './pages/Counsellor/Counsellor';
 import Client from './pages/Admin/Client';
 import ManagementTeam from './pages/Admin/ManagementTeam';
@@ -16,6 +15,9 @@ import Reports from './pages/Admin/Reports';
 import Psychiatrist from './pages/Admin/Psychiatrist';
 import Message from './pages/Admin/Message';
 import Team from './pages/ManagementTeam/Team';
+import Calendar from './pages/ManagementTeam/Calendar';
+import Feedback from './pages/Admin/Feedback';
+
  
 
 function App() {
@@ -39,6 +41,7 @@ function App() {
         <Route path='/reports' element={<Reports />} />
         <Route path="/psychiatrist" element={<Psychiatrist />} />
         <Route path="/message" element={<Message />} />
+        <Route path="/feedback" element={<Feedback />} />
 
         <Route path="*" element={<div className="text-center text-red-500">404 Not Found</div>} />
         <Route path="/MTDashboard" element={<MTDashboard />} />

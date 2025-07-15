@@ -1,800 +1,860 @@
 import React, { useState } from 'react';
-import  Sidebar  from '../../components/layout/Sidebar';
-import { 
-  User, 
-  Calendar, 
-  Clock, 
-  MessageCircle, 
-  Phone, 
-  Mail, 
-  MapPin,
-  ArrowLeft,
-  CheckCircle, 
-  AlertCircle,
-  Star,
-  Heart,
-  Brain, 
-  FileText,
-  Video,
-  Users,
-  Search,
-  Filter,
-  
-} from 'lucide-react';
-
-interface Session {
-  id: string;
-  date: string;
-  time: string;
-  duration: number;
-  type: 'individual' | 'group' | 'family' | 'assessment';
-  counselor: string;
-  status: 'completed' | 'scheduled' | 'cancelled';
-  notes: string;
-  mood: number; // 1-5 scale
-  progress: string;
-  sessionFormat: 'in-person' | 'video' | 'phone';
-}
+import Sidebar from '../../components/layout/Sidebar';
+import { Search, Filter, Eye, Check, X, Mail, AlertCircle, CheckCircle, XCircle, User, Phone, Calendar, MapPin, GraduationCap, Clock, BookOpen, CreditCard, DollarSign, FileText } from 'lucide-react';
 
 interface Client {
   id: string;
   name: string;
   email: string;
   phone: string;
-  dateOfBirth: string;
-  address: string;
-  emergencyContact: {
-    name: string;
-    phone: string;
-    relationship: string;
+  registeredDate: string;
+  status: 'active' | 'inactive' | 'suspended';
+  age: number;
+  location: string;
+  bio: string;
+  avatar?: string;
+  studentPackage?: {
+    applied: boolean;
+    status: 'pending' | 'approved' | 'rejected';
+    appliedDate?: string;
+    school?: string;
+    studentId?: string;
+    graduationYear?: string;
+    verificationDocument?: string;
+    rejectionReason?: string;
   };
-  startDate: string;
-  primaryCounselor: string;
-  goals: string[];
-  currentMood: number;
-  avatar: string;
-  status: 'active' | 'inactive' | 'on-hold';
-  totalSessions: number;
-  lastSession: string;
-  nextSession?: string;
+  subscriptionType: 'free' | 'basic' | 'premium' | 'student';
+  sessionsCompleted: number;
+  totalSpent: number;
 }
 
-const mockClients: Client[] = [
-  {
-    id: '1',
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@email.com',
-    phone: '+1 (555) 123-4567',
-    dateOfBirth: '1990-05-15',
-    address: '123 Wellness Ave, Peaceful City, PC 12345',
-    emergencyContact: {
-      name: 'Michael Johnson',
-      phone: '+1 (555) 987-6543',
-      relationship: 'Spouse'
-    },
-    startDate: '2024-01-15',
-    primaryCounselor: 'Dr. Emily Chen',
-    goals: [
-      'Manage anxiety and stress',
-      'Improve communication skills',
-      'Develop healthy coping strategies',
-      'Build self-confidence'
-    ],
-    currentMood: 4,
-    avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-    status: 'active',
-    totalSessions: 8,
-    lastSession: '2024-03-08',
-    nextSession: '2024-03-15'
-  },
-  {
-    id: '2',
-    name: 'Michael Rodriguez',
-    email: 'michael.rodriguez@email.com',
-    phone: '+1 (555) 234-5678',
-    dateOfBirth: '1985-08-22',
-    address: '456 Harmony St, Serene Town, ST 67890',
-    emergencyContact: {
-      name: 'Maria Rodriguez',
-      phone: '+1 (555) 876-5432',
-      relationship: 'Sister'
-    },
-    startDate: '2023-11-20',
-    primaryCounselor: 'Dr. James Wilson',
-    goals: [
-      'Overcome depression',
-      'Improve work-life balance',
-      'Strengthen relationships'
-    ],
-    currentMood: 3,
-    avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-    status: 'active',
-    totalSessions: 12,
-    lastSession: '2024-03-10',
-    nextSession: '2024-03-17'
-  },
-  {
-    id: '3',
-    name: 'Emily Davis',
-    email: 'emily.davis@email.com',
-    phone: '+1 (555) 345-6789',
-    dateOfBirth: '1992-12-03',
-    address: '789 Tranquil Rd, Calm City, CC 13579',
-    emergencyContact: {
-      name: 'Robert Davis',
-      phone: '+1 (555) 765-4321',
-      relationship: 'Father'
-    },
-    startDate: '2024-02-01',
-    primaryCounselor: 'Dr. Sarah Thompson',
-    goals: [
-      'Manage PTSD symptoms',
-      'Improve sleep quality',
-      'Build trust in relationships'
-    ],
-    currentMood: 2,
-    avatar: 'https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-    status: 'active',
-    totalSessions: 6,
-    lastSession: '2024-03-05',
-    nextSession: '2024-03-12'
-  },
-  {
-    id: '4',
-    name: 'David Thompson',
-    email: 'david.thompson@email.com',
-    phone: '+1 (555) 456-7890',
-    dateOfBirth: '1988-04-18',
-    address: '321 Peace Blvd, Quiet Village, QV 24680',
-    emergencyContact: {
-      name: 'Lisa Thompson',
-      phone: '+1 (555) 654-3210',
-      relationship: 'Wife'
-    },
-    startDate: '2023-09-10',
-    primaryCounselor: 'Dr. Emily Chen',
-    goals: [
-      'Anger management',
-      'Improve family relationships',
-      'Develop emotional regulation'
-    ],
-    currentMood: 3,
-    avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-    status: 'on-hold',
-    totalSessions: 15,
-    lastSession: '2024-02-28'
-  },
-  {
-    id: '5',
-    name: 'Jessica Wilson',
-    email: 'jessica.wilson@email.com',
-    phone: '+1 (555) 567-8901',
-    dateOfBirth: '1995-07-11',
-    address: '654 Mindful Ave, Zen City, ZC 97531',
-    emergencyContact: {
-      name: 'Mark Wilson',
-      phone: '+1 (555) 543-2109',
-      relationship: 'Brother'
-    },
-    startDate: '2024-01-08',
-    primaryCounselor: 'Dr. James Wilson',
-    goals: [
-      'Overcome social anxiety',
-      'Build self-esteem',
-      'Improve public speaking confidence'
-    ],
-    currentMood: 4,
-    avatar: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-    status: 'active',
-    totalSessions: 7,
-    lastSession: '2024-03-07',
-    nextSession: '2024-03-14'
-  }
-];
-
-const mockSessions: { [clientId: string]: Session[] } = {
-  '1': [
+const Client: React.FC = () => {
+  const [clients, setClients] = useState<Client[]>([
     {
       id: '1',
-      date: '2024-03-15',
-      time: '10:00 AM',
-      duration: 50,
-      type: 'individual',
-      counselor: 'Dr. Emily Chen',
-      status: 'scheduled',
-      notes: 'Focus on anxiety management techniques and homework review.',
-      mood: 0,
-      progress: '',
-      sessionFormat: 'in-person'
+      name: 'Alex Johnson',
+      email: 'alex.johnson@email.com',
+      phone: '+1 (555) 123-4567',
+      registeredDate: '2024-01-15',
+      status: 'active',
+      age: 28,
+      location: 'Los Angeles, CA',
+      bio: 'Working professional seeking therapy for work-life balance and stress management.',
+      subscriptionType: 'premium',
+      sessionsCompleted: 12,
+      totalSpent: 480,
+      studentPackage: {
+        applied: false,
+        status: 'pending'
+      }
     },
     {
       id: '2',
-      date: '2024-03-08',
-      time: '10:00 AM',
-      duration: 50,
-      type: 'individual',
-      counselor: 'Dr. Emily Chen',
-      status: 'completed',
-      notes: 'Discussed recent stressors at work. Practiced breathing exercises and introduced progressive muscle relaxation. Client showed good engagement and understanding.',
-      mood: 4,
-      progress: 'Made significant progress with breathing techniques. Client reported feeling more in control during stressful situations.',
-      sessionFormat: 'in-person'
+      name: 'Emma Martinez',
+      email: 'emma.martinez@student.ucla.edu',
+      phone: '+1 (555) 234-5678',
+      registeredDate: '2024-01-12',
+      status: 'active',
+      age: 21,
+      location: 'Los Angeles, CA',
+      bio: 'College student dealing with academic stress and anxiety.',
+      subscriptionType: 'student',
+      sessionsCompleted: 8,
+      totalSpent: 120,
+      studentPackage: {
+        applied: true,
+        status: 'approved',
+        appliedDate: '2024-01-12',
+        school: 'UCLA',
+        studentId: 'UCLA123456',
+        graduationYear: '2025',
+        verificationDocument: 'student-id-card.pdf'
+      }
     },
     {
       id: '3',
-      date: '2024-03-01',
-      time: '2:00 PM',
-      duration: 50,
-      type: 'individual',
-      counselor: 'Dr. Emily Chen',
-      status: 'completed',
-      notes: 'Explored childhood experiences and their impact on current anxiety patterns. Assigned journaling homework to track triggers.',
-      mood: 3,
-      progress: 'Good insight into anxiety triggers. Client is becoming more self-aware of patterns.',
-      sessionFormat: 'video'
-    }
-  ],
-  '2': [
+      name: 'Michael Chen',
+      email: 'michael.chen@student.stanford.edu',
+      phone: '+1 (555) 345-6789',
+      registeredDate: '2024-01-10',
+      status: 'active',
+      age: 22,
+      location: 'Palo Alto, CA',
+      bio: 'Graduate student working on thesis and managing academic pressure.',
+      subscriptionType: 'basic',
+      sessionsCompleted: 4,
+      totalSpent: 160,
+      studentPackage: {
+        applied: true,
+        status: 'pending',
+        appliedDate: '2024-01-10',
+        school: 'Stanford University',
+        studentId: 'STAN789012',
+        graduationYear: '2024',
+        verificationDocument: 'enrollment-letter.pdf'
+      }
+    },
     {
       id: '4',
-      date: '2024-03-17',
-      time: '2:00 PM',
-      duration: 50,
-      type: 'individual',
-      counselor: 'Dr. James Wilson',
-      status: 'scheduled',
-      notes: 'Continue work on depression management and coping strategies.',
-      mood: 0,
-      progress: '',
-      sessionFormat: 'in-person'
+      name: 'Sarah Thompson',
+      email: 'sarah.thompson@email.com',
+      phone: '+1 (555) 456-7890',
+      registeredDate: '2024-01-08',
+      status: 'inactive',
+      age: 35,
+      location: 'San Francisco, CA',
+      bio: 'Parent seeking family therapy and parenting guidance.',
+      subscriptionType: 'basic',
+      sessionsCompleted: 6,
+      totalSpent: 240,
+      studentPackage: {
+        applied: false,
+        status: 'pending'
+      }
     },
     {
       id: '5',
-      date: '2024-03-10',
-      time: '2:00 PM',
-      duration: 50,
-      type: 'individual',
-      counselor: 'Dr. James Wilson',
-      status: 'completed',
-      notes: 'Discussed medication compliance and side effects. Worked on cognitive restructuring techniques for negative thought patterns.',
-      mood: 3,
-      progress: 'Client showing improvement in mood stability. Better adherence to treatment plan.',
-      sessionFormat: 'in-person'
-    }
-  ],
-  '3': [
+      name: 'David Rodriguez',
+      email: 'david.rodriguez@student.usc.edu',
+      phone: '+1 (555) 567-8901',
+      registeredDate: '2024-01-05',
+      status: 'active',
+      age: 20,
+      location: 'Los Angeles, CA',
+      bio: 'Undergraduate student dealing with social anxiety and relationship issues.',
+      subscriptionType: 'free',
+      sessionsCompleted: 2,
+      totalSpent: 0,
+      studentPackage: {
+        applied: true,
+        status: 'rejected',
+        appliedDate: '2024-01-05',
+        school: 'USC',
+        studentId: 'USC345678',
+        graduationYear: '2026',
+        verificationDocument: 'fake-document.pdf',
+        rejectionReason: 'Submitted verification document appears to be invalid. Please provide an official enrollment letter or current student ID card from your institution.'
+      }
+    },
     {
       id: '6',
-      date: '2024-03-12',
-      time: '11:00 AM',
-      duration: 50,
-      type: 'individual',
-      counselor: 'Dr. Sarah Thompson',
-      status: 'scheduled',
-      notes: 'EMDR session for trauma processing.',
-      mood: 0,
-      progress: '',
-      sessionFormat: 'in-person'
+      name: 'Lisa Wilson',
+      email: 'lisa.wilson@email.com',
+      phone: '+1 (555) 678-9012',
+      registeredDate: '2024-01-03',
+      status: 'suspended',
+      age: 42,
+      location: 'Oakland, CA',
+      bio: 'Professional seeking therapy for career transitions and personal growth.',
+      subscriptionType: 'premium',
+      sessionsCompleted: 15,
+      totalSpent: 750,
+      studentPackage: {
+        applied: false,
+        status: 'pending'
+      }
     },
     {
       id: '7',
-      date: '2024-03-05',
-      time: '11:00 AM',
-      duration: 50,
-      type: 'individual',
-      counselor: 'Dr. Sarah Thompson',
-      status: 'completed',
-      notes: 'Continued trauma-focused therapy. Client reported fewer nightmares this week. Practiced grounding techniques.',
-      mood: 2,
-      progress: 'Gradual improvement in sleep quality. Client is developing better coping mechanisms.',
-      sessionFormat: 'in-person'
+      name: 'Jessica Park',
+      email: 'jessica.park@student.berkeley.edu',
+      phone: '+1 (555) 789-0123',
+      registeredDate: '2024-01-01',
+      status: 'active',
+      age: 23,
+      location: 'Berkeley, CA',
+      bio: 'PhD student researching anxiety and depression, seeking personal therapy.',
+      subscriptionType: 'free',
+      sessionsCompleted: 1,
+      totalSpent: 0,
+      studentPackage: {
+        applied: true,
+        status: 'pending',
+        appliedDate: '2024-01-01',
+        school: 'UC Berkeley',
+        studentId: 'UCB456789',
+        graduationYear: '2026',
+        verificationDocument: 'student-transcript.pdf'
+      }
     }
-  ]
-};
+  ]);
 
-function Client() {
-  const [currentView, setCurrentView] = useState<'clients' | 'client-detail'>('clients');
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'on-hold'>('all');
+  const [selectedStatus, setSelectedStatus] = useState('All Status');
+  const [selectedSubscription, setSelectedSubscription] = useState('All Subscriptions');
+  const [activeTab, setActiveTab] = useState('regular');
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [actionType, setActionType] = useState<'approve' | 'reject'>('approve');
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [isStudentPackageAction, setIsStudentPackageAction] = useState(false);
 
-  const filteredClients = mockClients.filter(client => {
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
+  const getStatusBadge = (status: string) => {
+    const badges = {
+      active: 'bg-green-100 text-green-800 border-green-200',
+      inactive: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      suspended: 'bg-red-100 text-red-800 border-red-200'
+    };
+    return badges[status as keyof typeof badges] || badges.active;
+  };
+
+  const getSubscriptionBadge = (subscription: string) => {
+    const badges = {
+      'free': 'bg-gray-100 text-gray-800',
+      'basic': 'bg-blue-100 text-blue-800',
+      'premium': 'bg-purple-100 text-purple-800',
+      'student': 'bg-green-100 text-green-800'
+    };
+    return badges[subscription as keyof typeof badges] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getStudentPackageStatusBadge = (status: string) => {
+    const badges = {
+      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      approved: 'bg-green-100 text-green-800 border-green-200',
+      rejected: 'bg-red-100 text-red-800 border-red-200'
+    };
+    return badges[status as keyof typeof badges] || badges.pending;
+  };
+
+  // Separate student and regular users
+  const studentUsers = clients.filter(client => 
+    client.studentPackage?.applied === true || client.subscriptionType === 'student'
+  );
+
+  const regularUsers = clients.filter(client => 
+    client.studentPackage?.applied !== true && client.subscriptionType !== 'student'
+  );
+
+  const currentClients = activeTab === 'students' ? studentUsers : regularUsers;
+
+  const filteredClients = currentClients.filter(client => {
     const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         client.primaryCounselor.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
-    return matchesSearch && matchesStatus;
+                         client.location.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = selectedStatus === 'All Status' || client.status === selectedStatus;
+    const matchesSubscription = selectedSubscription === 'All Subscriptions' || client.subscriptionType === selectedSubscription;
+    
+    return matchesSearch && matchesStatus && matchesSubscription;
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'inactive':
-        return 'bg-gray-100 text-gray-800';
-      case 'on-hold':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'scheduled':
-        return 'bg-blue-100 text-blue-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'individual':
-        return <User className="w-4 h-4" />;
-      case 'group':
-        return <Users className="w-4 h-4" />;
-      case 'family':
-        return <Heart className="w-4 h-4" />;
-      case 'assessment':
-        return <FileText className="w-4 h-4" />;
-      default:
-        return <MessageCircle className="w-4 h-4" />;
-    }
-  };
-
-  const getFormatIcon = (format: string) => {
-    switch (format) {
-      case 'video':
-        return <Video className="w-4 h-4 text-blue-600" />;
-      case 'phone':
-        return <Phone className="w-4 h-4 text-green-600" />;
-      case 'in-person':
-        return <MapPin className="w-4 h-4 text-purple-600" />;
-      default:
-        return <MessageCircle className="w-4 h-4" />;
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const renderMoodStars = (mood: number) => {
-    return Array.from({ length: 5 }).map((_, index) => (
-      <Star
-        key={index}
-        className={`w-4 h-4 ${
-          index < mood ? 'text-yellow-400 fill-current' : 'text-gray-300'
-        }`}
-      />
-    ));
-  };
-
-  const handleViewClient = (client: Client) => {
+  const handleViewProfile = (client: Client) => {
     setSelectedClient(client);
-    setCurrentView('client-detail');
+    setShowProfileModal(true);
   };
 
-  const renderClientsList = () => (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Client Management</h1>
-          <p className="text-gray-600 mt-1">View and monitor all client information and sessions</p>
-        </div>
-      </div>
+  const handleAction = (type: 'approve' | 'reject') => {
+    if (!selectedClient) return;
+    
+    setActionType(type);
+    setIsStudentPackageAction(true);
+    setRejectionReason('');
+    setShowActionModal(true);
+  };
 
-      {/* Filters and Search */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search clients by name, email, or counselor..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Filter className="w-5 h-5 text-gray-400" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="on-hold">On Hold</option>
-            </select>
-          </div>
-        </div>
-      </div>
+  const confirmAction = () => {
+    if (!selectedClient) return;
+    
+    if (actionType === 'reject' && isStudentPackageAction && !rejectionReason.trim()) {
+      showNotification('error', 'Please provide a rejection reason.');
+      return;
+    }
+    
+    setShowConfirmation(true);
+  };
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Clients</p>
-              <p className="text-2xl font-bold text-blue-600">{mockClients.length}</p>
-            </div>
-            <Users className="w-8 h-8 text-blue-600" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Active Clients</p>
-              <p className="text-2xl font-bold text-green-600">
-                {mockClients.filter(c => c.status === 'active').length}
-              </p>
-            </div>
-            <CheckCircle className="w-8 h-8 text-green-600" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">On Hold</p>
-              <p className="text-2xl font-bold text-yellow-600">
-                {mockClients.filter(c => c.status === 'on-hold').length}
-              </p>
-            </div>
-            <AlertCircle className="w-8 h-8 text-yellow-600" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Sessions</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {mockClients.reduce((sum, client) => sum + client.totalSessions, 0)}
-              </p>
-            </div>
-            <Calendar className="w-8 h-8 text-purple-600" />
-          </div>
-        </div>
-      </div>
+  const executeAction = async () => {
+    if (!selectedClient) return;
+    
+    setLoading(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setClients(prev => 
+        prev.map(c => 
+          c.id === selectedClient.id 
+            ? { 
+                ...c, 
+                studentPackage: {
+                  ...c.studentPackage!,
+                  status: actionType as 'approved' | 'rejected',
+                  rejectionReason: actionType === 'reject' ? rejectionReason : undefined
+                },
+                subscriptionType: actionType === 'approve' ? 'student' : c.subscriptionType
+              }
+            : c
+        )
+      );
+      
+      showNotification('success', `Student package application ${actionType}d successfully!`);
+      
+      setShowProfileModal(false);
+      setShowActionModal(false);
+      setShowConfirmation(false);
+      setSelectedClient(null);
+      setRejectionReason('');
+      setIsStudentPackageAction(false);
+      
+    } catch (error) {
+      showNotification('error', 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      {/* Clients Table */}
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Clients ({filteredClients.length})
-          </h2>
+  const closeModals = () => {
+    setShowProfileModal(false);
+    setShowActionModal(false);
+    setShowConfirmation(false);
+    setSelectedClient(null);
+    setRejectionReason('');
+    setIsStudentPackageAction(false);
+  };
+
+  // Sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const closeSidebar = () => setSidebarOpen(false);
+
+  return (
+    <div className='h-screen flex'>
+      <Sidebar isOpen={sidebarOpen} onClose={closeSidebar}/>
+      <div className="min-h-screen bg-gray-50 p-6 flex-1">
+
+        {/* Notification */}
+        {notification && (
+          <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg flex items-center space-x-2 ${
+            notification.type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
+            notification.type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
+            'bg-blue-100 text-blue-800 border border-blue-200'
+          }`}>
+            {notification.type === 'success' && <CheckCircle className="w-5 h-5" />}
+            {notification.type === 'error' && <XCircle className="w-5 h-5" />}
+            {notification.type === 'info' && <AlertCircle className="w-5 h-5" />}
+            <span>{notification.message}</span>
+            <button onClick={() => setNotification(null)} className="ml-2 hover:opacity-70">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Header */}
+        <div className="bg-blue-100 rounded-lg p-6 mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+            <div className="flex-1 max-w-lg">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search clients..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Filter className="w-5 h-5 text-blue-600" />
+                <span className="text-blue-600 font-medium">Filters:</span>
+              </div>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option>All Status</option>
+                <option>active</option>
+                <option>inactive</option>
+                <option>suspended</option>
+              </select>
+              <select
+                value={selectedSubscription}
+                onChange={(e) => setSelectedSubscription(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option>All Subscriptions</option>
+                <option>free</option>
+                <option>basic</option>
+                <option>premium</option>
+                <option>student</option>
+              </select>
+            </div>
+          </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Client
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contact
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Counselor
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Sessions
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Last Session
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Mood
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredClients.map((client) => (
-                <tr key={client.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <img
-                        src={client.avatar}
-                        alt={client.name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{client.name}</div>
-                        <div className="text-sm text-gray-500">
-                          Started {formatDate(client.startDate)}
+
+        {/* Main Content */}
+        <div className="bg-white rounded-lg shadow-sm">
+          {/* Title and Stats */}
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Client Management System</h1>
+                <p className="text-gray-600 mt-1">
+                  {activeTab === 'students' ? studentUsers.length : regularUsers.length} {activeTab === 'students' ? 'student' : 'regular'} clients found
+                </p>
+              </div>
+              <div className="flex items-center space-x-6 mt-4 lg:mt-0">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                  <span className="text-sm text-gray-600">
+                    {currentClients.filter(c => c.status === 'active').length} Active
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                  <span className="text-sm text-gray-600">
+                    {currentClients.filter(c => c.status === 'inactive').length} Inactive
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                  <span className="text-sm text-gray-600">
+                    {currentClients.filter(c => c.status === 'suspended').length} Suspended
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="px-6 border-b border-gray-200">
+            <div className="flex space-x-8 overflow-x-auto">
+              <button
+                onClick={() => setActiveTab('regular')}
+                className={`flex items-center space-x-2 py-4 border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === 'regular'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <User className="w-4 h-4" />
+                <span className="font-medium">Regular Users</span>
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  activeTab === 'regular'
+                    ? 'bg-blue-100 text-blue-600'
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {regularUsers.length}
+                </span>
+              </button>
+              <button
+                onClick={() => setActiveTab('students')}
+                className={`flex items-center space-x-2 py-4 border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === 'students'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <GraduationCap className="w-4 h-4" />
+                <span className="font-medium">Student Users</span>
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  activeTab === 'students'
+                    ? 'bg-blue-100 text-blue-600'
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {studentUsers.length}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* Table Header */}
+          <div className="px-6 py-4 bg-gray-50 grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 uppercase tracking-wider">
+            <div className="col-span-3 flex items-center space-x-2">
+              <User className="w-4 h-4" />
+              <span>Client</span>
+            </div>
+            <div className="col-span-3 flex items-center space-x-2">
+              <Mail className="w-4 h-4" />
+              <span>Contact</span>
+            </div>
+            {/* <div className="col-span-2 flex items-center space-x-2">
+              <CreditCard className="w-4 h-4" />
+              <span>Subscription</span>
+            </div> */}
+            {activeTab === 'students' && (
+              <div className="col-span-2 flex items-center space-x-2">
+                <GraduationCap className="w-4 h-4" />
+                <span>Student Package</span>
+              </div>
+            )}
+            {activeTab === 'regular' && (
+              <div className="col-span-2 flex items-center space-x-2">
+                <Clock className="w-4 h-4" />
+                <span>Sessions</span>
+              </div>
+            )}
+            <div className="col-span-2">Status</div>
+            <div className="col-span-1">Action</div>
+          </div>
+
+          {/* Table Body */}
+          <div className="divide-y divide-gray-200">
+            {filteredClients.map((client) => (
+              <div key={client.id} className="px-6 py-4 grid grid-cols-12 gap-4 items-center hover:bg-gray-50 transition-colors">
+                <div className="col-span-3 flex items-center space-x-3">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${
+                    client.status === 'active' ? 'bg-green-500' :
+                    client.status === 'inactive' ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}>
+                    {getInitials(client.name)}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">{client.name}</p>
+                    <p className="text-sm text-gray-500">{client.age} years old</p>
+                  </div>
+                </div>
+                <div className="col-span-3">
+                  <p className="text-gray-900 text-sm">{client.email}</p>
+                  <p className="text-sm text-gray-500">{client.phone}</p>
+                </div>
+                {/* <div className="col-span-2">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getSubscriptionBadge(client.subscriptionType)}`}>
+                    {client.subscriptionType}
+                  </span>
+                  <p className="text-xs text-gray-500 mt-1">${client.totalSpent} spent</p>
+                </div> */}
+                {activeTab === 'students' && (
+                  <div className="col-span-2">
+                    {client.studentPackage?.applied ? (
+                      <div className="space-y-1">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStudentPackageStatusBadge(client.studentPackage.status)}`}>
+                          {client.studentPackage.status}
+                        </span>
+                        <p className="text-xs text-gray-500">{client.studentPackage.school}</p>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400">Not applied</span>
+                    )}
+                  </div>
+                )}
+                {activeTab === 'regular' && (
+                  <div className="col-span-2">
+                    <p className="text-sm font-medium text-gray-900">{client.sessionsCompleted} sessions</p>
+                    <p className="text-xs text-gray-500">Total completed</p>
+                  </div>
+                )}
+                <div className="col-span-2">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusBadge(client.status)}`}>
+                    {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
+                  </span>
+                </div>
+                <div className="col-span-1">
+                  <button
+                    onClick={() => handleViewProfile(client)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg transition-colors flex items-center space-x-1 text-sm"
+                  >
+                    <Eye className="w-3 h-3" />
+                    <span>View</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Profile Modal */}
+        {showProfileModal && selectedClient && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-gray-900">Client Profile</h2>
+                  <button
+                    onClick={closeModals}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Profile Info */}
+                  <div className="lg:col-span-1">
+                    <div className="text-center">
+                      <div className={`w-24 h-24 rounded-full mx-auto flex items-center justify-center text-white text-2xl font-bold ${
+                        selectedClient.status === 'active' ? 'bg-green-500' :
+                        selectedClient.status === 'inactive' ? 'bg-yellow-500' : 'bg-red-500'
+                      }`}>
+                        {getInitials(selectedClient.name)}
+                      </div>
+                      <h3 className="mt-4 text-xl font-bold text-gray-900">{selectedClient.name}</h3>
+                      <p className="text-gray-600">{selectedClient.age} years old</p>
+                      <div className="mt-4 space-y-2">
+                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium border ${getStatusBadge(selectedClient.status)}`}>
+                          {selectedClient.status.charAt(0).toUpperCase() + selectedClient.status.slice(1)}
+                        </span>
+                        <br />
+                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getSubscriptionBadge(selectedClient.subscriptionType)}`}>
+                          {selectedClient.subscriptionType}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Details */}
+                  <div className="lg:col-span-2 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center space-x-3">
+                        <Mail className="w-5 h-5 text-gray-400" />
+                        <div>
+                          <p className="text-sm text-gray-500">Email</p>
+                          <p className="font-medium">{selectedClient.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <Phone className="w-5 h-5 text-gray-400" />
+                        <div>
+                          <p className="text-sm text-gray-500">Phone</p>
+                          <p className="font-medium">{selectedClient.phone}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <MapPin className="w-5 h-5 text-gray-400" />
+                        <div>
+                          <p className="text-sm text-gray-500">Location</p>
+                          <p className="font-medium">{selectedClient.location}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <Calendar className="w-5 h-5 text-gray-400" />
+                        <div>
+                          <p className="text-sm text-gray-500">Registered Date</p>
+                          <p className="font-medium">{new Date(selectedClient.registeredDate).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <Clock className="w-5 h-5 text-gray-400" />
+                        <div>
+                          <p className="text-sm text-gray-500">Sessions Completed</p>
+                          <p className="font-medium">{selectedClient.sessionsCompleted}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <DollarSign className="w-5 h-5 text-gray-400" />
+                        <div>
+                          <p className="text-sm text-gray-500">Total Spent</p>
+                          <p className="font-medium">${selectedClient.totalSpent}</p>
                         </div>
                       </div>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{client.email}</div>
-                    <div className="text-sm text-gray-500">{client.phone}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{client.primaryCounselor}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(client.status)}`}>
-                      {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{client.totalSessions}</div>
-                    {client.nextSession && (
-                      <div className="text-xs text-blue-600">
-                        Next: {formatDate(client.nextSession)}
+
+                    {/* Student Package Section */}
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-center space-x-3 mb-3">
+                        <GraduationCap className="w-5 h-5 text-gray-400" />
+                        <h4 className="font-semibold text-gray-900">Student Package Application</h4>
                       </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{formatDate(client.lastSession)}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-1">
-                      {renderMoodStars(client.currentMood)}
+                      
+                      {selectedClient.studentPackage?.applied ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600">Status:</span>
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStudentPackageStatusBadge(selectedClient.studentPackage.status)}`}>
+                              {selectedClient.studentPackage.status.charAt(0).toUpperCase() + selectedClient.studentPackage.status.slice(1)}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-500">School:</span>
+                              <p className="font-medium">{selectedClient.studentPackage.school}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Student ID:</span>
+                              <p className="font-medium">{selectedClient.studentPackage.studentId}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Graduation Year:</span>
+                              <p className="font-medium">{selectedClient.studentPackage.graduationYear}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Applied Date:</span>
+                              <p className="font-medium">{selectedClient.studentPackage.appliedDate ? new Date(selectedClient.studentPackage.appliedDate).toLocaleDateString() : 'N/A'}</p>
+                            </div>
+                          </div>
+                          
+                          {selectedClient.studentPackage.verificationDocument && (
+                            <div className="flex items-center space-x-2 text-sm">
+                              <FileText className="w-4 h-4 text-gray-400" />
+                              <span className="text-gray-500">Verification Document:</span>
+                              <span className="font-medium text-blue-600">{selectedClient.studentPackage.verificationDocument}</span>
+                            </div>
+                          )}
+
+                          {selectedClient.studentPackage.status === 'rejected' && selectedClient.studentPackage.rejectionReason && (
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                              <div className="flex items-start space-x-2">
+                                <AlertCircle className="w-4 h-4 text-red-500 mt-0.5" />
+                                <div>
+                                  <p className="text-sm font-medium text-red-800">Rejection Reason:</p>
+                                  <p className="text-sm text-red-700">{selectedClient.studentPackage.rejectionReason}</p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-sm">No student package application submitted.</p>
+                      )}
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => handleViewClient(client)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-                    >
-                      View
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
 
-  const renderClientDetail = () => {
-    if (!selectedClient) return null;
-
-    const clientSessions = mockSessions[selectedClient.id] || [];
-    const completedSessions = clientSessions.filter(s => s.status === 'completed');
-    const upcomingSessions = clientSessions.filter(s => s.status === 'scheduled');
-    const averageMood = completedSessions.length > 0 
-      ? completedSessions.reduce((sum, s) => sum + s.mood, 0) / completedSessions.length 
-      : 0;
-
-    return (
-      <div className="space-y-6 w-10/12 h-sreen  overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center ">
-          <div className="flex items-center space-x-4"> 
-            <button
-              onClick={() => setCurrentView('clients')}
-              className="bg-gray-100 hover:bg-gray-200 p-2 rounded-lg transition-colors "
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Client Details</h1>
-              <p className="text-gray-600 mt-1">Complete client information and session history</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Client Profile Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 ">
-          <div className="flex items-start space-x-6 mb-8">
-            <img
-              src={selectedClient.avatar}
-              alt={selectedClient.name}
-              className="w-24 h-24 rounded-full object-cover border-4 border-blue-100"
-            />
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">{selectedClient.name}</h2>
-                  <p className="text-gray-600">Client since {formatDate(selectedClient.startDate)}</p>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedClient.status)}`}>
-                  {selectedClient.status.charAt(0).toUpperCase() + selectedClient.status.slice(1)}
-                </span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-600 mb-2">Contact Information</h3>
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
-                      <Mail className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm text-gray-700">{selectedClient.email}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Phone className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm text-gray-700">{selectedClient.phone}</span>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-600 mb-2">Primary Counselor</h3>
-                  <p className="text-sm text-gray-700">{selectedClient.primaryCounselor}</p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-600 mb-2">Current Mood</h3>
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center space-x-1">
-                      {renderMoodStars(selectedClient.currentMood)}
-                    </div>
-                    <span className="text-sm text-gray-600">({selectedClient.currentMood}/5)</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-blue-50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600 mb-1">{selectedClient.totalSessions}</div>
-              <div className="text-sm text-gray-600">Total Sessions</div>
-            </div>
-            <div className="bg-green-50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-green-600 mb-1">{completedSessions.length}</div>
-              <div className="text-sm text-gray-600">Completed</div>
-            </div>
-            <div className="bg-orange-50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-orange-600 mb-1">{upcomingSessions.length}</div>
-              <div className="text-sm text-gray-600">Upcoming</div>
-            </div>
-            <div className="bg-purple-50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-purple-600 mb-1">{averageMood.toFixed(1)}</div>
-              <div className="text-sm text-gray-600">Avg Mood</div>
-            </div>
-          </div>
-
-          {/* Additional Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
-              <div className="space-y-3">
-                <div>
-                  <span className="text-sm font-medium text-gray-600">Date of Birth:</span>
-                  <span className="ml-2 text-sm text-gray-700">{formatDate(selectedClient.dateOfBirth)}</span>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-600">Address:</span>
-                  <span className="ml-2 text-sm text-gray-700">{selectedClient.address}</span>
-                </div>
-              </div>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Emergency Contact</h3>
-              <div className="space-y-3">
-                <div>
-                  <span className="text-sm font-medium text-gray-600">Name:</span>
-                  <span className="ml-2 text-sm text-gray-700">{selectedClient.emergencyContact.name}</span>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-600">Phone:</span>
-                  <span className="ml-2 text-sm text-gray-700">{selectedClient.emergencyContact.phone}</span>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-600">Relationship:</span>
-                  <span className="ml-2 text-sm text-gray-700">{selectedClient.emergencyContact.relationship}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Treatment Goals */}
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Treatment Goals</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {selectedClient.goals.map((goal, index) => (
-              <div key={index} className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg">
-                <Brain className="w-5 h-5 text-blue-600" />
-                <span className="text-gray-700">{goal}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Session History */}
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Session History</h3>
-          <div className="space-y-6">
-            {clientSessions.map((session) => (
-              <div key={session.id} className="border border-gray-200 rounded-lg p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-blue-100 rounded-lg p-3">
-                      {getTypeIcon(session.type)}
-                    </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900 capitalize">
-                        {session.type} Session
-                      </h4>
-                      <p className="text-sm text-gray-600">with {session.counselor}</p>
+                      <h4 className="font-semibold text-gray-900 mb-2">Bio</h4>
+                      <p className="text-gray-600">{selectedClient.bio}</p>
                     </div>
-                  </div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(session.status)}`}>
-                    {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-700">{formatDate(session.date)}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Clock className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-700">{session.time} • {session.duration} min</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {getFormatIcon(session.sessionFormat)}
-                    <span className="text-sm text-gray-700 capitalize">{session.sessionFormat}</span>
                   </div>
                 </div>
 
-                {session.status === 'completed' && session.mood > 0 && (
-                  <div className="mb-4">
-                    <div className="flex items-center space-x-3">
-                      <span className="text-sm font-medium text-gray-600">Session Mood:</span>
-                      <div className="flex items-center space-x-1">
-                        {renderMoodStars(session.mood)}
-                      </div>
-                      <span className="text-sm text-gray-600">({session.mood}/5)</span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-3">
-                  <div>
-                    <h5 className="text-sm font-medium text-gray-600 mb-1">Session Notes</h5>
-                    <p className="text-sm text-gray-700 bg-gray-50 rounded p-3">{session.notes}</p>
-                  </div>
-                  
-                  {session.progress && (
-                    <div>
-                      <h5 className="text-sm font-medium text-gray-600 mb-1">Progress & Insights</h5>
-                      <p className="text-sm text-gray-700 bg-green-50 rounded p-3">{session.progress}</p>
-                    </div>
+                {/* Action Buttons */}
+                <div className="mt-8 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+                  {selectedClient.studentPackage?.applied && selectedClient.studentPackage?.status === 'pending' && (
+                    <>
+                      <button
+                        onClick={() => handleAction('reject')}
+                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                      >
+                        <X className="w-4 h-4" />
+                        <span>Reject</span>
+                      </button>
+                      <button
+                        onClick={() => handleAction('approve')}
+                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                      >
+                        <Check className="w-4 h-4" />
+                        <span>Approve</span>
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-      </div>
-    );
-  };
+        )}
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-   const closeSidebar = () => setSidebarOpen(false);
-  
-  return (
-    <div className='flex h-screen'>
-      <Sidebar isOpen={sidebarOpen} onClose={closeSidebar}/>
-    <div className=" w-10/12 h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Main Content */}
-      <main className="max-w-full mx-auto px-4 py-8">
-        {currentView === 'clients' && renderClientsList()}
-        {currentView === 'client-detail' && renderClientDetail()}
-      </main>
-    </div>
+        {/* Action Modal */}
+        {showActionModal && selectedClient && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-lg w-full p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900">
+                  {actionType === 'approve' ? 'Approve Student Package' : 'Reject Student Package'}
+                </h3>
+                <button
+                  onClick={closeModals}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-gray-700 mb-2">
+                    {actionType === 'approve'
+                      ? `Are you sure you want to approve the student package application for ${selectedClient.name}?`
+                      : `Are you sure you want to reject the student package application for ${selectedClient.name}?`}
+                  </p>
+                  {actionType === 'reject' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Rejection Reason
+                      </label>
+                      <textarea
+                        value={rejectionReason}
+                        onChange={e => setRejectionReason(e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg p-2"
+                        rows={3}
+                        placeholder="Provide a reason for rejection..."
+                      />
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-end space-x-3 mt-4">
+                  <button
+                    onClick={closeModals}
+                    className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmAction}
+                    className={`px-4 py-2 rounded-lg text-white ${
+                      actionType === 'approve'
+                        ? 'bg-green-600 hover:bg-green-700'
+                        : 'bg-red-600 hover:bg-red-700'
+                    }`}
+                  >
+                    {actionType === 'approve' ? 'Approve' : 'Reject'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Confirmation Modal */}
+        {showConfirmation && selectedClient && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900">Confirm Action</h3>
+                <button
+                  onClick={closeModals}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <p className="text-gray-700">
+                  {actionType === 'approve'
+                    ? `Approve student package application for ${selectedClient.name}?`
+                    : `Reject student package application for ${selectedClient.name}?`}
+                </p>
+                <div className="flex justify-end space-x-3 mt-4">
+                  <button
+                    onClick={closeModals}
+                    className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={executeAction}
+                    className={`px-4 py-2 rounded-lg text-white ${
+                      actionType === 'approve'
+                        ? 'bg-green-600 hover:bg-green-700'
+                        : 'bg-red-600 hover:bg-red-700'
+                    }`}
+                    disabled={loading}
+                  >
+                    {loading ? 'Processing...' : 'Confirm'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
     </div>
   );
-}
+};
 
 export default Client;

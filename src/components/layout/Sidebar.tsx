@@ -1,5 +1,5 @@
-import React from 'react';
-import { ArrowLeft, Calendar, Users, MessageCircle,  FileText, LogOut, User, Grid2X2, ChartAreaIcon, BookOpen as Blog } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Users, MessageCircle, FileText, LogOut, User, Grid2X2, ChartAreaIcon, BookOpen as Blog, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -19,35 +19,35 @@ const Sidebar: React.FC<SidebarProps> = ({
   onExpandBeforeNavigation
 }) => {
 
-// Sidebar Logo (always visible, top of sidebar)
-const SidebarLogo = () => (
-  <div className={`flex items-center justify-center py-8 ${isMinimized ? 'px-0' : 'px-4'}`}>
-    <img
-      src="/assets/images/Sona.png"
-      alt="Sona Logo"
-      className={`transition-all duration-300 h-16 w-46 ${isMinimized ? 'mx-auto' : ''}`}
-    />
-    
-  </div>
-);
+  const [isUsersExpanded, setIsUsersExpanded] = useState(false);
 
   const menuItems = [
     { icon: Grid2X2, label: 'Dashboard', href: '/admin-dashboard', id: 'home' },
     { icon: User, label: 'Profile', href: '/admin-profile', id: 'profile' },
-    { icon: ChartAreaIcon, label: 'Analytic', href: '/admin-analytics', id: 'analytics' },
-    { icon: Users, label: 'Clients', href: '/client', id: 'client' },
-    { icon: Users, label: 'Psychatrist', href: '/psychiatrist', id: 'psychatrists' },
-    { icon: Users, label: 'Management Team', href: '/management-team', id: 'management_team' },
-    { icon: Users, label: 'Counsellors', href: '/counsellor', id: 'counsellors' },  
-    {icon:  Blog, label:'Blogs', href:'/blogs', id: 'blogs'},
-    { icon: Calendar, label: 'Calendar', href: '/calendar', id: 'calendar' },
+    { icon: ChartAreaIcon, label: 'Analytics', href: '/admin-analytics', id: 'analytics' },
+    { 
+      icon: Users, 
+      label: 'Users', 
+      href: '#', 
+      id: 'users',
+      isDropdown: true,
+      subItems: [
+        { label: 'Clients', href: '/client', id: 'client' },
+        { label: 'Psychiatrists', href: '/psychiatrist', id: 'psychatrists' },
+        { label: 'Management Team', href: '/management-team', id: 'management_team' },
+        { label: 'Counsellors', href: '/counsellor', id: 'counsellors' },
+      ]
+    },
+    { icon: Blog, label: 'Blogs', href: '/blogs', id: 'blogs' },
     { icon: MessageCircle, label: 'Message', href: '/message', id: 'messages' },
     { icon: FileText, label: 'Reports', href: '/reports', id: 'reports' },
-   
+    { icon: MessageCircle, label: 'Feedback', href: '/feedback', id: 'feedback' },
   ];
 
   const handleItemClick = (item: any) => {
-    if (item.id === 'chats' && onChatClick) {
+    if (item.id === 'users' && item.isDropdown) {
+      setIsUsersExpanded(!isUsersExpanded);
+    } else if (item.id === 'chats' && onChatClick) {
       onChatClick();
     } else {
       // Handle other navigation with expansion animation if minimized
@@ -59,6 +59,21 @@ const SidebarLogo = () => (
           // Direct navigation if not minimized
           window.location.href = item.href;
         }
+      }
+    }
+    
+    // Close sidebar on mobile (except for dropdown toggles)
+    if (window.innerWidth < 1024 && !item.isDropdown) {
+      onClose();
+    }
+  };
+
+  const handleSubItemClick = (subItem: any) => {
+    if (subItem.href !== '#') {
+      if (isMinimized && onExpandBeforeNavigation) {
+        onExpandBeforeNavigation(subItem.href);
+      } else {
+        window.location.href = subItem.href;
       }
     }
     
@@ -77,17 +92,19 @@ const SidebarLogo = () => (
           onClick={onClose}
         />
       )}
-
+   
       {/* Sidebar */}
       <div className={`
-        h-full bg-[#FFE9EF] flex flex-col transition-all duration-500 ease-in-out
-        fixed top-0 left-0 z-50 lg:relative lg:z-auto
+        h-screen bg-[#FFE9EF] flex flex-col transition-all duration-500 ease-in-out
+        fixed top-0 left-0 z-50 lg:relative lg:z-auto  
         ${isMinimized 
-          ? 'w-16 lg:w-16' 
-          : 'w-80 lg:w-80'
+          ? 'w-16' 
+          : 'w-24'
         }
         ${isOpen || isMinimized ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
+      `}
+        style={{ minWidth: isMinimized ? '4rem' : '17rem', maxWidth: isMinimized ? '4rem' : '17rem' }}
+      >
         
         {/* Sidebar Header - Only show on mobile when not minimized */}
         {!isMinimized && (
@@ -104,17 +121,15 @@ const SidebarLogo = () => (
               className="h-8 w-auto ml-3"
             />
           </div>
-        )}
-
-        {/* Sidebar Logo (always visible, top of sidebar) */}
-        <SidebarLogo />
+        )} 
 
         {/* Menu Items */}
-        <nav className={`py-6 ${isMinimized ? 'px-2' : 'px-4'} flex-1 flex flex-col transition-all duration-500 ease-in-out`}>
+        <nav className={`py-12 ${isMinimized ? 'px-2' : 'px-4'} flex-1 flex flex-col transition-all duration-500 ease-in-out`}>
           <ul className="space-y-2">
             {menuItems.map((item, index) => {
               const IconComponent = item.icon;
               const isActive = activeItem === item.id;
+              const hasActiveSubItem = item.subItems?.some(subItem => activeItem === subItem.id);
               
               return (
                 <li key={index}>
@@ -126,20 +141,21 @@ const SidebarLogo = () => (
                         ? 'px-3 py-3 justify-center' 
                         : 'px-4 py-3 space-x-4'
                       }
-                      ${isActive ? 'bg-white shadow-sm' : ''}
+                      ${isActive || hasActiveSubItem ? 'bg-white shadow-md' : ''}
                     `}
+                    style={isActive || hasActiveSubItem ? { backgroundColor: '#fff' } : {}}
                     title={isMinimized ? item.label : undefined}
                   >
                     <IconComponent 
                       size={20} 
                       className={`
                         text-gray-600 group-hover:text-gray-800 transition-colors duration-200
-                        ${isActive ? 'text-gray-800' : ''}
+                        ${isActive || hasActiveSubItem ? 'text-gray-800' : ''}
                       `} 
                     />
                     <span className={`
                       font-medium group-hover:text-gray-800 transition-all duration-300 ease-in-out overflow-hidden whitespace-nowrap
-                      ${isActive ? 'text-gray-800' : ''}
+                      ${isActive || hasActiveSubItem ? 'text-gray-800' : ''}
                       ${isMinimized 
                         ? 'opacity-0 w-0 transform scale-0' 
                         : 'opacity-100 w-auto transform scale-100'
@@ -147,7 +163,41 @@ const SidebarLogo = () => (
                     `}>
                       {item.label}
                     </span>
+                    {item.isDropdown && !isMinimized && (
+                      <div className="ml-auto">
+                        {isUsersExpanded ? (
+                          <ChevronDown size={16} className="text-gray-600" />
+                        ) : (
+                          <ChevronRight size={16} className="text-gray-600" />
+                        )}
+                      </div>
+                    )}
                   </button>
+                  
+                  {/* Dropdown Sub-items */}
+                  {item.isDropdown && isUsersExpanded && !isMinimized && (
+                    <ul className="ml-8 mt-2 space-y-1">
+                      {item.subItems?.map((subItem, subIndex) => {
+                        const isSubActive = activeItem === subItem.id;
+                        return (
+                          <li key={subIndex}>
+                            <button
+                              onClick={() => handleSubItemClick(subItem)}
+                              className={`
+                                flex items-center text-gray-600 hover:bg-gray-50 rounded-lg transition-all duration-300 ease-in-out group w-full
+                                px-3 py-2 text-sm
+                                ${isSubActive ? 'bg-gray-100 text-gray-800' : ''}
+                              `}
+                            >
+                              <span className="font-medium">
+                                {subItem.label}
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
                 </li>
               );
             })}
@@ -186,22 +236,6 @@ const SidebarLogo = () => (
       </div>
     </>
   );
-};
+}
 
 export default Sidebar;
-
-// import React from 'react';
-
-// interface SidebarProps {
-//   children: React.ReactNode;
-//   className?: string;
-// }
-
-// const Sidebar: React.FC<SidebarProps> = ({ children, className = '' }) => (
-//   <aside className={`w-64 bg-white border-r border-border p-4 ${className}`}>
-//     {children}
-//   </aside>
-// );
-
-// export default Sidebar;
-

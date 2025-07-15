@@ -160,7 +160,7 @@ const CounsellorTable: React.FC<CounsellorTableProps> = ({ counsellors, onReview
                     className="inline-flex items-center space-x-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-sm hover:shadow-md"
                   >
                     <Eye className="h-4 w-4" />
-                    <span>Review</span>
+                    <span>view</span>
                   </button>
                 </td>
               </tr>

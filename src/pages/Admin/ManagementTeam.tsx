@@ -2,18 +2,12 @@ import React, { useState } from 'react';
 import Sidebar from '../../components/layout/Sidebar';
 import { 
   Users, 
-  Check, 
   X, 
-  Clock, 
   Mail, 
   Phone, 
   MapPin, 
   Calendar,
-  Shield,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  ArrowLeft,
+ 
   Building,
   Award,
   Star,
@@ -22,7 +16,15 @@ import {
   Send,
   Eye,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Plus,
+  Upload,
+  Save,
+  Search,
+  Filter,
+ 
+  CheckCircle,
+  AlertTriangle
 } from 'lucide-react';
 
 interface TeamMember {
@@ -35,9 +37,31 @@ interface TeamMember {
   joinDate: string;
   department: string;
   avatar: string;
-  status: 'pending' | 'approved' | 'rejected';
-  rejectionReason?: string;
-  rejectionEmailSent?: boolean;
+  experience: string;
+  skills: string[];
+  bio: string;
+  education: string[];
+  certifications: string[];
+  previousRoles: Array<{
+    company: string;
+    position: string;
+    duration: string;
+  }>;
+  achievements: string[];
+  salary: string;
+  reportingTo: string;
+}
+
+interface TeamMember {
+  id: string;
+  name: string;
+  position: string;
+  email: string;
+  phone: string;
+  location: string;
+  joinDate: string;
+  department: string;
+  avatar: string;
   experience: string;
   skills: string[];
   bio: string;
@@ -65,7 +89,6 @@ function ManagementTeam() {
       joinDate: '2024-01-15',
       department: 'Product',
       avatar: 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=150',
-      status: 'pending',
       experience: '8 years',
       skills: ['Product Strategy', 'User Research', 'Agile', 'Data Analysis'],
       bio: 'Experienced product manager with a passion for creating user-centric solutions. Led multiple successful product launches and cross-functional teams.',
@@ -93,7 +116,6 @@ function ManagementTeam() {
       joinDate: '2024-01-10',
       department: 'Engineering',
       avatar: 'https://images.pexels.com/photos/3778876/pexels-photo-3778876.jpeg?auto=compress&cs=tinysrgb&w=150',
-      status: 'approved',
       experience: '12 years',
       skills: ['Full Stack Development', 'Cloud Architecture', 'Team Leadership', 'DevOps'],
       bio: 'Senior engineering leader with extensive experience in building scalable systems and leading high-performance teams.',
@@ -121,7 +143,6 @@ function ManagementTeam() {
       joinDate: '2024-01-20',
       department: 'Marketing',
       avatar: 'https://images.pexels.com/photos/3992656/pexels-photo-3992656.jpeg?auto=compress&cs=tinysrgb&w=150',
-      status: 'pending',
       experience: '10 years',
       skills: ['Digital Marketing', 'Brand Strategy', 'Growth Hacking', 'Analytics'],
       bio: 'Strategic marketing leader with proven track record in building brands and driving growth across multiple channels.',
@@ -149,9 +170,6 @@ function ManagementTeam() {
       joinDate: '2024-01-08',
       department: 'Sales',
       avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=150',
-      status: 'rejected',
-      rejectionReason: 'Incomplete documentation and missing required certifications.',
-      rejectionEmailSent: true,
       experience: '6 years',
       skills: ['B2B Sales', 'CRM Management', 'Lead Generation', 'Negotiation'],
       bio: 'Results-driven sales professional with expertise in enterprise sales and team management.',
@@ -179,7 +197,6 @@ function ManagementTeam() {
       joinDate: '2024-01-25',
       department: 'Design',
       avatar: 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=150',
-      status: 'pending',
       experience: '9 years',
       skills: ['UI/UX Design', 'Design Systems', 'Prototyping', 'User Testing'],
       bio: 'Creative design leader passionate about creating intuitive user experiences and building design systems at scale.',
@@ -202,26 +219,199 @@ function ManagementTeam() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [viewingProfile, setViewingProfile] = useState<TeamMember | null>(null);
   const [emailSending, setEmailSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  const [sortBy, setSortBy] = useState<'name' | 'position' | 'department' | 'joinDate' | 'status'>('name');
+  const [sortBy, setSortBy] = useState<'name' | 'position' | 'department' | 'joinDate'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  
+  // Search and filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
+  
+  // Add member modal states
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [newMemberForm, setNewMemberForm] = useState<Omit<TeamMember, 'id'>>({
+    name: '',
+    position: '',
+    email: '',
+    phone: '',
+    location: '',
+    joinDate: new Date().toISOString().split('T')[0],
+    department: '',
+    avatar: '',
+    experience: '',
+    skills: [],
+    bio: '',
+    education: [],
+    certifications: [],
+    previousRoles: [],
+    achievements: [],
+    salary: '',
+    reportingTo: ''
+  });
+  const [newSkill, setNewSkill] = useState('');
+  const [newEducation, setNewEducation] = useState('');
+  const [newCertification, setNewCertification] = useState('');
+  const [newAchievement, setNewAchievement] = useState('');
+  const [newRole, setNewRole] = useState({ company: '', position: '', duration: '' });
+  const [formSubmitting, setFormSubmitting] = useState(false);
 
-  const handleApprove = (id: string) => {
-    setTeamMembers(prev => 
-      prev.map(member => 
-        member.id === id 
-          ? { ...member, status: 'approved' as const, rejectionReason: undefined }
-          : member
-      )
-    );
+  // Add member functions
+  const resetAddMemberForm = () => {
+    setNewMemberForm({
+      name: '',
+      position: '',
+      email: '',
+      phone: '',
+      location: '',
+      joinDate: new Date().toISOString().split('T')[0],
+      department: '',
+      avatar: '',
+      experience: '',
+      skills: [],
+      bio: '',
+      education: [],
+      certifications: [],
+      previousRoles: [],
+      achievements: [],
+      salary: '',
+      reportingTo: ''
+    });
+    setNewSkill('');
+    setNewEducation('');
+    setNewCertification('');
+    setNewAchievement('');
+    setNewRole({ company: '', position: '', duration: '' });
   };
 
-  const handleReject = (member: TeamMember) => {
-    setSelectedMember(member);
-    setShowRejectModal(true);
+  const handleAddSkill = () => {
+    if (newSkill.trim()) {
+      setNewMemberForm(prev => ({
+        ...prev,
+        skills: [...prev.skills, newSkill.trim()]
+      }));
+      setNewSkill('');
+    }
+  };
+
+  const handleRemoveSkill = (index: number) => {
+    setNewMemberForm(prev => ({
+      ...prev,
+      skills: prev.skills.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleAddEducation = () => {
+    if (newEducation.trim()) {
+      setNewMemberForm(prev => ({
+        ...prev,
+        education: [...prev.education, newEducation.trim()]
+      }));
+      setNewEducation('');
+    }
+  };
+
+  const handleRemoveEducation = (index: number) => {
+    setNewMemberForm(prev => ({
+      ...prev,
+      education: prev.education.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleAddCertification = () => {
+    if (newCertification.trim()) {
+      setNewMemberForm(prev => ({
+        ...prev,
+        certifications: [...prev.certifications, newCertification.trim()]
+      }));
+      setNewCertification('');
+    }
+  };
+
+  const handleRemoveCertification = (index: number) => {
+    setNewMemberForm(prev => ({
+      ...prev,
+      certifications: prev.certifications.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleAddAchievement = () => {
+    if (newAchievement.trim()) {
+      setNewMemberForm(prev => ({
+        ...prev,
+        achievements: [...prev.achievements, newAchievement.trim()]
+      }));
+      setNewAchievement('');
+    }
+  };
+
+  const handleRemoveAchievement = (index: number) => {
+    setNewMemberForm(prev => ({
+      ...prev,
+      achievements: prev.achievements.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleAddRole = () => {
+    if (newRole.company.trim() && newRole.position.trim() && newRole.duration.trim()) {
+      setNewMemberForm(prev => ({
+        ...prev,
+        previousRoles: [...prev.previousRoles, { ...newRole }]
+      }));
+      setNewRole({ company: '', position: '', duration: '' });
+    }
+  };
+
+  const handleRemoveRole = (index: number) => {
+    setNewMemberForm(prev => ({
+      ...prev,
+      previousRoles: prev.previousRoles.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setNewMemberForm(prev => ({ ...prev, avatar: result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmitNewMember = async () => {
+    setFormSubmitting(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Generate new ID
+      const newId = (Math.max(...teamMembers.map(m => parseInt(m.id))) + 1).toString();
+      
+      // Create new member
+      const newMember: TeamMember = {
+        ...newMemberForm,
+        id: newId,
+        avatar: newMemberForm.avatar || 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=150'
+      };
+      
+      // Add to team members
+      setTeamMembers(prev => [...prev, newMember]);
+      
+      // Reset form and close modal
+      resetAddMemberForm();
+      setShowAddMemberModal(false);
+      
+      console.log('New member added successfully:', newMember);
+    } catch (error) {
+      console.error('Failed to add member:', error);
+    } finally {
+      setFormSubmitting(false);
+    }
   };
 
   const sendRejectionEmail = async (member: TeamMember, reason: string) => {
@@ -291,24 +481,23 @@ HR Management Team`);
     }
   };
 
-  const getStatusColor = (status: TeamMember['status']) => {
-    switch (status) {
-      case 'approved': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-yellow-100 text-yellow-800';
-    }
-  };
-
-  const getStatusIcon = (status: TeamMember['status']) => {
-    switch (status) {
-      case 'approved': return <CheckCircle className="w-4 h-4" />;
-      case 'rejected': return <XCircle className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
-    }
-  };
+  // Get unique departments for filter
+  const departments = ['all', ...Array.from(new Set(teamMembers.map(member => member.department)))];
 
   const filteredAndSortedMembers = teamMembers
-    .filter(member => filter === 'all' || member.status === filter)
+    .filter(member => {
+      // Search filter
+      const matchesSearch = searchTerm === '' || 
+        member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.department.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Department filter
+      const matchesDepartment = departmentFilter === 'all' || member.department === departmentFilter;
+      
+      return matchesSearch && matchesDepartment;
+    })
     .sort((a, b) => {
       let aValue: string | Date;
       let bValue: string | Date;
@@ -328,291 +517,71 @@ HR Management Team`);
       return 0;
     });
 
-  const stats = {
-    total: teamMembers.length,
-    pending: teamMembers.filter(m => m.status === 'pending').length,
-    approved: teamMembers.filter(m => m.status === 'approved').length,
-    rejected: teamMembers.filter(m => m.status === 'rejected').length
-  };
-
   // Sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const closeSidebar = () => setSidebarOpen(false);
 
-  // Profile View Component
-  if (viewingProfile) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <button
-              onClick={() => setViewingProfile(null)}
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4 transition-colors duration-200"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Team List
-            </button>
-            
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-              <div className="flex flex-col md:flex-row gap-6">
-                <img
-                  src={viewingProfile.avatar}
-                  alt={viewingProfile.name}
-                  className="w-32 h-32 rounded-full object-cover mx-auto md:mx-0"
-                />
-                <div className="flex-1 text-center md:text-left">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                    <div>
-                      <h1 className="text-3xl font-bold text-gray-900 mb-2">{viewingProfile.name}</h1>
-                      <p className="text-xl text-blue-600 font-medium mb-1">{viewingProfile.position}</p>
-                      <p className="text-gray-600">{viewingProfile.department} Department</p>
-                    </div>
-                    <div className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 mt-4 md:mt-0 ${getStatusColor(viewingProfile.status)}`}>
-                      {getStatusIcon(viewingProfile.status)}
-                      {viewingProfile.status.charAt(0).toUpperCase() + viewingProfile.status.slice(1)}
-                    </div>
-                  </div>
-                  
-                  <p className="text-gray-700 leading-relaxed mb-6">{viewingProfile.bio}</p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Mail className="w-4 h-4" />
-                      <span>{viewingProfile.email}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Phone className="w-4 h-4" />
-                      <span>{viewingProfile.phone}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <MapPin className="w-4 h-4" />
-                      <span>{viewingProfile.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Calendar className="w-4 h-4" />
-                      <span>Joined {new Date(viewingProfile.joinDate).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <User className="w-4 h-4" />
-                      <span>Reports to {viewingProfile.reportingTo}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Building className="w-4 h-4" />
-                      <span>{viewingProfile.experience} experience</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Details Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* Skills */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Star className="w-5 h-5 text-blue-600" />
-                Skills & Expertise
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {viewingProfile.skills.map((skill, index) => (
-                  <span key={index} className="px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full">
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Education */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Award className="w-5 h-5 text-blue-600" />
-                Education
-              </h3>
-              <div className="space-y-2">
-                {viewingProfile.education.map((edu, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                    <span className="text-gray-700">{edu}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Certifications */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-blue-600" />
-                Certifications
-              </h3>
-              <div className="space-y-2">
-                {viewingProfile.certifications.map((cert, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                    <span className="text-gray-700">{cert}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Achievements */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-blue-600" />
-                Key Achievements
-              </h3>
-              <div className="space-y-2">
-                {viewingProfile.achievements.map((achievement, index) => (
-                  <div key={index} className="flex items-start gap-2">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
-                    <span className="text-gray-700">{achievement}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Work History */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Building className="w-5 h-5 text-blue-600" />
-              Work History
-            </h3>
-            <div className="space-y-4">
-              {viewingProfile.previousRoles.map((role, index) => (
-                <div key={index} className="border-l-2 border-blue-200 pl-4">
-                  <h4 className="font-medium text-gray-900">{role.position}</h4>
-                  <p className="text-blue-600">{role.company}</p>
-                  <p className="text-sm text-gray-500">{role.duration}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Rejection Reason (if applicable) */}
-          {viewingProfile.status === 'rejected' && viewingProfile.rejectionReason && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
-              <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle className="w-5 h-5 text-red-600" />
-                <h3 className="text-lg font-semibold text-red-900">Rejection Details</h3>
-              </div>
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                <p className="text-red-800">{viewingProfile.rejectionReason}</p>
-              </div>
-              {viewingProfile.rejectionEmailSent && (
-                <div className="flex items-center gap-2 text-green-700 bg-green-50 border border-green-200 rounded-lg p-3">
-                  <CheckCircle className="w-4 h-4" />
-                  <span className="text-sm font-medium">Rejection notification sent to applicant</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          {viewingProfile.status === 'pending' && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Admin Actions</h3>
-              <div className="flex gap-4">
-                <button
-                  onClick={() => {
-                    handleApprove(viewingProfile.id);
-                    setViewingProfile(prev => prev ? { ...prev, status: 'approved' } : null);
-                  }}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
-                >
-                  <Check className="w-5 h-5" />
-                  Approve Member
-                </button>
-                <button
-                  onClick={() => handleReject(viewingProfile)}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
-                >
-                  <X className="w-5 h-5" />
-                  Reject Member
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
   // Main Table View
   return (
-   <div className='flex w-screen h-screen from-gray-200'>
+    <div className='flex w-screen h-screen from-gray-200'>
     <Sidebar isOpen={sidebarOpen} onClose={closeSidebar}/>
 
     <div className="h-screen w-11/12 bg-gradient-to-br from-slate-50 to-blue-50">
       <div className=" w-11/12 mx-auto   py-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 ">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-blue-600 rounded-xl">
+            {/* <div className="p-3 bg-blue-600 rounded-xl">
               <Shield className="w-6 h-6 text-white" />
-            </div>
+            </div>   */}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Management Team Administration</h1>
-              <p className="text-gray-600">Review and approve management team members</p>
+              <h1 className="text-3xl font-bold text-gray-900">Management Team</h1>
+              <p className="text-gray-600">Manage and view management team members</p>
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Members</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-                </div>
-                <Users className="w-8 h-8 text-blue-600" />
+          {/* Search and Filters */}
+          <div className="flex flex-col lg:flex-row gap-4 mb-6 bg-blue-100 p-11">
+            {/* Search Bar */}
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
               </div>
+              <input
+                type="text"
+                placeholder="Search members by name, position, email, or department..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              />
             </div>
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Pending</p>
-                  <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
-                </div>
-                <Clock className="w-8 h-8 text-yellow-600" />
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Approved</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.approved}</p>
-                </div>
-                <CheckCircle className="w-8 h-8 text-green-600" />
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Rejected</p>
-                  <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
-                </div>
-                <XCircle className="w-8 h-8 text-red-600" />
-              </div>
-            </div>
-          </div>
 
-          {/* Filters */}
-          <div className="flex flex-wrap gap-2">
-            {(['all', 'pending', 'approved', 'rejected'] as const).map(status => (
-              <button
-                key={status}
-                onClick={() => setFilter(status)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  filter === status
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-                }`}
+            {/* Department Filter */}
+            <div className="flex items-center gap-2">
+              <Filter className="h-5 w-5 text-gray-400" />
+              <select
+                value={departmentFilter}
+                onChange={(e) => setDepartmentFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
               >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </button>
-            ))}
+                {departments.map(dept => (
+                  <option key={dept} value={dept}>
+                    {dept === 'all' ? 'All Departments' : dept}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
+            <button
+              onClick={() => setShowAddMemberModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Add Member
+            </button>
           </div>
         </div>
 
@@ -670,17 +639,6 @@ HR Management Team`);
                     </button>
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <button
-                      onClick={() => handleSort('status')}
-                      className="flex items-center gap-1 hover:text-gray-700 transition-colors"
-                    >
-                      Status
-                      {sortBy === 'status' && (
-                        sortOrder === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                      )}
-                    </button>
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -716,26 +674,6 @@ HR Management Team`);
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {new Date(member.joinDate).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(member.status)}`}>
-                        {getStatusIcon(member.status)}
-                        {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
-                      </div>
-                      {member.status === 'rejected' && member.rejectionEmailSent && (
-                        <div className="flex items-center gap-1 text-xs text-green-600 mt-1">
-                          <CheckCircle className="w-3 h-3" />
-                          Email sent
-                        </div>
-                      )}
-                      {/* {member.status === 'rejected' && member.rejectionReason && (
-                        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-800 max-w-xs">
-                          <div className="font-medium mb-1">Rejection Reason:</div>
-                          <div className="truncate" title={member.rejectionReason}>
-                            {member.rejectionReason}
-                          </div>
-                        </div>
-                      )} */}
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
                         onClick={() => setViewingProfile(member)}
@@ -760,6 +698,589 @@ HR Management Team`);
           )}
         </div>
       </div>
+
+      {/* Profile View Modal */}
+      {viewingProfile && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <User className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900">Team Member Profile</h3>
+                </div>
+                <button
+                  onClick={() => setViewingProfile(null)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              {/* Header Section */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-6">
+                <div className="flex flex-col md:flex-row gap-6">
+                  <img
+                    src={viewingProfile.avatar}
+                    alt={viewingProfile.name}
+                    className="w-32 h-32 rounded-full object-cover mx-auto md:mx-0"
+                  />
+                  <div className="flex-1 text-center md:text-left">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                      <div>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">{viewingProfile.name}</h1>
+                        <p className="text-xl text-blue-600 font-medium mb-1">{viewingProfile.position}</p>
+                        <p className="text-gray-600">{viewingProfile.department} Department</p>
+                      </div>
+                    </div>
+                    
+                    <p className="text-gray-700 leading-relaxed mb-6">{viewingProfile.bio}</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Mail className="w-4 h-4" />
+                        <span>{viewingProfile.email}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Phone className="w-4 h-4" />
+                        <span>{viewingProfile.phone}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <MapPin className="w-4 h-4" />
+                        <span>{viewingProfile.location}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Calendar className="w-4 h-4" />
+                        <span>Joined {new Date(viewingProfile.joinDate).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <User className="w-4 h-4" />
+                        <span>Reports to {viewingProfile.reportingTo}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Building className="w-4 h-4" />
+                        <span>{viewingProfile.experience} experience</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Details Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/* Skills */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Star className="w-5 h-5 text-blue-600" />
+                    Skills & Expertise
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {viewingProfile.skills.map((skill, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Education */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Award className="w-5 h-5 text-blue-600" />
+                    Education
+                  </h3>
+                  <div className="space-y-2">
+                    {viewingProfile.education.map((edu, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                        <span className="text-gray-700">{edu}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Certifications */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-blue-600" />
+                    Certifications
+                  </h3>
+                  <div className="space-y-2">
+                    {viewingProfile.certifications.map((cert, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                        <span className="text-gray-700">{cert}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Achievements */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-blue-600" />
+                    Key Achievements
+                  </h3>
+                  <div className="space-y-2">
+                    {viewingProfile.achievements.map((achievement, index) => (
+                      <div key={index} className="flex items-start gap-2">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
+                        <span className="text-gray-700">{achievement}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Work History */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Building className="w-5 h-5 text-blue-600" />
+                  Work History
+                </h3>
+                <div className="space-y-4">
+                  {viewingProfile.previousRoles.map((role, index) => (
+                    <div key={index} className="border-l-2 border-blue-200 pl-4">
+                      <h4 className="font-medium text-gray-900">{role.position}</h4>
+                      <p className="text-blue-600">{role.company}</p>
+                      <p className="text-sm text-gray-500">{role.duration}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+    {/* Add Member Modal */}
+    {showAddMemberModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            {!formSubmitting ? (
+              <>
+                {/* Modal Header */}
+                <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <Plus className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900">Add New Team Member</h3>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowAddMemberModal(false);
+                        resetAddMemberForm();
+                      }}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <X className="w-5 h-5 text-gray-500" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Modal Content */}
+                <div className="p-6 space-y-6">
+                  {/* Basic Information */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      Basic Information
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                        <input
+                          type="text"
+                          value={newMemberForm.name}
+                          onChange={(e) => setNewMemberForm(prev => ({ ...prev, name: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter full name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Position *</label>
+                        <input
+                          type="text"
+                          value={newMemberForm.position}
+                          onChange={(e) => setNewMemberForm(prev => ({ ...prev, position: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter position title"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                        <input
+                          type="email"
+                          value={newMemberForm.email}
+                          onChange={(e) => setNewMemberForm(prev => ({ ...prev, email: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter email address"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                        <input
+                          type="tel"
+                          value={newMemberForm.phone}
+                          onChange={(e) => setNewMemberForm(prev => ({ ...prev, phone: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter phone number"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                        <input
+                          type="text"
+                          value={newMemberForm.location}
+                          onChange={(e) => setNewMemberForm(prev => ({ ...prev, location: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter location"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Join Date</label>
+                        <input
+                          type="date"
+                          value={newMemberForm.joinDate}
+                          onChange={(e) => setNewMemberForm(prev => ({ ...prev, joinDate: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Department *</label>
+                        <select
+                          value={newMemberForm.department}
+                          onChange={(e) => setNewMemberForm(prev => ({ ...prev, department: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="">Select Department</option>
+                          <option value="Product">Product</option>
+                          <option value="Engineering">Engineering</option>
+                          <option value="Marketing">Marketing</option>
+                          <option value="Sales">Sales</option>
+                          <option value="Design">Design</option>
+                          <option value="Operations">Operations</option>
+                          <option value="Finance">Finance</option>
+                          <option value="HR">HR</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Experience</label>
+                        <input
+                          type="text"
+                          value={newMemberForm.experience}
+                          onChange={(e) => setNewMemberForm(prev => ({ ...prev, experience: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="e.g., 5 years"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Reports To</label>
+                        <input
+                          type="text"
+                          value={newMemberForm.reportingTo}
+                          onChange={(e) => setNewMemberForm(prev => ({ ...prev, reportingTo: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter reporting manager"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Salary</label>
+                        <input
+                          type="text"
+                          value={newMemberForm.salary}
+                          onChange={(e) => setNewMemberForm(prev => ({ ...prev, salary: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="e.g., $120,000"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+                      <textarea
+                        value={newMemberForm.bio}
+                        onChange={(e) => setNewMemberForm(prev => ({ ...prev, bio: e.target.value }))}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter a brief bio"
+                      />
+                    </div>
+
+                    {/* Avatar Upload */}
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Profile Picture</label>
+                      <div className="flex items-center gap-4">
+                        {newMemberForm.avatar && (
+                          <img
+                            src={newMemberForm.avatar}
+                            alt="Preview"
+                            className="w-16 h-16 rounded-full object-cover"
+                          />
+                        )}
+                        <label className="cursor-pointer bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                          <Upload className="w-4 h-4" />
+                          Upload Photo
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAvatarUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Skills */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                      <Star className="w-4 h-4" />
+                      Skills & Expertise
+                    </h4>
+                    <div className="flex gap-2 mb-3">
+                      <input
+                        type="text"
+                        value={newSkill}
+                        onChange={(e) => setNewSkill(e.target.value)}
+                        placeholder="Add a skill"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onKeyPress={(e) => e.key === 'Enter' && handleAddSkill()}
+                      />
+                      <button
+                        onClick={handleAddSkill}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Add
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {newMemberForm.skills.map((skill, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm flex items-center gap-1"
+                        >
+                          {skill}
+                          <button
+                            onClick={() => handleRemoveSkill(index)}
+                            className="hover:bg-blue-200 rounded-full p-0.5"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Education */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                      <Award className="w-4 h-4" />
+                      Education
+                    </h4>
+                    <div className="flex gap-2 mb-3">
+                      <input
+                        type="text"
+                        value={newEducation}
+                        onChange={(e) => setNewEducation(e.target.value)}
+                        placeholder="Add education (e.g., MBA - Harvard Business School)"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onKeyPress={(e) => e.key === 'Enter' && handleAddEducation()}
+                      />
+                      <button
+                        onClick={handleAddEducation}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Add
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {newMemberForm.education.map((edu, index) => (
+                        <div key={index} className="flex items-center justify-between bg-white p-2 rounded">
+                          <span className="text-sm">{edu}</span>
+                          <button
+                            onClick={() => handleRemoveEducation(index)}
+                            className="text-red-600 hover:bg-red-50 rounded p-1"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Certifications */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Certifications
+                    </h4>
+                    <div className="flex gap-2 mb-3">
+                      <input
+                        type="text"
+                        value={newCertification}
+                        onChange={(e) => setNewCertification(e.target.value)}
+                        placeholder="Add certification"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onKeyPress={(e) => e.key === 'Enter' && handleAddCertification()}
+                      />
+                      <button
+                        onClick={handleAddCertification}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Add
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {newMemberForm.certifications.map((cert, index) => (
+                        <div key={index} className="flex items-center justify-between bg-white p-2 rounded">
+                          <span className="text-sm">{cert}</span>
+                          <button
+                            onClick={() => handleRemoveCertification(index)}
+                            className="text-red-600 hover:bg-red-50 rounded p-1"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Previous Roles */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                      <Building className="w-4 h-4" />
+                      Previous Roles
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3">
+                      <input
+                        type="text"
+                        value={newRole.company}
+                        onChange={(e) => setNewRole(prev => ({ ...prev, company: e.target.value }))}
+                        placeholder="Company"
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <input
+                        type="text"
+                        value={newRole.position}
+                        onChange={(e) => setNewRole(prev => ({ ...prev, position: e.target.value }))}
+                        placeholder="Position"
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <input
+                        type="text"
+                        value={newRole.duration}
+                        onChange={(e) => setNewRole(prev => ({ ...prev, duration: e.target.value }))}
+                        placeholder="Duration (e.g., 2020-2023)"
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <button
+                        onClick={handleAddRole}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Add Role
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {newMemberForm.previousRoles.map((role, index) => (
+                        <div key={index} className="flex items-center justify-between bg-white p-3 rounded">
+                          <div>
+                            <div className="font-medium text-sm">{role.position}</div>
+                            <div className="text-xs text-gray-600">{role.company} • {role.duration}</div>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveRole(index)}
+                            className="text-red-600 hover:bg-red-50 rounded p-1"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Achievements */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" />
+                      Key Achievements
+                    </h4>
+                    <div className="flex gap-2 mb-3">
+                      <input
+                        type="text"
+                        value={newAchievement}
+                        onChange={(e) => setNewAchievement(e.target.value)}
+                        placeholder="Add an achievement"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onKeyPress={(e) => e.key === 'Enter' && handleAddAchievement()}
+                      />
+                      <button
+                        onClick={handleAddAchievement}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Add
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {newMemberForm.achievements.map((achievement, index) => (
+                        <div key={index} className="flex items-start justify-between bg-white p-2 rounded">
+                          <span className="text-sm flex-1">{achievement}</span>
+                          <button
+                            onClick={() => handleRemoveAchievement(index)}
+                            className="text-red-600 hover:bg-red-50 rounded p-1 ml-2"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 rounded-b-xl">
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      onClick={() => {
+                        setShowAddMemberModal(false);
+                        resetAddMemberForm();
+                      }}
+                      className="px-6 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSubmitNewMember}
+                      disabled={!newMemberForm.name || !newMemberForm.position || !newMemberForm.email || !newMemberForm.department}
+                      className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                    >
+                      <Save className="w-4 h-4" />
+                      Add Member
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="p-12 text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Adding Team Member</h3>
+                <p className="text-gray-600">Please wait while we add the new team member...</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Enhanced Rejection Modal with Email Functionality */}
       {showRejectModal && selectedMember && (
@@ -830,9 +1351,11 @@ HR Management Team`);
           </div>
         </div>
       )}
+      </div>
     </div>
-    </div> 
+ 
   );
 }
+
 
 export default ManagementTeam;
