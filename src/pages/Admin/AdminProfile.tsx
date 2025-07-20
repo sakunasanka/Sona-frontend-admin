@@ -31,7 +31,7 @@ const AdminProfile: React.FC = () => {
     location: 'Colombo, SL',
     joinDate: '2023-01-15',
     role: 'Senior Administrator', 
-    profilePicture: 'https://images.pexels.com/photos/3777943/pexels-photo-3777943.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
+    profilePicture: '/assets/images/profiles/th.jpg',
     lastLogin: '2024-01-15 14:30:00',
   });
 
@@ -113,7 +113,7 @@ const AdminProfile: React.FC = () => {
 
             {/* Profile Header */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
-              <div className="h-32 bg-gradient-to-r from-blue-600 to-purple-600"></div>
+              <div className="h-32 bg-gradient-to-r from-slate-600 to-slate-800"></div>
               <div className="px-6 pb-6">
                 <div className="flex flex-col md:flex-row items-center md:items-end -mt-16 mb-6">
                   <div className="relative">
@@ -181,11 +181,11 @@ const AdminProfile: React.FC = () => {
               {/* Profile View */}
               {activeTab === 'profile' && (
                 <>
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                     <h2 className="text-xl font-bold text-gray-900 mb-6">Personal Information</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="flex items-center space-x-4">
-                        <div className="bg-blue-100 p-3 rounded-full">
+                      <div className="flex items-start gap-4">
+                        <div className="bg-blue-100 p-3 rounded-xl flex-shrink-0">
                           <Mail className="w-5 h-5 text-blue-600" />
                         </div>
                         <div>
@@ -193,8 +193,8 @@ const AdminProfile: React.FC = () => {
                           <p className="font-semibold">{profile.email}</p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-4">
-                        <div className="bg-green-100 p-3 rounded-full">
+                      <div className="flex items-start gap-4">
+                        <div className="bg-green-100 p-3 rounded-xl flex-shrink-0">
                           <Phone className="w-5 h-5 text-green-600" />
                         </div>
                         <div>
@@ -202,8 +202,8 @@ const AdminProfile: React.FC = () => {
                           <p className="font-semibold">{profile.phone}</p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-4">
-                        <div className="bg-purple-100 p-3 rounded-full">
+                      <div className="flex items-start gap-4">
+                        <div className="bg-purple-100 p-3 rounded-xl flex-shrink-0">
                           <MapPin className="w-5 h-5 text-purple-600" />
                         </div>
                         <div>
@@ -211,8 +211,8 @@ const AdminProfile: React.FC = () => {
                           <p className="font-semibold">{profile.location}</p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-4">
-                        <div className="bg-orange-100 p-3 rounded-full">
+                      <div className="flex items-start gap-4">
+                        <div className="bg-orange-100 p-3 rounded-xl flex-shrink-0">
                           <Calendar className="w-5 h-5 text-orange-600" />
                         </div>
                         <div>
@@ -223,11 +223,11 @@ const AdminProfile: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                     <h2 className="text-xl font-bold text-gray-900 mb-6">Admin Details</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="flex items-center space-x-4">
-                        <div className="bg-gray-100 p-3 rounded-full">
+                      <div className="flex items-start gap-4">
+                        <div className="bg-gray-100 p-3 rounded-xl flex-shrink-0">
                           <User className="w-5 h-5 text-gray-600" />
                         </div>
                         <div>
@@ -235,8 +235,8 @@ const AdminProfile: React.FC = () => {
                           <p className="font-semibold">{profile.id}</p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-4">
-                        <div className="bg-gray-100 p-3 rounded-full">
+                      <div className="flex items-start gap-4">
+                        <div className="bg-gray-100 p-3 rounded-xl flex-shrink-0">
                           <User className="w-5 h-5 text-gray-600" />
                         </div>
                         <div>
@@ -244,8 +244,8 @@ const AdminProfile: React.FC = () => {
                           <p className="font-semibold">{profile.role}</p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-4">
-                        <div className="bg-gray-100 p-3 rounded-full">
+                      <div className="flex items-start gap-4">
+                        <div className="bg-gray-100 p-3 rounded-xl flex-shrink-0">
                           <Calendar className="w-5 h-5 text-gray-600" />
                         </div>
                         <div>
