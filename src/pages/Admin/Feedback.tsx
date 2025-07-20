@@ -27,6 +27,7 @@ import {
   Star,
   Shield
 } from 'lucide-react';
+import { NavBar } from '../../components/layout';
 
 // Types
 interface Feedback {
@@ -790,60 +791,67 @@ function Feedback() {
   );
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
-      
-      <Navbar />
+    <div className="flex flex-col h-screen">
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar - Desktop */}
+        <div className="hidden lg:block">
+          <Sidebar isOpen={true} onClose={closeSidebar} />
+        </div>
+        
+        {/* Main Content */}
+        <div className="flex-1 overflow-auto">
+          <NavBar onMenuClick={() => {}} />
+          <div className="p-4 lg:p-6">
+            <div className="flex-1 overflow-auto">
+              <div className="max-w-7xl mx-auto p-6">
+                <div className="mb-8">
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Feedback Management</h1>
+                  <p className="text-gray-600">Manage and track all feedback including complaints, session feedback, and suggestions.</p>
+                </div>
 
-      <main className="p-3 pt-[4.5rem] bg-white rounded-tl-3xl shadow-md overflow-y-auto"> 
-      <div className="flex-1 overflow-auto">
-        <div className="max-w-7xl mx-auto p-6">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Feedback Management</h1>
-            <p className="text-gray-600">Manage and track all feedback including complaints, session feedback, and suggestions.</p>
-          </div>
-
-          <FeedbackStats feedback={feedback} />
-          <FeedbackFiltersComponent filters={filters} onFiltersChange={setFilters} />
-          
-          <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-6">
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Feedback Items ({filteredAndSortedFeedback.length})
-                </h2>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600 mr-2">Sort by:</span>
-                  <SortButton field="createdAt">Created Date</SortButton>
-                  <SortButton field="updatedAt">Updated Date</SortButton>
-                  <SortButton field="priority">Priority</SortButton>
-                  <SortButton field="status">Status</SortButton>
-                  <SortButton field="rating">Rating</SortButton>
+                <FeedbackStats feedback={feedback} />
+                <FeedbackFiltersComponent filters={filters} onFiltersChange={setFilters} />
+                
+                <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-6">
+                  <div className="p-4 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        Feedback Items ({filteredAndSortedFeedback.length})
+                      </h2>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600 mr-2">Sort by:</span>
+                        <SortButton field="createdAt">Created Date</SortButton>
+                        <SortButton field="updatedAt">Updated Date</SortButton>
+                        <SortButton field="priority">Priority</SortButton>
+                        <SortButton field="status">Status</SortButton>
+                        <SortButton field="rating">Rating</SortButton>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-6">
+                    {filteredAndSortedFeedback.length === 0 ? (
+                      <div className="text-center py-12">
+                        <p className="text-gray-500 text-lg">No feedback items found matching your criteria.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {filteredAndSortedFeedback.map(item => (
+                          <FeedbackItem
+                            key={item.id}
+                            feedback={item}
+                            onStatusChange={handleStatusChange}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <div className="p-6">
-              {filteredAndSortedFeedback.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-500 text-lg">No feedback items found matching your criteria.</p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {filteredAndSortedFeedback.map(item => (
-                    <FeedbackItem
-                      key={item.id}
-                      feedback={item}
-                      onStatusChange={handleStatusChange}
-                    />
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         </div>
       </div>
-      </main>
     </div>
   );
 }

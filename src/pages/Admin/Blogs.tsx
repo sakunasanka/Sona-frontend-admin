@@ -3,10 +3,8 @@ import {
   Eye, CheckCircle, XCircle, Clock, RotateCcw, Calendar, User, Heart, 
   TrendingUp, Filter, Search, X, AlertTriangle, MapPin, Mail, Tag 
 } from 'lucide-react';
-import Sidebar from '../../components/layout/Sidebar' ;
-import Navbar from '../../components/layout/Navbar';
+import { NavBar, Sidebar } from '../../components/layout';
 
-// Types
 interface Author {
   id: string;
   name: string;
@@ -41,13 +39,6 @@ interface BlogPost {
   isPublished: boolean;
 }
 
-interface AdminAction {
-  type: 'approve' | 'reject' | 'revoke';
-  postId: string;
-  reason?: string;
-}
-
-// Mock Data
 const mockAuthors: Author[] = [
   {
     id: '1',
@@ -85,15 +76,7 @@ const mockPosts: BlogPost[] = [
   {
     id: '1',
     title: 'Managing Exam Stress: Tips for Sri Lankan Students',
-    content: `Exams are a stressful time for many students in Sri Lanka. Here are some practical tips to manage anxiety and perform your best:
-
-1. **Plan Ahead**: Create a study schedule and stick to it.
-2. **Take Breaks**: Short breaks help your mind relax and improve focus.
-3. **Talk to Someone**: Share your worries with a trusted adult or counsellor.
-4. **Practice Mindfulness**: Simple breathing exercises can reduce stress.
-5. **Eat Well & Sleep Well**: Healthy habits support mental health.
-
-Remember, your mental wellbeing is just as important as your grades. Reach out for help if you need it.`,
+    content: `Exams are a stressful time for many students in Sri Lanka. Here are some practical tips to manage anxiety and perform your best...`,
     excerpt: 'Practical advice for students in Sri Lanka to cope with exam-related stress and anxiety.',
     author: mockAuthors[1],
     createdAt: '2024-05-01T09:00:00Z',
@@ -110,15 +93,7 @@ Remember, your mental wellbeing is just as important as your grades. Reach out f
   {
     id: '2',
     title: 'How to Support a Friend Facing Depression',
-    content: `Depression is a common mental health challenge in Sri Lanka. If you suspect a friend is struggling:
-
-- Listen without judgment
-- Encourage professional help
-- Avoid giving advice unless asked
-- Check in regularly
-- Educate yourself about depression
-
-Support can make a big difference. If you or someone you know needs help, contact a local counsellor or helpline.`,
+    content: `Depression is a common mental health challenge in Sri Lanka. If you suspect a friend is struggling...`,
     excerpt: 'Learn how to help friends in Sri Lanka who may be experiencing depression.',
     author: mockAuthors[0],
     createdAt: '2024-04-20T14:30:00Z',
@@ -137,14 +112,7 @@ Support can make a big difference. If you or someone you know needs help, contac
   {
     id: '3',
     title: 'Family Counselling: Building Stronger Relationships',
-    content: `Family relationships can be challenging. Counselling helps families in Sri Lanka communicate better and resolve conflicts.
-
-- **Open Communication**: Share feelings honestly.
-- **Respect Differences**: Every family member is unique.
-- **Seek Help Early**: Professional support can prevent bigger issues.
-- **Practice Forgiveness**: Let go of grudges for healthier relationships.
-
-Family counselling is available in Colombo, Kandy, Galle, and online.`,
+    content: `Family relationships can be challenging. Counselling helps families in Sri Lanka communicate better and resolve conflicts...`,
     excerpt: 'Discover how family counselling can strengthen relationships in Sri Lankan families.',
     author: mockAuthors[2],
     createdAt: '2024-03-15T11:00:00Z',
@@ -164,15 +132,7 @@ Family counselling is available in Colombo, Kandy, Galle, and online.`,
   {
     id: '4',
     title: 'Online Counselling: Safe and Confidential Support in Sri Lanka',
-    content: `Online counselling is growing in Sri Lanka, offering privacy and convenience.
-
-**Benefits:**
-- Accessible from anywhere
-- Flexible scheduling
-- Confidential and secure
-- Wide range of counsellors
-
-If you need support, consider booking an online session with a licensed Sri Lankan counsellor.`,
+    content: `Online counselling is growing in Sri Lanka, offering privacy and convenience...`,
     excerpt: 'Explore the benefits of online counselling services available in Sri Lanka.',
     author: mockAuthors[0],
     createdAt: '2024-02-10T16:45:00Z',
@@ -188,11 +148,7 @@ If you need support, consider booking an online session with a licensed Sri Lank
   }
 ];
 
-// Post Card Component - Only shows View button, no approve/reject
-const PostCard: React.FC<{
-  post: BlogPost;
-  onView: (post: BlogPost) => void;
-}> = ({ post, onView }) => {
+const PostCard = ({ post, onView }: { post: BlogPost; onView: (post: BlogPost) => void }) => {
   const getStatusColor = (status: BlogPost['status']) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
@@ -221,7 +177,6 @@ const PostCard: React.FC<{
 
   return (
     <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden group">
-      {/* Featured Image */}
       <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
         <img
           src={post.featuredImage}
@@ -231,9 +186,7 @@ const PostCard: React.FC<{
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
       </div>
 
-      {/* Content */}
       <div className="p-6">
-        {/* Status and Category */}
         <div className="flex items-center justify-between mb-4">
           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(post.status)}`}>
             {getStatusIcon(post.status)}
@@ -244,15 +197,9 @@ const PostCard: React.FC<{
           </span>
         </div>
 
-        {/* Title */}
-        <h3 className="text-md font-bold text-gray-900 mb-3  ">
-          {post.title}
-        </h3>
-
-        {/* Excerpt */}
+        <h3 className="text-md font-bold text-gray-900 mb-3">{post.title}</h3>
         <p className="text-gray-600 text-sm mb-4 line-clamp-3 leading-relaxed">{post.excerpt}</p>
 
-        {/* Author Info */}
         <div className="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
           <img
             src={post.author.avatar}
@@ -268,7 +215,6 @@ const PostCard: React.FC<{
           </div>
         </div>
 
-        {/* Meta Info */}
         <div className="flex items-center gap-4 mb-4 text-xs text-gray-500">
           <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full">
             <TrendingUp className="w-3 h-3" />
@@ -281,7 +227,6 @@ const PostCard: React.FC<{
           <span className="bg-gray-100 px-2 py-1 rounded-full">{post.readTime}</span>
         </div>
 
-        {/* Publication Status */}
         <div className="mb-4">
           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
             post.isPublished ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
@@ -290,7 +235,6 @@ const PostCard: React.FC<{
           </span>
         </div>
 
-        {/* Action Button - Only View */}
         <button
           onClick={() => onView(post)}
           className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 text-sm font-semibold shadow-sm hover:shadow-md"
@@ -303,15 +247,21 @@ const PostCard: React.FC<{
   );
 };
 
-// Post Details Modal Component - Shows approve/reject buttons inside the modal
-const PostDetailsModal: React.FC<{
+const PostDetailsModal = ({ 
+  post, 
+  isOpen, 
+  onClose, 
+  onApprove, 
+  onReject, 
+  onRevoke 
+}: {
   post: BlogPost;
   isOpen: boolean;
   onClose: () => void;
   onApprove: (postId: string) => void;
   onReject: (post: BlogPost) => void;
   onRevoke: (postId: string) => void;
-}> = ({ post, isOpen, onClose, onApprove, onReject, onRevoke }) => {
+}) => {
   if (!isOpen) return null;
 
   const formatDate = (dateString: string) => {
@@ -345,7 +295,6 @@ const PostDetailsModal: React.FC<{
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
       <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[95vh] overflow-y-auto shadow-2xl">
-        {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-start justify-between rounded-t-2xl">
           <div className="flex-1 pr-4">
             <div className="flex items-center gap-4 mb-4">
@@ -373,12 +322,9 @@ const PostDetailsModal: React.FC<{
           </button>
         </div>
 
-        {/* Content */}
         <div className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Main Content */}
             <div className="lg:col-span-3">
-              {/* Featured Image */}
               <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden mb-8 shadow-lg">
                 <img
                   src={post.featuredImage}
@@ -387,14 +333,12 @@ const PostDetailsModal: React.FC<{
                 />
               </div>
 
-              {/* Post Content */}
               <div className="prose prose-lg max-w-none">
                 <div className="whitespace-pre-line text-gray-700 leading-relaxed text-base">
                   {post.content}
                 </div>
               </div>
 
-              {/* Tags */}
               <div className="mt-8 pt-8 border-t border-gray-200">
                 <div className="flex items-center gap-3 mb-4">
                   <Tag className="w-5 h-5 text-gray-500" />
@@ -413,9 +357,7 @@ const PostDetailsModal: React.FC<{
               </div>
             </div>
 
-            {/* Sidebar */}
             <div className="space-y-6">
-              {/* Author Details */}
               <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
                 <h3 className="text-xl font-bold text-gray-900 mb-6">Author Details</h3>
                 <div className="flex items-center gap-4 mb-6">
@@ -449,7 +391,6 @@ const PostDetailsModal: React.FC<{
                 </div>
               </div>
 
-              {/* Post Stats */}
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
                 <h3 className="text-xl font-bold text-gray-900 mb-6">Post Statistics</h3>
                 <div className="space-y-4">
@@ -477,7 +418,6 @@ const PostDetailsModal: React.FC<{
                 </div>
               </div>
 
-              {/* Post Timeline */}
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
                 <h3 className="text-xl font-bold text-gray-900 mb-6">Timeline</h3>
                 <div className="space-y-4">
@@ -520,7 +460,6 @@ const PostDetailsModal: React.FC<{
                 </div>
               </div>
 
-              {/* Rejection Reason - Only shown inside the modal */}
               {post.status === 'rejected' && post.rejectionReason && (
                 <div className="bg-red-50 border border-red-200 rounded-xl p-6">
                   <h3 className="text-xl font-bold text-red-800 mb-4 flex items-center gap-2">
@@ -536,7 +475,6 @@ const PostDetailsModal: React.FC<{
           </div>
         </div>
 
-        {/* Action Buttons - Only shown inside the modal */}
         <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 rounded-b-2xl">
           <div className="flex gap-4 justify-end">
             <button
@@ -590,13 +528,17 @@ const PostDetailsModal: React.FC<{
   );
 };
 
-// Reject Modal Component
-const RejectModal: React.FC<{
+const RejectModal = ({ 
+  post, 
+  isOpen, 
+  onClose, 
+  onSubmit 
+}: {
   post: BlogPost;
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (reason: string) => void;
-}> = ({ post, isOpen, onClose, onSubmit }) => {
+}) => {
   const [reason, setReason] = useState('');
   const [selectedReason, setSelectedReason] = useState('');
 
@@ -631,7 +573,6 @@ const RejectModal: React.FC<{
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
       <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-red-100 rounded-full">
@@ -650,16 +591,13 @@ const RejectModal: React.FC<{
           </button>
         </div>
 
-        {/* Content */}
         <form onSubmit={handleSubmit} className="p-6">
-          {/* Post Info */}
           <div className="mb-6 p-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
             <h3 className="font-bold text-gray-900 mb-2 text-lg">{post.title}</h3>
             <p className="text-sm text-gray-600 mb-2">By {post.author.name}</p>
             <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">{post.excerpt}</p>
           </div>
 
-          {/* Warning */}
           <div className="mb-6 p-6 bg-yellow-50 border border-yellow-200 rounded-xl">
             <div className="flex items-start gap-4">
               <AlertTriangle className="w-6 h-6 text-yellow-600 mt-0.5 flex-shrink-0" />
@@ -672,7 +610,6 @@ const RejectModal: React.FC<{
             </div>
           </div>
 
-          {/* Quick Reasons */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-700 mb-4">
               Select a common reason (optional)
@@ -695,7 +632,6 @@ const RejectModal: React.FC<{
             </div>
           </div>
 
-          {/* Custom Reason */}
           <div className="mb-6">
             <label htmlFor="custom-reason" className="block text-sm font-semibold text-gray-700 mb-3">
               {selectedReason ? 'Add additional details (optional)' : 'Custom reason'}
@@ -710,7 +646,6 @@ const RejectModal: React.FC<{
             />
           </div>
 
-          {/* Selected Reason Preview */}
           {selectedReason && (
             <div className="mb-6 p-6 bg-red-50 border border-red-200 rounded-xl">
               <p className="text-sm font-semibold text-red-800 mb-3">Selected reason:</p>
@@ -728,7 +663,6 @@ const RejectModal: React.FC<{
             </div>
           )}
 
-          {/* Action Buttons */}
           <div className="flex gap-4 justify-end">
             <button
               type="button"
@@ -752,8 +686,7 @@ const RejectModal: React.FC<{
   );
 };
 
-// Main Blog Admin Component
-export const CompleteBlogAdmin: React.FC = () => {
+const BlogAdmin = () => {
   const [posts, setPosts] = useState<BlogPost[]>(mockPosts);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -761,8 +694,17 @@ export const CompleteBlogAdmin: React.FC = () => {
   const [postToReject, setPostToReject] = useState<BlogPost | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleAction = (action: AdminAction) => {
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+  };
+
+  const handleAction = (action: { type: 'approve' | 'reject' | 'revoke'; postId: string; reason?: string }) => {
     setPosts(prevPosts => 
       prevPosts.map(post => {
         if (post.id === action.postId) {
@@ -850,153 +792,140 @@ export const CompleteBlogAdmin: React.FC = () => {
       pending: posts.filter(p => p.status === 'pending').length,
       approved: posts.filter(p => p.status === 'approved').length,
       rejected: posts.filter(p => p.status === 'rejected').length,
-      published: posts.filter(p => p.isPublished).length
     };
   };
 
   const statusCounts = getStatusCounts();
 
-   // Sidebar state
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    const closeSidebar = () => setSidebarOpen(false);
   return (
-<div className=" h-screen w-screen bg-gradient-to-br from-gray-50 to-blue-50 flex ">
-      {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} onClose={closeSidebar}/>
-      <Navbar />
-
-      <main className="p-3 pt-[4.5rem] bg-white rounded-tl-3xl shadow-md overflow-y-auto"> 
-
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-y-auto flex-1">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-9  ">
-          <h1 className="text-2xl font-bold text-gray-900 mb-3   ">
-            Blog Admin Dashboard
-          </h1>
-          <p className="text-gray-600 text-lg">Review and approve blog posts before publication</p>
+    <div className="flex flex-col h-screen">
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar - Desktop */}
+        <div className="hidden lg:block">
+          <Sidebar isOpen={true} onClose={closeSidebar} />
         </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-            <div className="flex items-center">
-              <div className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg">
-                <Filter className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-semibold text-gray-600">Total Posts</p>
-                <p className="text-3xl font-bold text-gray-900">{statusCounts.all}</p>
-              </div>
-            </div>
-          </div>
+        
+        {/* Main Content */}
+        <div className="flex-1 overflow-auto">
+          <NavBar onMenuClick={toggleSidebar} />
           
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-            <div className="flex items-center">
-              <div className="p-3 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl shadow-lg">
-                <Clock className="w-6 h-6 text-white" />
+          <div className="p-4 lg:p-6">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Blog Management</h1>
+                <p className="text-gray-600 mt-1">Review and approve counseling blog posts</p>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-semibold text-gray-600">Pending</p>
-                <p className="text-3xl font-bold text-gray-900">{statusCounts.pending}</p>
+              <div className="flex items-center gap-3 mt-4 md:mt-0">
+                <div className="relative">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value as any)}
+                    className="appearance-none px-4 py-2 pr-8 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <option value="all">All Posts</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    {/* Replace with a down arrow SVG to fix missing ChevronDown */}
+                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="relative">
+                  {/* Replace with a search icon SVG to fix missing Search */}
+                  <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Search posts..."
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-            <div className="flex items-center">
-              <div className="p-3 bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg">
-                <CheckCircle className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-semibold text-gray-600">Approved</p>
-                <p className="text-3xl font-bold text-gray-900">{statusCounts.approved}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-            <div className="flex items-center">
-              <div className="p-3 bg-gradient-to-r from-red-500 to-red-600 rounded-xl shadow-lg">
-                <XCircle className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-semibold text-gray-600">Rejected</p>
-                <p className="text-3xl font-bold text-gray-900">{statusCounts.rejected}</p>
-              </div>
-            </div>
-          </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-            <div className="flex items-center">
-              <div className="p-3 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg">
-                <TrendingUp className="w-6 h-6 text-white" />
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white shadow rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-500">Total Posts</p>
+                    <p className="text-3xl font-semibold mt-2">{statusCounts.all}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-blue-100">
+                    <Filter className="w-6 h-6 text-blue-600" />
+                  </div>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-semibold text-gray-600">Published</p>
-                <p className="text-3xl font-bold text-gray-900">{statusCounts.published}</p>
+              
+              <div className="bg-white shadow rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-500">Pending</p>
+                    <p className="text-3xl font-semibold mt-2">{statusCounts.pending}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-yellow-100">
+                    <Clock className="w-6 h-6 text-yellow-600" />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white shadow rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-500">Approved</p>
+                    <p className="text-3xl font-semibold mt-2">{statusCounts.approved}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-green-100">
+                    <CheckCircle className="w-6 h-6 text-green-600" />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white shadow rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-500">Rejected</p>
+                    <p className="text-3xl font-semibold mt-2">{statusCounts.rejected}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-red-100">
+                    <XCircle className="w-6 h-6 text-red-600" />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Filters */}
-        <div className="bg-red-100 rounded-xl shadow-lg p-6 mb-8 border border-gray-100">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search posts or authors..."
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+            {/* Posts Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredPosts.map((post) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  onView={handleViewPost}
                 />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              {(['all', 'pending', 'approved', 'rejected'] as const).map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setStatusFilter(status)}
-                  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
-                    statusFilter === status
-                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-md'
-                  }`}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                  {status !== 'all' && <span className="ml-2 px-2 py-1 bg-white bg-opacity-20 rounded-full text-xs">
-                    {statusCounts[status]}
-                  </span>}
-                </button>
               ))}
             </div>
+
+            {/* Empty State */}
+            {filteredPosts.length === 0 && (
+              <div className="text-center py-16">
+                <div className="text-gray-400 mb-6">
+                  <Search className="w-16 h-16 mx-auto" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">No posts found</h3>
+                <p className="text-gray-600">Try adjusting your search or filter criteria</p>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Posts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-          {filteredPosts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              onView={handleViewPost}
-            />
-          ))}
-        </div>
-
-        {/* Empty State */}
-        {filteredPosts.length === 0 && (
-          <div className="text-center py-16">
-            <div className="text-gray-400 mb-6">
-              <Search className="w-16 h-16 mx-auto" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">No posts found</h3>
-            <p className="text-gray-600 text-lg">Try adjusting your search or filter criteria</p>
-          </div>
-        )}
       </div>
 
       {/* Modals */}
@@ -1026,468 +955,7 @@ export const CompleteBlogAdmin: React.FC = () => {
         />
       )}
     </div>
-    </main>
-    </div>
   );
 };
 
-function Blogs() {
-  return (
-    <div className="min-h-screen">
-      <CompleteBlogAdmin />
-    </div>
-  );
-}
-
-export default Blogs;
-
-// import React, { useState } from 'react';
-// import { 
-//   Eye, CheckCircle, XCircle, Clock, RotateCcw, Calendar, User, Heart, 
-//   TrendingUp, Filter, Search, X, AlertTriangle, MapPin, Mail, Tag, EyeOff 
-// } from 'lucide-react';
-
-// // Types
-// interface Author {
-//   id: string;
-//   name: string;
-//   email: string;
-//   avatar: string;
-//   bio: string;
-//   joinDate: string;
-//   totalPosts: number;
-//   location: string;
-// }
-
-// interface BlogPost {
-//   id: string;
-//   title: string;
-//   content: string;
-//   excerpt: string;
-//   author: Author;
-//   createdAt: string;
-//   updatedAt: string;
-//   status: 'pending' | 'approved' | 'rejected';
-//   category: string;
-//   tags: string[];
-//   featuredImage: string;
-//   readTime: string;
-//   rejectionReason?: string;
-//   approvedBy?: string;
-//   approvedAt?: string;
-//   rejectedBy?: string;
-//   rejectedAt?: string;
-//   viewCount: number;
-//   likes: number;
-//   isPublished: boolean;
-//   viewedByAdmin: boolean;
-//   adminViewedAt?: string;
-// }
-
-// interface AdminAction {
-//   type: 'approve' | 'reject' | 'revoke' | 'view';
-//   postId: string;
-//   reason?: string;
-// }
-
-// // Mock Data
-// const mockAuthors: Author[] = [
-//   {
-//     id: '1',
-//     name: 'John Smith',
-//     email: 'john.smith@example.com',
-//     avatar: 'https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-//     bio: 'Tech enthusiast and full-stack developer with 5 years of experience in React and Node.js.',
-//     joinDate: '2023-01-15',
-//     totalPosts: 24,
-//     location: 'San Francisco, CA'
-//   },
-//   {
-//     id: '2',
-//     name: 'Sarah Johnson',
-//     email: 'sarah.johnson@example.com',
-//     avatar: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-//     bio: 'UI/UX designer passionate about creating intuitive user experiences.',
-//     joinDate: '2023-03-20',
-//     totalPosts: 18,
-//     location: 'New York, NY'
-//   },
-//   {
-//     id: '3',
-//     name: 'Michael Chen',
-//     email: 'michael.chen@example.com',
-//     avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-//     bio: 'Data scientist and machine learning engineer with expertise in Python and AI.',
-//     joinDate: '2023-02-10',
-//     totalPosts: 31,
-//     location: 'Seattle, WA'
-//   }
-// ];
-
-// const mockPosts: BlogPost[] = [
-//   // ... (same as above, omitted for brevity)
-// ];
-
-// // PostCard, PostDetailsModal, RejectModal components (same as above, omitted for brevity)
-
-// // Minimal PostCard implementation
-// interface PostCardProps {
-//   post: BlogPost;
-//   onView: (post: BlogPost) => void;
-//   onApprove: (postId: string) => void;
-//   onReject: (post: BlogPost) => void;
-//   onRevoke: (postId: string) => void;
-// }
-
-// const PostCard: React.FC<PostCardProps> = ({ post, onView, onApprove, onReject, onRevoke }) => {
-//   return (
-//     <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 flex flex-col justify-between h-full">
-//       <div>
-//         <img src={post.featuredImage} alt={post.title} className="w-full h-40 object-cover rounded-lg mb-4" />
-//         <h2 className="text-xl font-bold mb-2">{post.title}</h2>
-//         <p className="text-gray-600 mb-2">{post.excerpt}</p>
-//         <div className="flex items-center gap-2 mb-2">
-//           <User className="w-4 h-4 text-gray-400" />
-//           <span className="text-sm text-gray-700">{post.author.name}</span>
-//         </div>
-//         <div className="flex items-center gap-2 mb-2">
-//           <Calendar className="w-4 h-4 text-gray-400" />
-//           <span className="text-sm text-gray-700">{new Date(post.createdAt).toLocaleDateString()}</span>
-//         </div>
-//         <div className="flex items-center gap-2 mb-2">
-//           <Tag className="w-4 h-4 text-gray-400" />
-//           <span className="text-sm text-gray-700">{post.category}</span>
-//         </div>
-//         <div className="flex items-center gap-2 mb-2">
-//           <Eye className="w-4 h-4 text-gray-400" />
-//           <span className="text-sm text-gray-700">{post.viewCount} views</span>
-//         </div>
-//         <div className="flex items-center gap-2 mb-2">
-//           <Heart className="w-4 h-4 text-gray-400" />
-//           <span className="text-sm text-gray-700">{post.likes} likes</span>
-//         </div>
-//         <div className="flex items-center gap-2 mb-2">
-//           <Clock className="w-4 h-4 text-gray-400" />
-//           <span className="text-sm text-gray-700">{post.readTime} read</span>
-//         </div>
-//         <div className="flex items-center gap-2 mb-2">
-//           {post.status === 'pending' && <Clock className="w-4 h-4 text-yellow-500" />}
-//           {post.status === 'approved' && <CheckCircle className="w-4 h-4 text-green-500" />}
-//           {post.status === 'rejected' && <XCircle className="w-4 h-4 text-red-500" />}
-//           <span className={`text-sm font-semibold ${
-//             post.status === 'pending' ? 'text-yellow-600' :
-//             post.status === 'approved' ? 'text-green-600' :
-//             'text-red-600'
-//           }`}>
-//             {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
-//           </span>
-//         </div>
-//       </div>
-//       <div className="flex gap-2 mt-4">
-//         <button
-//           className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold"
-//           onClick={() => onView(post)}
-//         >
-//           View
-//         </button>
-//         {post.status === 'pending' && (
-//           <>
-//             <button
-//               className="px-4 py-2 rounded-lg bg-green-600 text-white font-semibold"
-//               onClick={() => onApprove(post.id)}
-//             >
-//               Approve
-//             </button>
-//             <button
-//               className="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold"
-//               onClick={() => onReject(post)}
-//             >
-//               Reject
-//             </button>
-//           </>
-//         )}
-//         {post.status === 'approved' && (
-//           <button
-//             className="px-4 py-2 rounded-lg bg-yellow-500 text-white font-semibold"
-//             onClick={() => onRevoke(post.id)}
-//           >
-//             Revoke
-//           </button>
-//         )}
-//       </div>
-//     </div>
-// };
-
-// // Minimal RejectModal implementation
-// interface RejectModalProps {
-//   post: BlogPost;
-//   isOpen: boolean;
-//   onClose: () => void;
-//   onSubmit: (reason: string) => void;
-// }
-
-// const RejectModal = ({ post, isOpen, onClose, onSubmit }: RejectModalProps) => {
-//   const [reason, setReason] = useState<string>('');
-//   if (!isOpen) return null;
-//   return (
-//     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-//       <div className="bg-white rounded-xl shadow-xl p-8 w-full max-w-md">
-//         <h2 className="text-xl font-bold mb-4">Reject Post</h2>
-//         <p className="mb-2">Please provide a reason for rejecting <span className="font-semibold">{post.title}</span>:</p>
-//         <textarea
-//           className="w-full border border-gray-300 rounded-lg p-2 mb-4"
-//           rows={4}
-//           value={reason}
-//           onChange={e => setReason(e.target.value)}
-//           placeholder="Enter rejection reason..."
-//         />
-//         <div className="flex justify-end gap-2">
-//           <button
-//             className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700"
-//             onClick={onClose}
-//           >
-//             Cancel
-//           </button>
-//           <button
-//             className="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold"
-//             onClick={() => {
-//               onSubmit(reason);
-//               setReason('');
-//             }}
-//             disabled={!reason.trim()}
-//           >
-//             Reject
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// // Main Blog Admin Component
-// const Blogs: React.FC = () => {
-//   const [posts, setPosts] = useState<BlogPost[]>(mockPosts);
-//   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
-//   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-//   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
-//   const [postToReject, setPostToReject] = useState<BlogPost | null>(null);
-//   const [searchTerm, setSearchTerm] = useState('');
-//   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
-
-//   const handleAction = (action: AdminAction) => {
-//     setPosts(prevPosts => 
-//       prevPosts.map(post => {
-//         if (post.id === action.postId) {
-//           const now = new Date().toISOString();
-//           switch (action.type) {
-//             case 'approve':
-//               return {
-//                 ...post,
-//                 status: 'approved' as const,
-//                 approvedBy: 'Admin',
-//                 approvedAt: now,
-//                 rejectionReason: undefined,
-//                 rejectedBy: undefined,
-//                 rejectedAt: undefined,
-//                 isPublished: true
-//               };
-//             case 'reject':
-//               return {
-//                 ...post,
-//                 status: 'rejected' as const,
-//                 rejectionReason: action.reason,
-//                 rejectedBy: 'Admin',
-//                 rejectedAt: now,
-//                 approvedBy: undefined,
-//                 approvedAt: undefined,
-//                 isPublished: false
-//               };
-//             case 'revoke':
-//               return {
-//                 ...post,
-//                 status: 'pending' as const,
-//                 approvedBy: undefined,
-//                 approvedAt: undefined,
-//                 rejectedBy: undefined,
-//                 rejectedAt: undefined,
-//                 rejectionReason: undefined,
-//                 isPublished: false
-//               };
-//             case 'view':
-//               return {
-//                 ...post,
-//                 viewedByAdmin: true,
-//                 adminViewedAt: now
-//               };
-//             default:
-//               return post;
-//           }
-//         }
-//         return post;
-//       })
-//     );
-//   };
-
-//   const handleViewPost = (post: BlogPost) => {
-//     setSelectedPost(post);
-//     setIsDetailsModalOpen(true);
-//   };
-
-//   const handleMarkAsViewed = (postId: string) => {
-//     handleAction({ type: 'view', postId });
-//   };
-
-//   const handleApprove = (postId: string) => {
-//     handleAction({ type: 'approve', postId });
-//   };
-
-//   const handleReject = (post: BlogPost) => {
-//     setPostToReject(post);
-//     setIsRejectModalOpen(true);
-//   };
-
-//   const handleRejectSubmit = (reason: string) => {
-//     if (postToReject) {
-//       handleAction({ type: 'reject', postId: postToReject.id, reason });
-//       setIsRejectModalOpen(false);
-//       setPostToReject(null);
-//     }
-//   };
-
-//   const handleRevoke = (postId: string) => {
-//     handleAction({ type: 'revoke', postId });
-//   };
-
-//   const filteredPosts = posts.filter(post => {
-//     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//                          post.author.name.toLowerCase().includes(searchTerm.toLowerCase());
-//     const matchesStatus = statusFilter === 'all' || post.status === statusFilter;
-//     return matchesSearch && matchesStatus;
-//   });
-
-//   const getStatusCounts = () => {
-//     return {
-//       all: posts.length,
-//       pending: posts.filter(p => p.status === 'pending').length,
-//       approved: posts.filter(p => p.status === 'approved').length,
-//       rejected: posts.filter(p => p.status === 'rejected').length,
-//       published: posts.filter(p => p.isPublished).length,
-//       unviewed: posts.filter(p => !p.viewedByAdmin && p.status === 'pending').length
-//     };
-//   };
-
-//   const statusCounts = getStatusCounts();
-
-//   return (
-//     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-//       <div className="max-w-7xl mx-auto px-4 py-8">
-//         {/* Header */}
-//         <div className="mb-8 text-center">
-//           <h1 className="text-4xl font-bold text-gray-900 mb-3 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-//             Blog Admin Dashboard
-//           </h1>
-//           <p className="text-gray-600 text-lg">Review and approve blog posts before publication</p>
-//         </div>
-
-//         {/* Stats Cards */}
-//         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-//           {/* ...stats cards as above... */}
-//         </div>
-
-//         {/* Filters */}
-//         <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-100">
-//           <div className="flex flex-col md:flex-row gap-4">
-//             <div className="flex-1">
-//               <div className="relative">
-//                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-//                 <input
-//                   type="text"
-//                   placeholder="Search posts or authors..."
-//                   className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
-//                   value={searchTerm}
-//                   onChange={(e) => setSearchTerm(e.target.value)}
-//                 />
-//               </div>
-//             </div>
-//             <div className="flex gap-2">
-//               {(['all', 'pending', 'approved', 'rejected'] as const).map((status) => (
-//                 <button
-//                   key={status}
-//                   onClick={() => setStatusFilter(status)}
-//                   className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
-//                     statusFilter === status
-//                       ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
-//                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-md'
-//                   }`}
-//                 >
-//                   {status.charAt(0).toUpperCase() + status.slice(1)}
-//                   {status !== 'all' && (
-//                     <span className="ml-2 px-2 py-1 bg-white bg-opacity-20 rounded-full text-xs">
-//                       {statusCounts[status as keyof typeof statusCounts]}
-//                     </span>
-//                   )}
-//                 </button>
-//               ))}
-//             </div>
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Posts Grid */}
-//         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-//           {filteredPosts.map((post) => (
-//             <PostCard
-//               key={post.id}
-//               post={post}
-//               onView={handleViewPost}
-//               onApprove={handleApprove}
-//               onReject={handleReject}
-//               onRevoke={handleRevoke}
-//             />
-//           ))}
-//         </div>
-
-//         {/* Empty State */}
-//         {filteredPosts.length === 0 && (
-//           <div className="text-center py-16">
-//             <div className="text-gray-400 mb-6">
-//               <Search className="w-16 h-16 mx-auto" />
-//             </div>
-//             <h3 className="text-2xl font-bold text-gray-900 mb-3">No posts found</h3>
-//             <p className="text-gray-600">Try adjusting your search or filter criteria.</p>
-//           </div>
-//         )}
-
-//         {/* Details Modal */}
-//         {selectedPost && (
-//           <PostDetailsModal
-//             post={selectedPost}
-//             isOpen={isDetailsModalOpen}
-//             onClose={() => setIsDetailsModalOpen(false)}
-//             onApprove={handleApprove}
-//             onReject={handleReject}
-//             onRevoke={handleRevoke}
-//             onMarkAsViewed={handleMarkAsViewed}
-//           />
-//         )}
-
-//         {/* Reject Modal */}
-//         {postToReject && (
-//           <RejectModal
-//             post={postToReject}
-//             isOpen={isRejectModalOpen}
-//             onClose={() => {
-//               setIsRejectModalOpen(false);
-//               setPostToReject(null);
-//             }}
-//             onSubmit={handleRejectSubmit}
-//           />
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Blogs;
-
-  
+export default BlogAdmin;

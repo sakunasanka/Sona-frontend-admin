@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/layout/Navbar';
 import Sidebar from '../../components/layout/Sidebar';
-import CounsellorFilter  from '../../components/ui/CounsellorFilter';
+import CounsellorFilter from '../../components/ui/CounsellorFilter';
 import CounsellorTable from '../../components/ui/CounsellorTable';
 import StatusTabs from '../../components/ui/StatusTabs';
 import CounsellorReviewModal from '../../components/Modals/CounsellorReviewModal'; 
@@ -26,6 +26,7 @@ export interface CounsellorFilters {
     category: 'all' | 'clinical' | 'family' | 'career' | 'addiction' | 'trauma';
     experience: 'all' | 'junior' | 'mid' | 'senior';
 }
+
 // Mock data for counsellor registrations
 const mockCounsellors: Counsellor[] = [
   {
@@ -145,7 +146,7 @@ const CounsellorManagement = () => {
     experience: 'all'
   });
 
-    // Sidebar state
+  // Sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const closeSidebar = () => setSidebarOpen(false);
 
@@ -226,79 +227,80 @@ const CounsellorManagement = () => {
   };
 
   return (
-    <div className=" h-screen w-screen bg-gradient-to-br from-gray-50 to-blue-50 flex">
-      {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} onClose={closeSidebar}/>
+    <div className="flex flex-col h-screen">
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar - Desktop */}
+        <div className={`fixed inset-y-0 left-0 z-50 lg:static lg:block ${sidebarOpen ? 'block' : 'hidden'}`}>
+          <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
+        </div>
+        
+        {/* Main Content */}
+        <div className="flex-1 overflow-auto">
+          <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+          
+          <div className="p-4 lg:p-6">
+            <CounsellorFilter onSearch={handleSearch} onFilterChange={handleFilterChange} />
 
-      
-      <main className=" w-10/12 mx-auto">
-
-       <Navbar />
-
-      <main className="p-3 pt-[4.5rem] bg-white rounded-tl-3xl w-full shadow-md overflow-y-auto">  
-       
-      <CounsellorFilter onSearch={handleSearch} onFilterChange={handleFilterChange} />
-
-        <div className="px-6 py-6">
-          {/* Header */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Counsellor Registration Management</h1>
-                <p className="text-gray-600 mt-1">
-                  {filteredCounsellors.length} counsellor{filteredCounsellors.length !== 1 ? 's' : ''} found
-                </p>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-4 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                    <span className="text-gray-600">
-                      {counsellors.filter(c => c.status === 'pending').length} Pending
-                    </span>
+            <div className="px-6 py-6">
+              {/* Header */}
+              <div className="mb-6">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Counsellor Registration Management</h1>
+                    <p className="text-gray-600 mt-1">
+                      {filteredCounsellors.length} counsellor{filteredCounsellors.length !== 1 ? 's' : ''} found
+                    </p>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                    <span className="text-gray-600">
-                      {counsellors.filter(c => c.status === 'approved').length} Approved
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                    <span className="text-gray-600">
-                      {counsellors.filter(c => c.status === 'rejected').length} Rejected
-                    </span>
+                  
+                  <div className="flex items-center space-x-4 mt-4 lg:mt-0">
+                    <div className="flex items-center space-x-4 text-sm">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                        <span className="text-gray-600">
+                          {counsellors.filter(c => c.status === 'pending').length} Pending
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                        <span className="text-gray-600">
+                          {counsellors.filter(c => c.status === 'approved').length} Approved
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                        <span className="text-gray-600">
+                          {counsellors.filter(c => c.status === 'rejected').length} Rejected
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Status Tabs */}
-            <StatusTabs
-              activeStatus={activeStatus}
-              onStatusChange={setActiveStatus}
-              counts={getStatusCounts()}
-            />
+                {/* Status Tabs */}
+                <StatusTabs
+                  activeStatus={activeStatus}
+                  onStatusChange={setActiveStatus}
+                  counts={getStatusCounts()}
+                />
+              </div>
+              
+              {/* Table */}
+              <CounsellorTable
+                counsellors={filteredCounsellors}
+                onReview={handleReview}
+              />
+            </div>
           </div>
-          
-          {/* Table */}
-          <CounsellorTable
-            counsellors={filteredCounsellors}
-            onReview={handleReview}
+
+          {/* Review Modal */}
+          <CounsellorReviewModal
+            counsellor={selectedCounsellor}
+            isOpen={isReviewModalOpen}
+            onClose={handleCloseModal}
+            onStatusUpdate={handleStatusUpdate}
           />
         </div>
-      </main>
-
-      {/* Review Modal */}
-      <CounsellorReviewModal
-        counsellor={selectedCounsellor}
-        isOpen={isReviewModalOpen}
-        onClose={handleCloseModal}
-        onStatusUpdate={handleStatusUpdate}
-      />
-
-      </main>
+      </div>
     </div>
   );
 };
