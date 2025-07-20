@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Users, MessageCircle, FileText, LogOut, User, Grid2X2, ChartAreaIcon, BookOpen as Blog, ChevronDown, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Users, MessageCircle, FileText, LogOut, User, Grid2X2, ChartAreaIcon, BookOpen as Blog, ChevronDown, ChevronRight, Calendar } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -10,7 +10,7 @@ interface SidebarProps {
   onExpandBeforeNavigation?: (href: string) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ 
+const MTSidebar: React.FC<SidebarProps> = ({ 
   isOpen, 
   onClose, 
   isMinimized = false, 
@@ -26,22 +26,23 @@ const Sidebar: React.FC<SidebarProps> = ({
     { icon: User, label: 'Profile', href: '/admin-profile', id: 'profile' },
     { icon: ChartAreaIcon, label: 'Analytics', href: '/admin-analytics', id: 'analytics' },
     { 
-      icon: Users, 
-      label: 'Users', 
-      href: '#', 
-      id: 'users',
-      isDropdown: true,
-      subItems: [
-        { label: 'Clients', href: '/client', id: 'client' },
-        { label: 'Psychiatrists', href: '/psychiatrist', id: 'psychatrists' },
-        { label: 'Management Team', href: '/management-team', id: 'management_team' },
-        { label: 'Counsellors', href: '/counsellor', id: 'counsellors' },
-      ]
+          icon: Users, 
+          label: 'Users', 
+          href: '#', 
+          id: 'users',
+          isDropdown: true,
+          subItems: [
+            { label: 'Clients', href: '/client', id: 'client' },
+            { label: 'Psychiatrists', href: '/psychiatrist', id: 'psychatrists' },
+            { label: 'Management Team', href: '/management-team', id: 'management_team' },
+            { label: 'Counsellors', href: '/counsellor', id: 'counsellors' },
+          ]
     },
-    { icon: Blog, label: 'Blogs', href: '/blogs', id: 'blogs' },
+    {icon:  Blog, label:'Blogs', href:'/blogs', id: 'blogs'},
+    { icon: Calendar, label: 'Calendar', href: '/calendar', id: 'calendar' },
     { icon: MessageCircle, label: 'Message', href: '/message', id: 'messages' },
     { icon: FileText, label: 'Reports', href: '/reports', id: 'reports' },
-    { icon: MessageCircle, label: 'Feedback', href: '/feedback', id: 'feedback' },
+   
   ];
 
   const handleItemClick = (item: any) => {
@@ -94,7 +95,6 @@ const Sidebar: React.FC<SidebarProps> = ({
       )}
    
       {/* Sidebar */}
-      
       <div className={`
         h-screen bg-[#FFE9EF] flex flex-col transition-all duration-500 ease-in-out
         fixed top-0 left-0 z-50 lg:relative lg:z-auto  
@@ -117,7 +117,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               <ArrowLeft size={20} className="text-gray-600" />
             </button>
             <img
-              src="/assets/images/Sona.jpg"
+              src="/assets/images/th.jpg"
               alt="Sona Logo"
               className="h-8 w-auto ml-3"
             />
@@ -126,14 +126,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Menu Items */}
         <nav className={`py-12 ${isMinimized ? 'px-2' : 'px-4'} flex-1 flex flex-col transition-all duration-500 ease-in-out`}>
-          <div className="text-center mb-4">
-        <img
-          src="public/assets/images/Sona.png" 
-          alt="SONA Logo"
-          className="mx-auto w-32 h-auto"
-        />
-      </div>
-
           <ul className="space-y-2">
             {menuItems.map((item, index) => {
               const IconComponent = item.icon;
@@ -246,5 +238,22 @@ const Sidebar: React.FC<SidebarProps> = ({
     </>
   );
 }
+ 
 
-export default Sidebar;
+export default MTSidebar;
+
+// import React from 'react';
+
+// interface SidebarProps {
+//   children: React.ReactNode;
+//   className?: string;
+// }
+
+// const Sidebar: React.FC<SidebarProps> = ({ children, className = '' }) => (
+//   <aside className={`w-64 bg-white border-r border-border p-4 ${className}`}>
+//     {children}
+//   </aside>
+// );
+
+// export default Sidebar;
+
