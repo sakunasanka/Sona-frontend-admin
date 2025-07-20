@@ -1,6 +1,30 @@
 import React, { useState } from 'react';
 import { NavBar, Sidebar } from '../../components/layout';
-import { Search, Filter, Eye, Check, X, Mail, AlertCircle, CheckCircle, XCircle, User, Phone, Calendar, MapPin, GraduationCap, Clock, BookOpen, CreditCard, DollarSign, FileText } from 'lucide-react';
+import { 
+  Search, 
+  Filter, 
+  Eye, 
+  Check, 
+  X, 
+  Mail, 
+  AlertCircle, 
+  CheckCircle, 
+  XCircle, 
+  User, 
+  Phone, 
+  Calendar, 
+  MapPin, 
+  GraduationCap, 
+  Clock, 
+  BookOpen, 
+  CreditCard, 
+  DollarSign, 
+  FileText,
+  ChevronDown,
+  ChevronUp,
+  ArrowRight
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface Client {
   id: string;
@@ -23,12 +47,14 @@ interface Client {
     verificationDocument?: string;
     rejectionReason?: string;
   };
-  subscriptionType: 'free' | 'basic' | 'premium' | 'student';
+  clientType: 'regular' | 'student';
   sessionsCompleted: number;
   totalSpent: number;
+  subscriptionType?: string;
 }
 
 const Client: React.FC = () => {
+  const navigate = useNavigate();
   const [clients, setClients] = useState<Client[]>([
     {
       id: '1',
@@ -40,7 +66,7 @@ const Client: React.FC = () => {
       age: 28,
       location: 'Los Angeles, CA',
       bio: 'Working professional seeking therapy for work-life balance and stress management.',
-      subscriptionType: 'premium',
+      clientType: 'regular',
       sessionsCompleted: 12,
       totalSpent: 480,
       studentPackage: {
@@ -58,7 +84,7 @@ const Client: React.FC = () => {
       age: 21,
       location: 'Los Angeles, CA',
       bio: 'College student dealing with academic stress and anxiety.',
-      subscriptionType: 'student',
+      clientType: 'student',
       sessionsCompleted: 8,
       totalSpent: 120,
       studentPackage: {
@@ -81,7 +107,7 @@ const Client: React.FC = () => {
       age: 22,
       location: 'Palo Alto, CA',
       bio: 'Graduate student working on thesis and managing academic pressure.',
-      subscriptionType: 'basic',
+      clientType: 'regular',
       sessionsCompleted: 4,
       totalSpent: 160,
       studentPackage: {
@@ -104,7 +130,7 @@ const Client: React.FC = () => {
       age: 35,
       location: 'San Francisco, CA',
       bio: 'Parent seeking family therapy and parenting guidance.',
-      subscriptionType: 'basic',
+      clientType: 'regular',
       sessionsCompleted: 6,
       totalSpent: 240,
       studentPackage: {
@@ -122,7 +148,7 @@ const Client: React.FC = () => {
       age: 20,
       location: 'Los Angeles, CA',
       bio: 'Undergraduate student dealing with social anxiety and relationship issues.',
-      subscriptionType: 'free',
+      clientType: 'student',
       sessionsCompleted: 2,
       totalSpent: 0,
       studentPackage: {
@@ -146,7 +172,7 @@ const Client: React.FC = () => {
       age: 42,
       location: 'Oakland, CA',
       bio: 'Professional seeking therapy for career transitions and personal growth.',
-      subscriptionType: 'premium',
+      clientType: 'student',
       sessionsCompleted: 15,
       totalSpent: 750,
       studentPackage: {
@@ -164,7 +190,7 @@ const Client: React.FC = () => {
       age: 23,
       location: 'Berkeley, CA',
       bio: 'PhD student researching anxiety and depression, seeking personal therapy.',
-      subscriptionType: 'free',
+      clientType: 'regular',
       sessionsCompleted: 1,
       totalSpent: 0,
       studentPackage: {
@@ -182,7 +208,7 @@ const Client: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('All Status');
   const [selectedSubscription, setSelectedSubscription] = useState('All Subscriptions');
-  const [activeTab, setActiveTab] = useState('regular');
+  const [activeTab, setActiveTab] = useState<'regular' | 'students'>('regular');
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
@@ -194,13 +220,8 @@ const Client: React.FC = () => {
   const [isStudentPackageAction, setIsStudentPackageAction] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
-  const closeSidebar = () => {
-    setSidebarOpen(false);
-  };
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const closeSidebar = () => setSidebarOpen(false);
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -208,39 +229,39 @@ const Client: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const badges = {
-      active: 'bg-green-100 text-green-800 border-green-200',
-      inactive: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      suspended: 'bg-red-100 text-red-800 border-red-200'
+      active: 'bg-green-100 text-green-700 border-green-200',
+      inactive: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      suspended: 'bg-red-100 text-red-700 border-red-200'
     };
     return badges[status as keyof typeof badges] || badges.active;
   };
 
-  const getSubscriptionBadge = (subscription: string) => {
+  const getSubscriptionBadge = (subscription: string | undefined) => {
     const badges = {
-      'free': 'bg-gray-100 text-gray-800',
-      'basic': 'bg-blue-100 text-blue-800',
-      'premium': 'bg-purple-100 text-purple-800',
-      'student': 'bg-green-100 text-green-800'
+      'free': 'bg-gray-100 text-gray-700',
+      'basic': 'bg-blue-100 text-blue-700',
+      'premium': 'bg-purple-100 text-purple-700',
+      'student': 'bg-green-100 text-green-700'
     };
-    return badges[subscription as keyof typeof badges] || 'bg-gray-100 text-gray-800';
+    return badges[subscription as keyof typeof badges] || 'bg-gray-100 text-gray-700';
   };
 
   const getStudentPackageStatusBadge = (status: string) => {
     const badges = {
-      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      approved: 'bg-green-100 text-green-800 border-green-200',
-      rejected: 'bg-red-100 text-red-800 border-red-200'
+      pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      approved: 'bg-green-100 text-green-700 border-green-200',
+      rejected: 'bg-red-100 text-red-700 border-red-200'
     };
     return badges[status as keyof typeof badges] || badges.pending;
   };
 
   // Separate student and regular users
   const studentUsers = clients.filter(client => 
-    client.studentPackage?.applied === true || client.subscriptionType === 'student'
+    client.studentPackage?.applied === true || client.clientType === 'student'
   );
 
   const regularUsers = clients.filter(client => 
-    client.studentPackage?.applied !== true && client.subscriptionType !== 'student'
+    client.studentPackage?.applied !== true && client.clientType !== 'student'
   );
 
   const currentClients = activeTab === 'students' ? studentUsers : regularUsers;
@@ -250,8 +271,8 @@ const Client: React.FC = () => {
                          client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          client.location.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = selectedStatus === 'All Status' || client.status === selectedStatus;
-    const matchesSubscription = selectedSubscription === 'All Subscriptions' || client.subscriptionType === selectedSubscription;
+    const matchesStatus = selectedStatus === 'All Status' || client.status === selectedStatus.toLowerCase();
+    const matchesSubscription = selectedSubscription === 'All Subscriptions' || client.clientType === selectedSubscription.toLowerCase();
     
     return matchesSearch && matchesStatus && matchesSubscription;
   });
@@ -305,7 +326,7 @@ const Client: React.FC = () => {
                   status: actionType as 'approved' | 'rejected',
                   rejectionReason: actionType === 'reject' ? rejectionReason : undefined
                 },
-                subscriptionType: actionType === 'approve' ? 'student' : c.subscriptionType
+                subscriptionType: actionType === 'approve' ? 'student' : c.clientType
               }
             : c
         )
@@ -344,11 +365,27 @@ const Client: React.FC = () => {
           <Sidebar isOpen={true} onClose={closeSidebar} />
         </div>
         
-        {/* Main Content */}
+        {/* Mobile Sidebar */}
+        <div className="lg:hidden">
+          <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
+        </div>
+        
+        {/* Main content */}
         <div className="flex-1 overflow-auto">
           <NavBar onMenuClick={toggleSidebar} />
-          
           <div className="p-4 lg:p-6">
+            {/* Page Header */}
+            <div className="mb-6 lg:mb-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+                    Client Management
+                  </h1>
+                  <p className="text-gray-600">View and manage your client relationships</p>
+                </div>
+              </div>
+            </div>
+
             {/* Notification */}
             {notification && (
               <div className={`fixed top-5 right-4 z-50 p-4 rounded-lg shadow-lg flex items-center space-x-2 ${
@@ -366,127 +403,139 @@ const Client: React.FC = () => {
               </div>
             )}
 
-            {/* Header */}
-            <div className="bg-blue-50 rounded-lg p-6 mb-6">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div className="flex-1 max-w-lg">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="text"
-                      placeholder="Search clients..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6 mb-8">
+              {/* Total Clients */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <User className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{clients.length}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Total Clients</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <Filter className="w-5 h-5 text-blue-600" />
-                    <span className="text-blue-600 font-medium">Filters:</span>
+              </div>
+
+              {/* Active Clients */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="w-5 h-5 lg:w-6 lg:h-6 text-green-600" />
                   </div>
-                  <select
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option>All Status</option>
-                    <option>active</option>
-                    <option>inactive</option>
-                    <option>suspended</option>
-                  </select>
-                  <select
-                    value={selectedSubscription}
-                    onChange={(e) => setSelectedSubscription(e.target.value)}
-                    className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option>All Subscriptions</option>
-                    <option>free</option>
-                    <option>basic</option>
-                    <option>premium</option>
-                    <option>student</option>
-                  </select>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{clients.filter(c => c.status === 'active').length}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Active</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Inactive Clients */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-yellow-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Clock className="w-5 h-5 lg:w-6 lg:h-6 text-yellow-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{clients.filter(c => c.status === 'inactive').length}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Inactive</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Student Clients */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <GraduationCap className="w-5 h-5 lg:w-6 lg:h-6 text-purple-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{studentUsers.length}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Students</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Premium Clients */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <CreditCard className="w-5 h-5 lg:w-6 lg:h-6 text-indigo-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{clients.filter(c => c.clientType === 'regular').length}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Regular</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Main Content */}
-            <div className="bg-white rounded-lg shadow-sm">
-              {/* Title and Stats */}
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Client Management</h1>
-                    <p className="text-gray-600 mt-1">
-                      {activeTab === 'students' ? studentUsers.length : regularUsers.length} {activeTab === 'students' ? 'student' : 'regular'} clients
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                      <span className="text-sm text-gray-600">
-                        {currentClients.filter(c => c.status === 'active').length} Active
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                      <span className="text-sm text-gray-600">
-                        {currentClients.filter(c => c.status === 'inactive').length} Inactive
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                      <span className="text-sm text-gray-600">
-                        {currentClients.filter(c => c.status === 'suspended').length} Suspended
-                      </span>
-                    </div>
-                  </div>
-                </div>
+            {/* Filters */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Filter className="w-5 h-5 text-gray-600" />
+                <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Filters</h2>
               </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                {/* Search */}
+                <div className="relative md:col-span-1 lg:col-span-2">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Search clients..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  />
+                </div>
 
-              {/* Tabs */}
-              <div className="px-6 border-b border-gray-200">
-                <div className="flex gap-8 overflow-x-auto">
+                {/* Status Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
+                  <select
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  >
+                    <option value="All Status">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="suspended">Suspended</option>
+                  </select>
+                </div>
+
+                {/* Tab Navigation */}
+                <div className="flex items-center gap-2 md:col-span-2 lg:col-span-1">
                   <button
                     onClick={() => setActiveTab('regular')}
-                    className={`flex items-center gap-2 py-4 border-b-2 transition-colors whitespace-nowrap ${
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-colors ${
                       activeTab === 'regular'
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                     }`}
                   >
                     <User className="w-4 h-4" />
-                    <span className="font-medium">Regular Users</span>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      activeTab === 'regular'
-                        ? 'bg-blue-100 text-blue-600'
-                        : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {regularUsers.length}
-                    </span>
+                    <span>Regular</span>
                   </button>
                   <button
                     onClick={() => setActiveTab('students')}
-                    className={`flex items-center gap-2 py-4 border-b-2 transition-colors whitespace-nowrap ${
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-colors ${
                       activeTab === 'students'
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                     }`}
                   >
                     <GraduationCap className="w-4 h-4" />
-                    <span className="font-medium">Student Users</span>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      activeTab === 'students'
-                        ? 'bg-blue-100 text-blue-600'
-                        : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {studentUsers.length}
-                    </span>
+                    <span>Students</span>
                   </button>
                 </div>
               </div>
+            </div>
 
+            {/* Clients Table */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6">
               {/* Table Header */}
               <div className="px-6 py-4 bg-gray-50 grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 uppercase tracking-wider">
                 <div className="col-span-3 flex items-center gap-2">
@@ -575,7 +624,7 @@ const Client: React.FC = () => {
             {/* Profile Modal */}
             {showProfileModal && selectedClient && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
                   <div className="p-6 border-b border-gray-200">
                     <div className="flex items-center justify-between">
                       <h2 className="text-2xl font-bold text-gray-900">Client Profile</h2>
@@ -606,8 +655,8 @@ const Client: React.FC = () => {
                               {selectedClient.status.charAt(0).toUpperCase() + selectedClient.status.slice(1)}
                             </span>
                             <br />
-                            <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getSubscriptionBadge(selectedClient.subscriptionType)}`}>
-                              {selectedClient.subscriptionType}
+                            <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getSubscriptionBadge(selectedClient.subscriptionType || 'regular')}`}>
+                              {selectedClient.clientType.charAt(0).toUpperCase() + selectedClient.clientType.slice(1)}
                             </span>
                           </div>
                         </div>

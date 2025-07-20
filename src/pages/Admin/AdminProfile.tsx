@@ -284,6 +284,7 @@ const AdminProfile: React.FC = () => {
                         <input
                           type="email"
                           value={editForm.email}
+                          disabled
                           onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
@@ -302,6 +303,7 @@ const AdminProfile: React.FC = () => {
                         <input
                           type="text"
                           value={editForm.location}
+                          disabled
                           onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
@@ -311,6 +313,7 @@ const AdminProfile: React.FC = () => {
                         <input
                           type="text"
                           value={editForm.role}
+                          disabled
                           onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />

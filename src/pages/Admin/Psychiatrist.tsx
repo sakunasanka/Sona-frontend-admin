@@ -262,88 +262,146 @@ const Psychiatrist: React.FC = () => {
             )}
 
             {/* Header */}
-            <div className="bg-purple-50 rounded-lg p-6 mb-6">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div className="flex-1 max-w-lg">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="text"
-                      placeholder="Search psychiatrists..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    />
+            <div className="mb-6 lg:mb-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+                    Psychiatrist Management
+                  </h1>
+                  <p className="text-gray-600">View and manage psychiatrist applications</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6 mb-8">
+              {/* Total Psychiatrists */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <User className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{psychiatrists.length}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Total Psychiatrists</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <Filter className="w-5 h-5 text-purple-600" />
-                    <span className="text-purple-600 font-medium">Filters:</span>
+              </div>
+
+              {/* Pending */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-yellow-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Clock className="w-5 h-5 lg:w-6 lg:h-6 text-yellow-600" />
                   </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{statusCounts.pending}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Pending</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Approved */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="w-5 h-5 lg:w-6 lg:h-6 text-green-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{statusCounts.approved}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Approved</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Rejected */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <XCircle className="w-5 h-5 lg:w-6 lg:h-6 text-red-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{statusCounts.rejected}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Rejected</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Clinical */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Shield className="w-5 h-5 lg:w-6 lg:h-6 text-purple-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{psychiatrists.filter(p => p.category === 'Clinical').length}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Clinical</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Filter className="w-5 h-5 text-gray-600" />
+                <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Filters</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                {/* Search */}
+                <div className="relative md:col-span-1 lg:col-span-2">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Search psychiatrists..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  />
+                </div>
+
+                {/* Category Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                   >
-                    <option>All Categories</option>
-                    <option>Clinical</option>
-                    <option>Family</option>
-                    <option>Career</option>
-                    <option>Addiction</option>
-                    <option>Trauma</option>
+                    <option value="All Categories">All Categories</option>
+                    <option value="Clinical">Clinical</option>
+                    <option value="Family">Family</option>
+                    <option value="Career">Career</option>
+                    <option value="Addiction">Addiction</option>
+                    <option value="Trauma">Trauma</option>
                   </select>
+                </div>
+
+                {/* Status Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
                   <select
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                   >
-                    <option>All Status</option>
-                    <option>pending</option>
-                    <option>approved</option>
-                    <option>rejected</option>
+                    <option value="All Status">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
                   </select>
                 </div>
               </div>
             </div>
 
-            {/* Main Content */}
-            <div className="bg-white rounded-lg shadow-sm">
-              {/* Title and Stats */}
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Psychiatrist Management</h1>
-                    <p className="text-gray-600 mt-1">{psychiatrists.length} psychiatrists found</p>
-                  </div>
-                  <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                      <span className="text-sm text-gray-600">
-                        {statusCounts.pending} Pending
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                      <span className="text-sm text-gray-600">
-                        {statusCounts.approved} Approved
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                      <span className="text-sm text-gray-600">
-                        {statusCounts.rejected} Rejected
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
+            {/* Psychiatrists Table */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6">
               {/* Table Header */}
               <div className="px-6 py-4 bg-gray-50 grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 uppercase tracking-wider">
                 <div className="col-span-3 flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  <span>Name</span>
+                  <span>Psychiatrist</span>
                 </div>
                 <div className="col-span-3 flex items-center gap-2">
                   <Mail className="w-4 h-4" />
