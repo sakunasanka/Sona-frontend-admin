@@ -1,33 +1,54 @@
 import React from 'react';
-import { Eye, Mail, Calendar, Tag, CheckCircle, Clock, XCircle, User, Phone, Award } from 'lucide-react';
+import {
+  Eye,
+  Mail,
+  Calendar,
+  Tag,
+  CheckCircle,
+  Clock,
+  XCircle,
+  User,
+  Phone,
+  Award,
+} from 'lucide-react';
+
 
 export interface Counsellor {
-    id: string;
-    name: string;
+  userId: number;
+  status: 'pending' | 'approved' | 'rejected';
+  specialization?: string;
+  registeredDate?: string;
+  phone?: string;
+  category?: string;
+  experience?: string;
+  user?: {
+    id: number;
+    name?: string;
     email: string;
-    registeredDate: string;
-    category: string;
-    status: 'pending' | 'approved' | 'rejected';
-    phone?: string;
-    specialization?: string;
-    experience?: string;
-    qualifications?: string[];
-    bio?: string;
-    avatar?: string;
+  };
 }
 
-export interface CounsellorFilters {
-    status: 'all' | 'pending' | 'approved' | 'rejected';
-    category: 'all' | 'clinical' | 'family' | 'career' | 'addiction' | 'trauma';
-    experience: 'all' | 'junior' | 'mid' | 'senior';
-}
 
 interface CounsellorTableProps {
   counsellors: Counsellor[];
   onReview: (counsellor: Counsellor) => void;
 }
 
-const CounsellorTable: React.FC<CounsellorTableProps> = ({ counsellors, onReview }) => {
+
+const CounsellorTable: React.FC<CounsellorTableProps> = ({
+  counsellors,
+  onReview,
+}) => {
+  const getInitials = (name?: string) => {
+    if (!name) return 'NA';
+    return name
+      .split(' ')
+      .map((n) => n.charAt(0))
+      .join('')
+      .toUpperCase();
+  };
+
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved':
@@ -40,6 +61,7 @@ const CounsellorTable: React.FC<CounsellorTableProps> = ({ counsellors, onReview
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
+
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -54,16 +76,18 @@ const CounsellorTable: React.FC<CounsellorTableProps> = ({ counsellors, onReview
     }
   };
 
+
   const getCategoryColor = (category: string) => {
     const colors = {
-      'clinical': 'bg-purple-100 text-purple-800',
-      'family': 'bg-blue-100 text-blue-800',
-      'career': 'bg-green-100 text-green-800',
-      'addiction': 'bg-red-100 text-red-800',
-      'trauma': 'bg-orange-100 text-orange-800',
+      clinical: 'bg-purple-100 text-purple-800',
+      family: 'bg-blue-100 text-blue-800',
+      career: 'bg-green-100 text-green-800',
+      addiction: 'bg-red-100 text-red-800',
+      trauma: 'bg-orange-100 text-orange-800',
     };
     return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
+
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -89,12 +113,12 @@ const CounsellorTable: React.FC<CounsellorTableProps> = ({ counsellors, onReview
                   <span>Registered Date</span>
                 </div>
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              {/* <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 <div className="flex items-center space-x-2">
                   <Tag className="h-4 w-4" />
                   <span>Category</span>
                 </div>
-              </th>
+              </th> */}
               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Status
               </th>
@@ -105,8 +129,8 @@ const CounsellorTable: React.FC<CounsellorTableProps> = ({ counsellors, onReview
           </thead>
           <tbody className="divide-y divide-gray-200">
             {counsellors.map((counsellor, index) => (
-              <tr 
-                key={counsellor.id} 
+              <tr
+                key={counsellor.userId}
                 className={`hover:bg-blue-50 transition-colors duration-200 ${
                   index % 2 === 0 ? 'bg-white' : 'bg-gray-25'
                 }`}
@@ -115,12 +139,12 @@ const CounsellorTable: React.FC<CounsellorTableProps> = ({ counsellors, onReview
                   <div className="flex items-center">
                     <div className="h-10 w-10 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-full flex items-center justify-center mr-3 shadow-sm">
                       <span className="text-white text-sm font-semibold">
-                        {counsellor.name.split(' ').map(n => n.charAt(0)).join('').toUpperCase()}
+                        {getInitials(counsellor.user?.name)}
                       </span>
                     </div>
                     <div>
                       <div className="text-sm font-semibold text-gray-900">
-                        {counsellor.name}
+                        {counsellor.user?.name || 'N/A'}
                       </div>
                       {counsellor.specialization && (
                         <div className="text-xs text-gray-500 flex items-center space-x-1">
@@ -132,7 +156,7 @@ const CounsellorTable: React.FC<CounsellorTableProps> = ({ counsellors, onReview
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-600">{counsellor.email}</div>
+                  <div className="text-sm text-gray-600">{counsellor.user?.email || 'N/A'}</div>
                   {counsellor.phone && (
                     <div className="text-xs text-gray-500 flex items-center space-x-1 mt-1">
                       <Phone className="h-3 w-3" />
@@ -140,16 +164,30 @@ const CounsellorTable: React.FC<CounsellorTableProps> = ({ counsellors, onReview
                     </div>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-600">{counsellor.registeredDate}</div>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  {counsellor.createdAt ? counsellor.createdAt.split('T')[0] : 'N/A'}
                 </td>
+
+                {/* <td className="px-6 py-4 whitespace-nowrap"> 
+                  {counsellor.category ? (
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(
+                        counsellor.category
+                      )}`}
+                    >
+                      {counsellor.category.charAt(0).toUpperCase() +
+                        counsellor.category.slice(1)}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-400">N/A</span>
+                  )}
+                </td>*/}
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(counsellor.category)}`}>
-                    {counsellor.category.charAt(0).toUpperCase() + counsellor.category.slice(1)}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(counsellor.status)}`}>
+                  <span
+                    className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(
+                      counsellor.status
+                    )}`}
+                  >
                     {getStatusIcon(counsellor.status)}
                     <span className="capitalize">{counsellor.status}</span>
                   </span>
@@ -157,29 +195,33 @@ const CounsellorTable: React.FC<CounsellorTableProps> = ({ counsellors, onReview
                 <td className="px-6 py-4 whitespace-nowrap">
                   <button
                     onClick={() => onReview(counsellor)}
-                    className="inline-flex items-center space-x-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="inline-flex items-center space-x-1 px-4 py-2 bg-buttonBlue-500 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-sm hover:shadow-md"
                   >
                     <Eye className="h-4 w-4" />
-                    <span>view</span>
+                    <span>View</span>
                   </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
-      
-      {counsellors.length === 0 && (
-        <div className="text-center py-12">
-          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <User className="w-12 h-12 text-gray-400" />
+
+
+        {counsellors.length === 0 && (
+          <div className="text-center py-12">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <User className="w-12 h-12 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No counsellors found</h3>
+            <p className="text-gray-500">
+              No counsellor registrations match your current filters.
+            </p>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No counsellors found</h3>
-          <p className="text-gray-500">No counsellor registrations match your current filters.</p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
+
 
 export default CounsellorTable;
