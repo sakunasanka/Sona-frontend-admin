@@ -1,31 +1,29 @@
 import React, { useState, useMemo } from 'react';
-import Sidebar from '../../components/layout/Sidebar'; // Add this import
-import Navbar from '../../components/layout/Navbar';
+import { NavBar, Sidebar } from '../../components/layout';
 import { 
-  MessageCircle, 
+  MessageSquare, 
+  Clock, 
+  AlertTriangle, 
+  CheckCircle, 
   Users, 
-  Lightbulb, 
-  Bug, 
-  FileText,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  Calendar,
+  Star,
   User,
+  Calendar,
+  MapPin,
+  Phone,
   Mail,
   Tag,
   Search,
   Filter,
   ChevronDown,
   ChevronUp,
-  MessageSquare,
-  AlertTriangle,
-  Heart,
-  Brain,
-  Phone,
-  MapPin,
-  Star,
-  Shield
+  ArrowRight,
+  PlusCircle,
+  HandCoins,
+  BookOpen,
+  Activity,
+  BarChart3,
+  MessageCircle
 } from 'lucide-react';
 
 // Types
@@ -38,7 +36,7 @@ interface Feedback {
   author: string;
   email: string;
   phone?: string;
-  location: string; // Sri Lankan districts/cities
+  location: string;
   language: 'sinhala' | 'tamil' | 'english';
   status: 'pending' | 'in-progress' | 'resolved' | 'urgent';
   priority: 'low' | 'medium' | 'high' | 'critical';
@@ -47,7 +45,7 @@ interface Feedback {
   createdAt: Date;
   updatedAt: Date;
   tags: string[];
-  rating?: number; // 1-5 stars for session feedback
+  rating?: number;
   isAnonymous: boolean;
 }
 
@@ -64,7 +62,7 @@ interface FeedbackFilters {
 type SortField = 'createdAt' | 'updatedAt' | 'priority' | 'status' | 'rating';
 type SortDirection = 'asc' | 'desc';
 
-// Mock Data with Sri Lankan context
+// Mock Data
 const mockFeedback: Feedback[] = [
   {
     id: '1',
@@ -109,586 +107,96 @@ const mockFeedback: Feedback[] = [
   },
   {
     id: '3',
-    type: 'suggestion',
-    category: 'online',
-    title: 'Add Tamil language support for online sessions',
-    description: 'It would be great to have more counsellors who can conduct sessions in Tamil language, especially for online consultations. This would help Tamil-speaking clients feel more comfortable.',
-    author: 'Ravi Shankar',
-    email: 'ravi.s@email.com',
-    location: 'Jaffna',
-    language: 'tamil',
-    status: 'in-progress',
-    priority: 'high',
-    sessionType: 'online',
-    createdAt: new Date('2024-01-13'),
-    updatedAt: new Date('2024-01-17'),
-    tags: ['language-support', 'tamil', 'online-therapy', 'accessibility'],
-    isAnonymous: false
-  },
-  {
-    id: '4',
-    type: 'emergency',
-    category: 'crisis',
-    title: 'Crisis helpline response time',
-    description: 'Called the crisis helpline during a mental health emergency. The response was quick and professional. The counsellor provided immediate support and follow-up resources.',
-    author: 'Anonymous Client',
-    email: 'anonymous@system.com',
+    type: 'session',
+    category: 'individual',
+    title: 'Individual therapy session review',
+    description: 'The individual counselling session helped me work through my anxiety issues. Dr. Perera was very understanding and provided practical coping strategies.',
+    author: 'Saman Kumara',
+    email: 'saman.k@email.com',
     location: 'Galle',
-    language: 'english',
-    status: 'resolved',
-    priority: 'critical',
-    counsellorAssigned: 'Crisis Team',
-    sessionType: 'phone',
-    createdAt: new Date('2024-01-12'),
-    updatedAt: new Date('2024-01-12'),
-    tags: ['crisis-intervention', 'emergency', 'helpline', 'immediate-support'],
-    rating: 4,
-    isAnonymous: true
-  },
-  {
-    id: '5',
-    type: 'complaint',
-    category: 'addiction',
-    title: 'Addiction counselling program concerns',
-    description: 'The addiction recovery program lacks sufficient group sessions. More peer support groups would be beneficial for long-term recovery, especially considering Sri Lankan cultural context.',
-    author: 'Chaminda Fernando',
-    email: 'chaminda.f@email.com',
-    phone: '+94723456789',
-    location: 'Negombo',
     language: 'sinhala',
-    status: 'pending',
-    priority: 'high',
-    counsellorAssigned: 'Dr. Anura Wickramasinghe',
-    sessionType: 'group',
-    createdAt: new Date('2024-01-11'),
-    updatedAt: new Date('2024-01-11'),
-    tags: ['addiction-recovery', 'group-therapy', 'peer-support', 'cultural-context'],
-    isAnonymous: false
-  },
-  {
-    id: '6',
-    type: 'testimonial',
-    category: 'trauma',
-    title: 'Trauma counselling success story',
-    description: 'After the difficult period following the Easter attacks, the trauma counselling sessions helped me regain my mental stability. Dr. Perera\'s approach was compassionate and effective.',
-    author: 'Malini Rodrigo',
-    email: 'malini.r@email.com',
-    location: 'Colombo',
-    language: 'english',
     status: 'resolved',
     priority: 'low',
     counsellorAssigned: 'Dr. Sandun Perera',
     sessionType: 'face-to-face',
-    createdAt: new Date('2024-01-10'),
-    updatedAt: new Date('2024-01-15'),
-    tags: ['trauma-recovery', 'ptsd', 'success-story', 'post-conflict'],
-    rating: 5,
-    isAnonymous: false
-  },
-  {
-    id: '7',
-    type: 'session',
-    category: 'relationship',
-    title: 'Couples counselling feedback',
-    description: 'The couples counselling sessions have significantly improved our relationship. The counsellor understood our cultural background and provided relevant advice for Sri Lankan couples.',
-    author: 'Saman & Dilani Wickramaratne',
-    email: 'saman.dilani@email.com',
-    phone: '+94734567890',
-    location: 'Matara',
-    language: 'sinhala',
-    status: 'in-progress',
-    priority: 'medium',
-    counsellorAssigned: 'Dr. Nayomi Gunasekara',
-    sessionType: 'face-to-face',
-    createdAt: new Date('2024-01-09'),
-    updatedAt: new Date('2024-01-18'),
-    tags: ['couples-therapy', 'relationship', 'cultural-awareness', 'communication'],
+    createdAt: new Date('2024-01-13'),
+    updatedAt: new Date('2024-01-17'),
+    tags: ['anxiety', 'individual-therapy', 'coping-strategies'],
     rating: 4,
     isAnonymous: false
   },
   {
-    id: '8',
-    type: 'suggestion',
+    id: '4',
+    type: 'complaint',
     category: 'online',
-    title: 'Mobile app for appointment booking',
-    description: 'A mobile application would make it easier to book appointments and access resources. Many people in rural areas rely on mobile phones for internet access.',
-    author: 'Tharaka Bandara',
-    email: 'tharaka.b@email.com',
-    location: 'Anuradhapura',
-    language: 'sinhala',
-    status: 'pending',
-    priority: 'medium',
-    createdAt: new Date('2024-01-08'),
-    updatedAt: new Date('2024-01-08'),
-    tags: ['mobile-app', 'accessibility', 'rural-access', 'technology'],
+    title: 'Technical issues during online session',
+    description: 'Experienced multiple connection drops during my online counselling session. The session had to be rescheduled due to poor audio quality.',
+    author: 'Tharaka Silva',
+    email: 'tharaka.s@email.com',
+    phone: '+94723456789',
+    location: 'Negombo',
+    language: 'english',
+    status: 'in-progress',
+    priority: 'high',
+    counsellorAssigned: 'Dr. Anura Wickramasinghe',
+    sessionType: 'online',
+    createdAt: new Date('2024-01-12'),
+    updatedAt: new Date('2024-01-18'),
+    tags: ['technical-issues', 'online-therapy', 'connectivity'],
     isAnonymous: false
+  },
+  {
+    id: '5',
+    type: 'session',
+    category: 'group',
+    title: 'Group therapy session feedback',
+    description: 'The group therapy session was very beneficial. The group dynamics were well managed and I felt comfortable sharing my experiences.',
+    author: 'Malini Fernando',
+    email: 'malini.f@email.com',
+    location: 'Matara',
+    language: 'english',
+    status: 'resolved',
+    priority: 'low',
+    counsellorAssigned: 'Dr. Nayomi Gunasekara',
+    sessionType: 'group',
+    createdAt: new Date('2024-01-11'),
+    updatedAt: new Date('2024-01-19'),
+    tags: ['group-therapy', 'peer-support', 'addiction-recovery'],
+    rating: 5,
+    isAnonymous: false
+  },
+  {
+    id: '6',
+    type: 'complaint',
+    category: 'crisis',
+    title: 'Delayed response to crisis call',
+    description: 'Called the crisis helpline during an emergency but had to wait 15 minutes before getting connected to a counsellor. This delay could be critical in emergency situations.',
+    author: 'Anonymous',
+    email: 'anonymous@system.com',
+    location: 'Kandy',
+    language: 'sinhala',
+    status: 'urgent',
+    priority: 'critical',
+    counsellorAssigned: 'Crisis Team',
+    sessionType: 'phone',
+    createdAt: new Date('2024-01-10'),
+    updatedAt: new Date('2024-01-10'),
+    tags: ['crisis-intervention', 'emergency', 'response-time'],
+    isAnonymous: true
   }
 ];
 
-// Sri Lankan locations
 const sriLankanLocations = [
   'Colombo', 'Kandy', 'Galle', 'Jaffna', 'Negombo', 'Matara', 'Anuradhapura', 
   'Polonnaruwa', 'Kurunegala', 'Ratnapura', 'Batticaloa', 'Trincomalee', 
   'Badulla', 'Kalutara', 'Gampaha', 'Hambantota', 'Vavuniya', 'Kilinochchi'
 ];
 
-// Utility Functions
-const getTypeIcon = (type: Feedback['type']) => {
-  switch (type) {
-    case 'complaint':
-      return <MessageCircle className="w-5 h-5" />;
-    case 'session':
-      return <Users className="w-5 h-5" />;
-    case 'suggestion':
-      return <Lightbulb className="w-5 h-5" />;
-    case 'emergency':
-      return <AlertTriangle className="w-5 h-5" />;
-    case 'testimonial':
-      return <Heart className="w-5 h-5" />;
-    default:
-      return <FileText className="w-5 h-5" />;
-  }
-};
-
-const getTypeColor = (type: Feedback['type']) => {
-  switch (type) {
-    case 'complaint':
-      return 'bg-red-100 text-red-800 border-red-200';
-    case 'session':
-      return 'bg-blue-100 text-blue-800 border-blue-200';
-    case 'suggestion':
-      return 'bg-green-100 text-green-800 border-green-200';
-    case 'emergency':
-      return 'bg-red-200 text-red-900 border-red-300';
-    case 'testimonial':
-      return 'bg-purple-100 text-purple-800 border-purple-200';
-    default:
-      return 'bg-gray-100 text-gray-800 border-gray-200';
-  }
-};
-
-const getCategoryIcon = (category: Feedback['category']) => {
-  switch (category) {
-    case 'individual':
-      return <User className="w-4 h-4" />;
-    case 'family':
-      return <Users className="w-4 h-4" />;
-    case 'group':
-      return <Users className="w-4 h-4" />;
-    case 'online':
-      return <MessageSquare className="w-4 h-4" />;
-    case 'crisis':
-      return <AlertTriangle className="w-4 h-4" />;
-    case 'addiction':
-      return <Shield className="w-4 h-4" />;
-    case 'trauma':
-      return <Brain className="w-4 h-4" />;
-    case 'relationship':
-      return <Heart className="w-4 h-4" />;
-    default:
-      return <Tag className="w-4 h-4" />;
-  }
-};
-
-const getStatusIcon = (status: Feedback['status']) => {
-  switch (status) {
-    case 'pending':
-      return <Clock className="w-4 h-4" />;
-    case 'in-progress':
-      return <AlertCircle className="w-4 h-4" />;
-    case 'resolved':
-      return <CheckCircle className="w-4 h-4" />;
-    case 'urgent':
-      return <AlertTriangle className="w-4 h-4" />;
-    default:
-      return null;
-  }
-};
-
-const getStatusColor = (status: Feedback['status']) => {
-  switch (status) {
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    case 'in-progress':
-      return 'bg-blue-100 text-blue-800 border-blue-200';
-    case 'resolved':
-      return 'bg-green-100 text-green-800 border-green-200';
-    case 'urgent':
-      return 'bg-red-100 text-red-800 border-red-200';
-    default:
-      return 'bg-gray-100 text-gray-800 border-gray-200';
-  }
-};
-
-const getPriorityColor = (priority: Feedback['priority']) => {
-  switch (priority) {
-    case 'low':
-      return 'bg-gray-100 text-gray-800';
-    case 'medium':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'high':
-      return 'bg-orange-100 text-orange-800';
-    case 'critical':
-      return 'bg-red-100 text-red-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-};
-
-const formatDate = (date: Date) => {
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-};
-
-const getLanguageLabel = (lang: Feedback['language']) => {
-  switch (lang) {
-    case 'sinhala': return 'සිංහල';
-    case 'tamil': return 'தமிழ்';
-    case 'english': return 'English';
-    default: return lang;
-  }
-};
-
-const getRatingStars = (rating?: number) => {
-  if (!rating) return null;
-  return (
-    <span className="flex items-center gap-0.5">
-      {[...Array(5)].map((_, i) => (
-        <Star key={i} className={`w-4 h-4 ${i < rating ? 'text-yellow-400' : 'text-gray-300'}`} />
-      ))}
-    </span>
-  );
-};
-
-// Components
-const FeedbackStats: React.FC<{ feedback: Feedback[] }> = ({ feedback }) => {
-  const totalFeedback = feedback.length;
-  const pendingCount = feedback.filter(f => f.status === 'pending').length;
-  const inProgressCount = feedback.filter(f => f.status === 'in-progress').length;
-  const resolvedCount = feedback.filter(f => f.status === 'resolved').length;
-  const urgentCount = feedback.filter(f => f.status === 'urgent').length;
-
-  const stats = [
-    {
-      title: 'Total Feedback',
-      value: totalFeedback,
-      icon: MessageSquare,
-      color: 'bg-blue-500',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-700'
-    },
-    {
-      title: 'Pending',
-      value: pendingCount,
-      icon: Clock,
-      color: 'bg-yellow-500',
-      bgColor: 'bg-yellow-50',
-      textColor: 'text-yellow-700'
-    },
-    {
-      title: 'In Progress',
-      value: inProgressCount,
-      icon: AlertTriangle,
-      color: 'bg-orange-500',
-      bgColor: 'bg-orange-50',
-      textColor: 'text-orange-700'
-    },
-    {
-      title: 'Resolved',
-      value: resolvedCount,
-      icon: CheckCircle,
-      color: 'bg-green-500',
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-700'
-    },
-    {
-      title: 'Urgent',
-      value: urgentCount,
-      icon: AlertTriangle,
-      color: 'bg-red-500',
-      bgColor: 'bg-red-50',
-      textColor: 'text-red-700'
-    }
-  ];
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
-      {stats.map((stat, index) => (
-        <div
-          key={index}
-          className={`${stat.bgColor} rounded-lg p-6 border border-gray-200 hover:shadow-md transition-shadow duration-200`}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${stat.textColor}`}>
-                {stat.title}
-              </p>
-              <p className={`text-3xl font-bold ${stat.textColor} mt-1`}>
-                {stat.value}
-              </p>
-            </div>
-            <div className={`p-3 rounded-full ${stat.color}`}>
-              <stat.icon className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const FeedbackFiltersComponent: React.FC<{
-  filters: FeedbackFilters;
-  onFiltersChange: (filters: FeedbackFilters) => void;
-}> = ({ filters, onFiltersChange }) => {
-  const handleFilterChange = (key: keyof FeedbackFilters, value: string) => {
-    onFiltersChange({
-      ...filters,
-      [key]: value
-    });
-  };
-
-  return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-6">
-      <div className="flex items-center gap-2 mb-4">
-        <Filter className="w-5 h-5 text-gray-600" />
-        <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search feedback..."
-            value={filters.search}
-            onChange={(e) => handleFilterChange('search', e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-          />
-        </div>
-
-        {/* Type Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-          <select
-            value={filters.type}
-            onChange={(e) => handleFilterChange('type', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-          >
-            <option value="">All Types</option>
-            <option value="complaint">Complaints</option>
-            <option value="session">Session Feedback</option>
-            <option value="suggestion">Suggestions</option>
-            <option value="emergency">Emergency</option>
-            <option value="testimonial">Testimonials</option>
-            <option value="general">General</option>
-          </select>
-        </div>
-
-        {/* Category Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-          <select
-            value={filters.category}
-            onChange={(e) => handleFilterChange('category', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-          >
-            <option value="">All Categories</option>
-            <option value="individual">Individual</option>
-            <option value="family">Family</option>
-            <option value="group">Group</option>
-            <option value="online">Online</option>
-            <option value="crisis">Crisis</option>
-            <option value="addiction">Addiction</option>
-            <option value="trauma">Trauma</option>
-            <option value="relationship">Relationship</option>
-          </select>
-        </div>
-
-        {/* Status Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-          <select
-            value={filters.status}
-            onChange={(e) => handleFilterChange('status', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-          >
-            <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="in-progress">In Progress</option>
-            <option value="resolved">Resolved</option>
-            <option value="urgent">Urgent</option>
-          </select>
-        </div>
-
-        {/* Priority Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-          <select
-            value={filters.priority}
-            onChange={(e) => handleFilterChange('priority', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-          >
-            <option value="">All Priorities</option>
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="critical">Critical</option>
-          </select>
-        </div>
-
-        {/* Location Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-          <select
-            value={filters.location}
-            onChange={(e) => handleFilterChange('location', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-          >
-            <option value="">All Locations</option>
-            {sriLankanLocations.map(loc => (
-              <option key={loc} value={loc}>{loc}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Language Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
-          <select
-            value={filters.language}
-            onChange={(e) => handleFilterChange('language', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-          >
-            <option value="">All Languages</option>
-            <option value="sinhala">සිංහල</option>
-            <option value="tamil">தமிழ்</option>
-            <option value="english">English</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const FeedbackItem: React.FC<{
-  feedback: Feedback;
-  onStatusChange: (id: string, status: Feedback['status']) => void;
-}> = ({ feedback, onStatusChange }) => {
-  return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-200">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg border ${getTypeColor(feedback.type)}`}>
-            {getTypeIcon(feedback.type)}
-          </div>
-          <div>
-            <h3 className="font-semibold text-gray-900 text-lg">{feedback.title}</h3>
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeColor(feedback.type)} mt-1`}>
-              {feedback.type.charAt(0).toUpperCase() + feedback.type.slice(1)}
-            </span>
-            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
-              {getCategoryIcon(feedback.category)}
-              <span className="ml-1">{feedback.category.charAt(0).toUpperCase() + feedback.category.slice(1)}</span>
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(feedback.priority)}`}>
-            {feedback.priority.charAt(0).toUpperCase() + feedback.priority.slice(1)}
-          </span>
-          <select
-            value={feedback.status}
-            onChange={(e) => onStatusChange(feedback.id, e.target.value as Feedback['status'])}
-            className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium border cursor-pointer ${getStatusColor(feedback.status)}`}
-          >
-            <option value="pending">Pending</option>
-            <option value="in-progress">In Progress</option>
-            <option value="resolved">Resolved</option>
-            <option value="urgent">Urgent</option>
-          </select>
-        </div>
-      </div>
-
-      <p className="text-gray-700 mb-4 leading-relaxed">{feedback.description}</p>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <User className="w-4 h-4" />
-          <span>{feedback.isAnonymous ? 'Anonymous' : feedback.author}</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Mail className="w-4 h-4" />
-          <span>{feedback.email}</span>
-        </div>
-        {feedback.phone && (
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Phone className="w-4 h-4" />
-            <span>{feedback.phone}</span>
-          </div>
-        )}
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <MapPin className="w-4 h-4" />
-          <span>{feedback.location}</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Calendar className="w-4 h-4" />
-          <span>Created: {formatDate(feedback.createdAt)}</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Calendar className="w-4 h-4" />
-          <span>Updated: {formatDate(feedback.updatedAt)}</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Tag className="w-4 h-4" />
-          <span>{feedback.language ? getLanguageLabel(feedback.language) : ''}</span>
-        </div>
-        {feedback.counsellorAssigned && (
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <User className="w-4 h-4" />
-            <span>{feedback.counsellorAssigned}</span>
-          </div>
-        )}
-        {feedback.sessionType && (
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <MessageSquare className="w-4 h-4" />
-            <span>{feedback.sessionType.charAt(0).toUpperCase() + feedback.sessionType.slice(1)}</span>
-          </div>
-        )}
-        {feedback.rating && (
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            {getRatingStars(feedback.rating)}
-            <span>{feedback.rating}/5</span>
-          </div>
-        )}
-      </div>
-
-      {feedback.tags.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <Tag className="w-4 h-4 text-gray-500" />
-          {feedback.tags.map((tag, index) => (
-            <span
-              key={index}
-              className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Main App Component
-function Feedback() {
+const FeedbackManagement: React.FC = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [feedback, setFeedback] = useState<Feedback[]>(mockFeedback);
-  const [filters, setFilters] = useState<FeedbackFilters>({
-    type: '',
+  const [sessionFilters, setSessionFilters] = useState<FeedbackFilters>({
+    type: 'session',
     category: '',
     status: '',
     priority: '',
@@ -696,10 +204,22 @@ function Feedback() {
     language: '',
     search: ''
   });
-  const [sortField, setSortField] = useState<SortField>('createdAt');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [complaintFilters, setComplaintFilters] = useState<FeedbackFilters>({
+    type: 'complaint',
+    category: '',
+    status: '',
+    priority: '',
+    location: '',
+    language: '',
+    search: ''
+  });
+  const [sessionSortField, setSessionSortField] = useState<SortField>('createdAt');
+  const [sessionSortDirection, setSessionSortDirection] = useState<SortDirection>('desc');
+  const [complaintSortField, setComplaintSortField] = useState<SortField>('createdAt');
+  const [complaintSortDirection, setComplaintSortDirection] = useState<SortDirection>('desc');
+  const [activeTab, setActiveTab] = useState<'overview' | 'sessions' | 'complaints'>('overview');
 
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const closeSidebar = () => setSidebarOpen(false);
 
   const handleStatusChange = (id: string, status: Feedback['status']) => {
@@ -712,16 +232,25 @@ function Feedback() {
     );
   };
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+  const handleSort = (field: SortField, type: 'session' | 'complaint') => {
+    if (type === 'session') {
+      if (sessionSortField === field) {
+        setSessionSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+      } else {
+        setSessionSortField(field);
+        setSessionSortDirection('desc');
+      }
     } else {
-      setSortField(field);
-      setSortDirection('desc');
+      if (complaintSortField === field) {
+        setComplaintSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+      } else {
+        setComplaintSortField(field);
+        setComplaintSortDirection('desc');
+      }
     }
   };
 
-  const filteredAndSortedFeedback = useMemo(() => {
+  const getFilteredAndSorted = (filters: FeedbackFilters, sortField: SortField, sortDirection: SortDirection) => {
     let filtered = feedback.filter(item => {
       const matchesType = !filters.type || item.type === filters.type;
       const matchesCategory = !filters.category || item.category === filters.category;
@@ -737,7 +266,6 @@ function Feedback() {
       return matchesType && matchesCategory && matchesStatus && matchesPriority && matchesLocation && matchesLanguage && matchesSearch;
     });
 
-    // Sort the filtered results
     filtered.sort((a, b) => {
       let aValue: any;
       let bValue: any;
@@ -775,77 +303,636 @@ function Feedback() {
     });
 
     return filtered;
-  }, [feedback, filters, sortField, sortDirection]);
+  };
 
-  const SortButton: React.FC<{ field: SortField; children: React.ReactNode }> = ({ field, children }) => (
+  const sessionFeedback = getFilteredAndSorted(sessionFilters, sessionSortField, sessionSortDirection);
+  const complaintFeedback = getFilteredAndSorted(complaintFilters, complaintSortField, complaintSortDirection);
+
+  // Stats calculation
+  const totalFeedback = feedback.length;
+  const pendingCount = feedback.filter(f => f.status === 'pending').length;
+  const inProgressCount = feedback.filter(f => f.status === 'in-progress').length;
+  const resolvedCount = feedback.filter(f => f.status === 'resolved').length;
+  const sessionFeedbackCount = feedback.filter(f => f.type === 'session').length;
+  const complaintsCount = feedback.filter(f => f.type === 'complaint').length;
+  const averageRating = feedback.filter(f => f.rating).length > 0 
+    ? feedback.filter(f => f.rating).reduce((acc, f) => acc + (f.rating || 0), 0) / feedback.filter(f => f.rating).length
+    : 0;
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const getStatusColor = (status: Feedback['status']) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'in-progress':
+        return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'resolved':
+        return 'bg-green-100 text-green-700 border-green-200';
+      case 'urgent':
+        return 'bg-red-100 text-red-700 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
+  const getPriorityColor = (priority: Feedback['priority']) => {
+    switch (priority) {
+      case 'low':
+        return 'bg-gray-100 text-gray-700';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'high':
+        return 'bg-orange-100 text-orange-700';
+      case 'critical':
+        return 'bg-red-100 text-red-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const getRatingStars = (rating?: number) => {
+    if (!rating) return null;
+    return (
+      <div className="flex items-center gap-1">
+        {[...Array(5)].map((_, i) => (
+          <Star 
+            key={i} 
+            className={`w-4 h-4 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+          />
+        ))}
+        <span className="ml-1 text-sm text-gray-600">({rating}/5)</span>
+      </div>
+    );
+  };
+
+  const SortButton: React.FC<{ 
+    field: SortField; 
+    children: React.ReactNode; 
+    type: 'session' | 'complaint';
+  }> = ({ field, children, type }) => {
+    const isActive = (type === 'session' ? sessionSortField : complaintSortField) === field;
+    const direction = type === 'session' ? sessionSortDirection : complaintSortDirection;
+    
+    return (
+      <button
+        onClick={() => handleSort(field, type)}
+        className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+      >
+        {children}
+        {isActive && (
+          direction === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+        )}
+      </button>
+    );
+  };
+
+  const TabButton: React.FC<{ 
+    tab: 'overview' | 'sessions' | 'complaints'; 
+    children: React.ReactNode;
+    icon: React.ReactNode;
+  }> = ({ tab, children, icon }) => (
     <button
-      onClick={() => handleSort(field)}
-      className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+      onClick={() => setActiveTab(tab)}
+      className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-colors ${
+        activeTab === tab
+          ? 'bg-blue-100 text-blue-700 border border-blue-200'
+          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+      }`}
     >
+      {icon}
       {children}
-      {sortField === field && (
-        sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-      )}
     </button>
   );
 
-  return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
-      
-      <Navbar />
+  const FilterComponent: React.FC<{
+    filters: FeedbackFilters;
+    onFiltersChange: (filters: FeedbackFilters) => void;
+    showTypeFilter?: boolean;
+  }> = ({ filters, onFiltersChange, showTypeFilter = true }) => {
+    const handleFilterChange = (key: keyof FeedbackFilters, value: string) => {
+      onFiltersChange({
+        ...filters,
+        [key]: value
+      });
+    };
 
-      <main className="p-3 pt-[4.5rem] bg-white rounded-tl-3xl shadow-md overflow-y-auto"> 
-      <div className="flex-1 overflow-auto">
-        <div className="max-w-7xl mx-auto p-6">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Feedback Management</h1>
-            <p className="text-gray-600">Manage and track all feedback including complaints, session feedback, and suggestions.</p>
+    return (
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Filter className="w-5 h-5 text-gray-600" />
+          <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Filters</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search feedback..."
+              value={filters.search}
+              onChange={(e) => handleFilterChange('search', e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+            />
           </div>
 
-          <FeedbackStats feedback={feedback} />
-          <FeedbackFiltersComponent filters={filters} onFiltersChange={setFilters} />
-          
-          <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-6">
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Feedback Items ({filteredAndSortedFeedback.length})
-                </h2>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600 mr-2">Sort by:</span>
-                  <SortButton field="createdAt">Created Date</SortButton>
-                  <SortButton field="updatedAt">Updated Date</SortButton>
-                  <SortButton field="priority">Priority</SortButton>
-                  <SortButton field="status">Status</SortButton>
-                  <SortButton field="rating">Rating</SortButton>
+          {/* Type Filter - Only show if enabled */}
+          {showTypeFilter && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+              <select
+                value={filters.type}
+                onChange={(e) => handleFilterChange('type', e.target.value)}
+                className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+              >
+                <option value="">All Types</option>
+                <option value="complaint">Complaints</option>
+                <option value="session">Session Feedback</option>
+                <option value="suggestion">Suggestions</option>
+                <option value="emergency">Emergency</option>
+                <option value="testimonial">Testimonials</option>
+                <option value="general">General</option>
+              </select>
+            </div>
+          )}
+
+          {/* Status Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <select
+              value={filters.status}
+              onChange={(e) => handleFilterChange('status', e.target.value)}
+              className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+            >
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="in-progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+
+          {/* Priority Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+            <select
+              value={filters.priority}
+              onChange={(e) => handleFilterChange('priority', e.target.value)}
+              className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+            >
+              <option value="">All Priorities</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+          </div>
+
+          {/* Location Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+            <select
+              value={filters.location}
+              onChange={(e) => handleFilterChange('location', e.target.value)}
+              className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+            >
+              <option value="">All Locations</option>
+              {sriLankanLocations.map(loc => (
+                <option key={loc} value={loc}>{loc}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex flex-col h-screen">
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar - Desktop */}
+        <div className="hidden lg:block">
+          <Sidebar isOpen={true} onClose={closeSidebar} />
+        </div>
+        
+        {/* Mobile Sidebar */}
+        <div className="lg:hidden">
+          <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
+        </div>
+        
+        {/* Main content */}
+        <div className="flex-1 overflow-auto">
+          <NavBar onMenuClick={toggleSidebar} />
+          <div className="p-4 lg:p-6">
+        {/* Page Header */}
+        <div className="mb-6 lg:mb-8">
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+            Feedback Management
+          </h1>
+          <p className="text-gray-600">Manage session reviews and handle client complaints efficiently.</p>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex items-center gap-2 mb-6">
+          <TabButton tab="overview" icon={<MessageSquare className="w-4 h-4" />}>
+            Overview
+          </TabButton>
+          <TabButton tab="sessions" icon={<Star className="w-4 h-4" />}>
+            Session Reviews
+          </TabButton>
+          <TabButton tab="complaints" icon={<AlertTriangle className="w-4 h-4" />}>
+            Complaints
+          </TabButton>
+        </div>
+
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6 mb-8">
+              {/* Total Feedback */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <MessageSquare className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{totalFeedback}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Total Feedback</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pending */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Clock className="w-5 h-5 lg:w-6 lg:h-6 text-orange-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{pendingCount}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Pending</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Session Reviews */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Users className="w-5 h-5 lg:w-6 lg:h-6 text-green-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{sessionFeedbackCount}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Session Reviews</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Complaints */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <AlertTriangle className="w-5 h-5 lg:w-6 lg:h-6 text-red-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{complaintsCount}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Complaints</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Average Rating */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-yellow-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Star className="w-5 h-5 lg:w-6 lg:h-6 text-yellow-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{averageRating.toFixed(1)}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Avg Rating</p>
+                  </div>
                 </div>
               </div>
             </div>
             
-            <div className="p-6">
-              {filteredAndSortedFeedback.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-500 text-lg">No feedback items found matching your criteria.</p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+              {/* Recent Session Reviews */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Recent Session Reviews</h2>
+                  <button 
+                    onClick={() => setActiveTab('sessions')}
+                    className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-2 transition-colors"
+                  >
+                    View All
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
                 </div>
-              ) : (
-                <div className="space-y-6">
-                  {filteredAndSortedFeedback.map(item => (
-                    <FeedbackItem
-                      key={item.id}
-                      feedback={item}
-                      onStatusChange={handleStatusChange}
-                    />
+                <div className="space-y-4">
+                  {feedback.filter(f => f.type === 'session').slice(0, 3).map((item) => (
+                    <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Star className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900 text-sm">{item.title}</p>
+                        <p className="text-xs text-gray-600">{item.author} • {item.rating}/5 stars</p>
+                      </div>
+                      <span className="px-2 py-1 rounded-lg text-xs font-medium bg-green-100 text-green-700">
+                        {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                      </span>
+                    </div>
                   ))}
                 </div>
-              )}
+              </div>
+
+              {/* Recent Complaints */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Recent Complaints</h2>
+                  <button 
+                    onClick={() => setActiveTab('complaints')}
+                    className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-2 transition-colors"
+                  >
+                    View All
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {feedback.filter(f => f.type === 'complaint').slice(0, 3).map((item) => (
+                    <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                      <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                        <AlertTriangle className="w-4 h-4 text-red-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900 text-sm">{item.title}</p>
+                        <p className="text-xs text-gray-600">{item.author} • {item.priority} priority</p>
+                      </div>
+                      <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                        item.status === 'urgent' ? 'bg-red-100 text-red-700' : 
+                        item.status === 'pending' ? 'bg-orange-100 text-orange-700' :
+                        'bg-blue-100 text-blue-700'
+                      }`}>
+                        {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
+          </>
+        )}
+
+        {/* Session Reviews Tab */}
+        {activeTab === 'sessions' && (
+          <>
+            <FilterComponent 
+              filters={sessionFilters} 
+              onFiltersChange={setSessionFilters}
+              showTypeFilter={false}
+            />
+            
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6">
+              <div className="p-4 lg:p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg lg:text-xl font-semibold text-gray-900">
+                    Session Reviews ({sessionFeedback.length})
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600 mr-2">Sort by:</span>
+                    <SortButton field="createdAt" type="session">Created Date</SortButton>
+                    <SortButton field="rating" type="session">Rating</SortButton>
+                    <SortButton field="status" type="session">Status</SortButton>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                {sessionFeedback.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Star className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg">No session reviews found.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {sessionFeedback.map(item => (
+                      <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                              <User className="w-6 h-6 text-blue-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900 text-lg">{item.title}</h3>
+                              <p className="text-sm text-gray-600">
+                                {item.isAnonymous ? 'Anonymous Client' : item.author}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {item.rating && getRatingStars(item.rating)}
+                          </div>
+                        </div>
+
+                        <p className="text-gray-700 mb-4 leading-relaxed">{item.description}</p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Calendar className="w-4 h-4" />
+                            <span>{formatDate(item.createdAt)}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <MapPin className="w-4 h-4" />
+                            <span>{item.location}</span>
+                          </div>
+                          {item.counsellorAssigned && (
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <User className="w-4 h-4" />
+                              <span>{item.counsellorAssigned}</span>
+                            </div>
+                          )}
+                          {item.sessionType && (
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <MessageSquare className="w-4 h-4" />
+                              <span className="capitalize">{item.sessionType.replace('-', ' ')}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {item.tags.slice(0, 2).map((tag, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-700"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                            {item.tags.length > 2 && (
+                              <span className="text-xs text-gray-500">+{item.tags.length - 2} more</span>
+                            )}
+                          </div>
+                          <select
+                            value={item.status}
+                            onChange={(e) => handleStatusChange(item.id, e.target.value as Feedback['status'])}
+                            className={`inline-flex items-center px-3 py-2 rounded-xl text-xs font-medium border cursor-pointer transition-colors ${getStatusColor(item.status)}`}
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="urgent">Urgent</option>
+                          </select>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Complaints Tab */}
+        {activeTab === 'complaints' && (
+          <>
+            <FilterComponent 
+              filters={complaintFilters} 
+              onFiltersChange={setComplaintFilters}
+              showTypeFilter={false}
+            />
+            
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6">
+              <div className="p-4 lg:p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg lg:text-xl font-semibold text-gray-900">
+                    Complaints ({complaintFeedback.length})
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600 mr-2">Sort by:</span>
+                    <SortButton field="createdAt" type="complaint">Created Date</SortButton>
+                    <SortButton field="priority" type="complaint">Priority</SortButton>
+                    <SortButton field="status" type="complaint">Status</SortButton>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                {complaintFeedback.length === 0 ? (
+                  <div className="text-center py-12">
+                    <AlertTriangle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg">No complaints found.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {complaintFeedback.map(item => (
+                      <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                              <AlertTriangle className="w-6 h-6 text-red-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900 text-lg">{item.title}</h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getPriorityColor(item.priority)}`}>
+                                  {item.priority.charAt(0).toUpperCase() + item.priority.slice(1)} Priority
+                                </span>
+                                <span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 capitalize">
+                                  {item.category}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <select
+                            value={item.status}
+                            onChange={(e) => handleStatusChange(item.id, e.target.value as Feedback['status'])}
+                            className={`inline-flex items-center px-3 py-2 rounded-xl text-xs font-medium border cursor-pointer transition-colors ${getStatusColor(item.status)}`}
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="urgent">Urgent</option>
+                          </select>
+                        </div>
+
+                        <p className="text-gray-700 mb-4 leading-relaxed">{item.description}</p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <User className="w-4 h-4" />
+                            <span>{item.isAnonymous ? 'Anonymous' : item.author}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Mail className="w-4 h-4" />
+                            <span>{item.email}</span>
+                          </div>
+                          {item.phone && (
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Phone className="w-4 h-4" />
+                              <span>{item.phone}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <MapPin className="w-4 h-4" />
+                            <span>{item.location}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Calendar className="w-4 h-4" />
+                            <span>Created: {formatDate(item.createdAt)}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Calendar className="w-4 h-4" />
+                            <span>Updated: {formatDate(item.updatedAt)}</span>
+                          </div>
+                          {item.counsellorAssigned && (
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <User className="w-4 h-4" />
+                              <span>Assigned: {item.counsellorAssigned}</span>
+                            </div>
+                          )}
+                          {item.sessionType && (
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <MessageSquare className="w-4 h-4" />
+                              <span className="capitalize">{item.sessionType.replace('-', ' ')}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {item.tags.length > 0 && (
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Tag className="w-4 h-4 text-gray-500" />
+                            {item.tags.map((tag, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-700"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
           </div>
         </div>
       </div>
-      </main>
     </div>
   );
-}
+};
 
-export default Feedback;
+export default FeedbackManagement;

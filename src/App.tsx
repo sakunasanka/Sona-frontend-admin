@@ -17,6 +17,7 @@ import Message from './pages/Admin/Message';
 import Team from './pages/ManagementTeam/Team';
 import Calendar from './pages/ManagementTeam/Calendar';
 import Feedback from './pages/Admin/Feedback';
+import FeedbackManagement from './pages/Admin/Feedback';
 
  
 
@@ -35,13 +36,13 @@ function App() {
         <Route path="/blogs" element={<Blogs />} />
         <Route path="/counsellor" element={<Counsellor />} />
         <Route path="/client" element={<Client />} />
-        <Route path="/admin-analytics" element={<Analytics />} />  
+        {/* <Route path="/admin-analytics" element={<Analytics />} />   */}
         <Route path="/calendar" element={<Calendar />} />
         <Route path='/management-team' element={<ManagementTeam />} />
         <Route path='/reports' element={<Reports />} />
         <Route path="/psychiatrist" element={<Psychiatrist />} />
         <Route path="/message" element={<Message />} />
-        <Route path="/feedback" element={<Feedback />} />
+        <Route path="/feedback" element={<FeedbackManagement />} />
 
         <Route path="*" element={<div className="text-center text-red-500">404 Not Found</div>} />
         <Route path="/MTDashboard" element={<MTDashboard />} />
