@@ -1,0 +1,868 @@
+import React, { useState } from 'react';
+import { NavBar, Sidebar } from '../../components/layout';
+import { 
+  Search, 
+  Filter, 
+  Eye, 
+  Check, 
+  X, 
+  Mail, 
+  AlertCircle, 
+  CheckCircle, 
+  XCircle, 
+  User, 
+  Phone, 
+  Calendar, 
+  MapPin, 
+  GraduationCap, 
+  Clock, 
+  BookOpen, 
+  CreditCard, 
+  DollarSign, 
+  FileText,
+  ChevronDown,
+  ChevronUp,
+  ArrowRight
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+interface Client {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  registeredDate: string;
+  status: 'active' | 'inactive' | 'suspended';
+  age: number;
+  location: string;
+  bio: string;
+  avatar?: string;
+  studentPackage?: {
+    applied: boolean;
+    status: 'pending' | 'approved' | 'rejected';
+    appliedDate?: string;
+    school?: string;
+    studentId?: string;
+    graduationYear?: string;
+    verificationDocument?: string;
+    rejectionReason?: string;
+  };
+  clientType: 'regular' | 'student';
+  sessionsCompleted: number;
+  totalSpent: number;
+  subscriptionType?: string;
+}
+
+const mockClients: Client[] = [
+  {
+    id: '1',
+    name: 'Kavindi Rajapakse',
+    email: 'kavindi.r@gmail.com',
+    phone: '+94 77 123 4567',
+    registeredDate: '2024-01-15',
+    status: 'active',
+    age: 24,
+    location: 'Colombo 05, Sri Lanka',
+    bio: 'University student seeking counseling support for academic stress and career guidance.',
+    studentPackage: {
+      applied: true,
+      status: 'approved',
+      appliedDate: '2024-01-10',
+      school: 'University of Colombo',
+      studentId: 'UOC/2021/12345',
+      graduationYear: '2025',
+      verificationDocument: 'student_id_card.pdf'
+    },
+    clientType: 'student',
+    sessionsCompleted: 3,
+    totalSpent: 7500
+  },
+  {
+    id: '2',
+    name: 'Malith Fernando',
+    email: 'malith.f@outlook.com',
+    phone: '+94 76 234 5678',
+    registeredDate: '2024-01-12',
+    status: 'active',
+    age: 35,
+    location: 'Nugegoda, Sri Lanka',
+    bio: 'IT professional seeking work-life balance and stress management counseling.',
+    clientType: 'regular',
+    sessionsCompleted: 8,
+    totalSpent: 24000,
+    subscriptionType: 'premium'
+  },
+  {
+    id: '3',
+    name: 'Sachini Perera',
+    email: 'sachini.p@yahoo.com',
+    phone: '+94 71 345 6789',
+    registeredDate: '2024-01-08',
+    status: 'inactive',
+    age: 28,
+    location: 'Kandy, Sri Lanka',
+    bio: 'Young professional dealing with anxiety and relationship issues.',
+    studentPackage: {
+      applied: true,
+      status: 'rejected',
+      appliedDate: '2024-01-05',
+      school: 'University of Peradeniya',
+      studentId: 'UOP/2020/7890',
+      graduationYear: '2024',
+      verificationDocument: 'student_verification.pdf',
+      rejectionReason: 'Document verification failed'
+    },
+    clientType: 'student',
+    sessionsCompleted: 2,
+    totalSpent: 5000
+  },
+  {
+    id: '4',
+    name: 'Roshan Bandara',
+    email: 'roshan.b@gmail.com',
+    phone: '+94 75 456 7890',
+    registeredDate: '2024-01-05',
+    status: 'suspended',
+    age: 42,
+    location: 'Gampaha, Sri Lanka',
+    bio: 'Business owner seeking executive coaching and stress management.',
+    clientType: 'regular',
+    sessionsCompleted: 5,
+    totalSpent: 15000,
+    subscriptionType: 'basic'
+  },
+  {
+    id: '5',
+    name: 'Dilini Wickramasinghe',
+    email: 'dilini.w@outlook.com',
+    phone: '+94 77 567 8901',
+    registeredDate: '2024-01-02',
+    status: 'active',
+    age: 19,
+    location: 'Galle, Sri Lanka',
+    bio: 'First-year university student seeking career guidance and personal development counseling.',
+    studentPackage: {
+      applied: true,
+      status: 'pending',
+      appliedDate: '2024-01-01',
+      school: 'University of Ruhuna',
+      studentId: 'UOR/2023/5678',
+      graduationYear: '2027',
+      verificationDocument: 'admission_letter.pdf'
+    },
+    clientType: 'student',
+    sessionsCompleted: 1,
+    totalSpent: 2500
+  }
+];
+
+const Client: React.FC = () => {
+  const navigate = useNavigate();
+  const [clients, setClients] = useState<Client[]>(mockClients);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('All Status');
+  const [selectedSubscription, setSelectedSubscription] = useState('All Subscriptions');
+  const [activeTab, setActiveTab] = useState<'regular' | 'students'>('regular');
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [actionType, setActionType] = useState<'approve' | 'reject'>('approve');
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [isStudentPackageAction, setIsStudentPackageAction] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const closeSidebar = () => setSidebarOpen(false);
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
+  const getStatusBadge = (status: string) => {
+    const badges = {
+      active: 'bg-green-100 text-green-700 border-green-200',
+      inactive: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      suspended: 'bg-red-100 text-red-700 border-red-200'
+    };
+    return badges[status as keyof typeof badges] || badges.active;
+  };
+
+  const getSubscriptionBadge = (subscription: string | undefined) => {
+    const badges = {
+      'free': 'bg-gray-100 text-gray-700',
+      'basic': 'bg-blue-100 text-blue-700',
+      'premium': 'bg-purple-100 text-purple-700',
+      'student': 'bg-green-100 text-green-700'
+    };
+    return badges[subscription as keyof typeof badges] || 'bg-gray-100 text-gray-700';
+  };
+
+  const getStudentPackageStatusBadge = (status: string) => {
+    const badges = {
+      pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      approved: 'bg-green-100 text-green-700 border-green-200',
+      rejected: 'bg-red-100 text-red-700 border-red-200'
+    };
+    return badges[status as keyof typeof badges] || badges.pending;
+  };
+
+  // Separate student and regular users
+  const studentUsers = clients.filter(client => 
+    client.studentPackage?.applied === true || client.clientType === 'student'
+  );
+
+  const regularUsers = clients.filter(client => 
+    client.studentPackage?.applied !== true && client.clientType !== 'student'
+  );
+
+  const currentClients = activeTab === 'students' ? studentUsers : regularUsers;
+
+  const filteredClients = currentClients.filter(client => {
+    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         client.location.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = selectedStatus === 'All Status' || client.status === selectedStatus.toLowerCase();
+    const matchesSubscription = selectedSubscription === 'All Subscriptions' || client.clientType === selectedSubscription.toLowerCase();
+    
+    return matchesSearch && matchesStatus && matchesSubscription;
+  });
+
+  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
+
+  const handleViewProfile = (client: Client) => {
+    setSelectedClient(client);
+    setShowProfileModal(true);
+  };
+
+  const handleAction = (type: 'approve' | 'reject') => {
+    if (!selectedClient) return;
+    
+    setActionType(type);
+    setIsStudentPackageAction(true);
+    setRejectionReason('');
+    setShowActionModal(true);
+  };
+
+  const confirmAction = () => {
+    if (!selectedClient) return;
+    
+    if (actionType === 'reject' && isStudentPackageAction && !rejectionReason.trim()) {
+      showNotification('error', 'Please provide a rejection reason.');
+      return;
+    }
+    
+    setShowConfirmation(true);
+  };
+
+  const executeAction = async () => {
+    if (!selectedClient) return;
+    
+    setLoading(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setClients(prev => 
+        prev.map(c => 
+          c.id === selectedClient.id 
+            ? { 
+                ...c, 
+                studentPackage: {
+                  ...c.studentPackage!,
+                  status: actionType as 'approved' | 'rejected',
+                  rejectionReason: actionType === 'reject' ? rejectionReason : undefined
+                },
+                subscriptionType: actionType === 'approve' ? 'student' : c.clientType
+              }
+            : c
+        )
+      );
+      
+      showNotification('success', `Student package application ${actionType}d successfully!`);
+      
+      setShowProfileModal(false);
+      setShowActionModal(false);
+      setShowConfirmation(false);
+      setSelectedClient(null);
+      setRejectionReason('');
+      setIsStudentPackageAction(false);
+      
+    } catch (error) {
+      showNotification('error', 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const closeModals = () => {
+    setShowProfileModal(false);
+    setShowActionModal(false);
+    setShowConfirmation(false);
+    setSelectedClient(null);
+    setRejectionReason('');
+    setIsStudentPackageAction(false);
+  };
+
+  return (
+    <div className="flex flex-col h-screen">
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar - Desktop */}
+        <div className="hidden lg:block">
+          <Sidebar isOpen={true} onClose={closeSidebar} />
+        </div>
+        
+        {/* Mobile Sidebar */}
+        <div className="lg:hidden">
+          <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
+        </div>
+        
+        {/* Main content */}
+        <div className="flex-1 overflow-auto">
+          <NavBar onMenuClick={toggleSidebar} />
+          <div className="p-4 lg:p-6">
+            {/* Page Header */}
+            <div className="mb-6 lg:mb-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+                    Clients
+                  </h1>
+                  <p className="text-gray-600">View and manage your client relationships</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Notification */}
+            {notification && (
+              <div className={`fixed top-5 right-4 z-50 p-4 rounded-lg shadow-lg flex items-center space-x-2 ${
+                notification.type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
+                notification.type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
+                'bg-blue-100 text-blue-800 border border-blue-200'
+              }`}>
+                {notification.type === 'success' && <CheckCircle className="w-5 h-5" />}
+                {notification.type === 'error' && <XCircle className="w-5 h-5" />}
+                {notification.type === 'info' && <AlertCircle className="w-5 h-5" />}
+                <span>{notification.message}</span>
+                <button onClick={() => setNotification(null)} className="ml-2 hover:opacity-70">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6 mb-8">
+              {/* Total Clients */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <User className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{clients.length}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Total Clients</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Clients */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="w-5 h-5 lg:w-6 lg:h-6 text-green-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{clients.filter(c => c.status === 'active').length}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Active</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Inactive Clients */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-yellow-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Clock className="w-5 h-5 lg:w-6 lg:h-6 text-yellow-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{clients.filter(c => c.status === 'inactive').length}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Inactive</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Student Clients */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <GraduationCap className="w-5 h-5 lg:w-6 lg:h-6 text-purple-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{studentUsers.length}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Students</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Premium Clients */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <CreditCard className="w-5 h-5 lg:w-6 lg:h-6 text-indigo-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{clients.filter(c => c.clientType === 'regular').length}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Regular</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-6">
+              <div className="flex items-center gap-2">
+                <Filter className="w-5 h-5 text-gray-600" />
+                <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Filters</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                {/* Search */}
+                <div className="relative md:col-span-1 lg:col-span-2">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Search clients..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  />
+                </div>
+
+                {/* Status Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
+                  <select
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  >
+                    <option value="All Status">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="suspended">Suspended</option>
+                  </select>
+                </div>
+
+                {/* Tab Navigation */}
+                <div className="flex items-center gap-2 md:col-span-2 lg:col-span-1">
+                  <button
+                    onClick={() => setActiveTab('regular')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-colors ${
+                      activeTab === 'regular'
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Regular</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('students')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-colors ${
+                      activeTab === 'students'
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <GraduationCap className="w-4 h-4" />
+                    <span>Students</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Clients Table */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6">
+              {/* Table Header */}
+              <div className="px-6 py-4 bg-gray-50 grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 uppercase tracking-wider">
+                <div className="col-span-3 flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  <span>Client</span>
+                </div>
+                <div className="col-span-3 flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  <span>Contact</span>
+                </div>
+                {activeTab === 'students' && (
+                  <div className="col-span-2 flex items-center gap-2">
+                    <GraduationCap className="w-4 h-4" />
+                    <span>Student Package</span>
+                  </div>
+                )}
+                {activeTab === 'regular' && (
+                  <div className="col-span-2 flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    <span>Sessions</span>
+                  </div>
+                )}
+                <div className="col-span-2">Status</div>
+                <div className="col-span-1">Action</div>
+              </div>
+
+              {/* Table Body */}
+              <div className="divide-y divide-gray-200">
+                {filteredClients.map((client) => (
+                  <div key={client.id} className="px-6 py-4 grid grid-cols-12 gap-4 items-center hover:bg-gray-50 transition-colors">
+                    <div className="col-span-3 flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
+                        client.status === 'active' ? 'bg-green-500' :
+                        client.status === 'inactive' ? 'bg-yellow-500' : 'bg-red-500'
+                      }`}>
+                        {getInitials(client.name)}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{client.name}</p>
+                        <p className="text-sm text-gray-500">{client.age} years old</p>
+                      </div>
+                    </div>
+                    <div className="col-span-3">
+                      <p className="text-gray-900 text-sm">{client.email}</p>
+                      <p className="text-sm text-gray-500">{client.phone}</p>
+                    </div>
+                    {activeTab === 'students' && (
+                      <div className="col-span-2">
+                        {client.studentPackage?.applied ? (
+                          <div className="space-y-1">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStudentPackageStatusBadge(client.studentPackage.status)}`}>
+                              {client.studentPackage.status.charAt(0).toUpperCase() + client.studentPackage.status.slice(1)}
+                            </span>
+                            <p className="text-xs text-gray-500">{client.studentPackage.school}</p>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-400">Not applied</span>
+                        )}
+                      </div>
+                    )}
+                    {activeTab === 'regular' && (
+                      <div className="col-span-2">
+                        <p className="text-sm font-medium text-gray-900">{client.sessionsCompleted} sessions</p>
+                        <p className="text-xs text-gray-500">Total completed</p>
+                      </div>
+                    )}
+                    <div className="col-span-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadge(client.status)}`}>
+                        {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
+                      </span>
+                    </div>
+                    <div className="col-span-1">
+                      <button
+                        onClick={() => handleViewProfile(client)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg transition-colors flex items-center gap-1 text-sm"
+                      >
+                        <Eye className="w-3 h-3" />
+                        <span>View</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Profile Modal */}
+            {showProfileModal && selectedClient && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+                  <div className="p-6 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-2xl font-bold text-gray-900">Client Profile</h2>
+                      <button
+                        onClick={closeModals}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <X className="w-6 h-6" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      {/* Profile Info */}
+                      <div className="lg:col-span-1">
+                        <div className="text-center">
+                          <div className={`w-24 h-24 rounded-full mx-auto flex items-center justify-center text-white text-2xl font-bold ${
+                            selectedClient.status === 'active' ? 'bg-green-500' :
+                            selectedClient.status === 'inactive' ? 'bg-yellow-500' : 'bg-red-500'
+                          }`}>
+                            {getInitials(selectedClient.name)}
+                          </div>
+                          <h3 className="mt-4 text-xl font-bold text-gray-900">{selectedClient.name}</h3>
+                          <p className="text-gray-600">{selectedClient.age} years old</p>
+                          <div className="mt-4 space-y-2">
+                            <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium border ${getStatusBadge(selectedClient.status)}`}>
+                              {selectedClient.status.charAt(0).toUpperCase() + selectedClient.status.slice(1)}
+                            </span>
+                            <br />
+                            <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getSubscriptionBadge(selectedClient.subscriptionType || 'regular')}`}>
+                              {selectedClient.clientType.charAt(0).toUpperCase() + selectedClient.clientType.slice(1)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Details */}
+                      <div className="lg:col-span-2 space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="flex items-center gap-3">
+                            <Mail className="w-5 h-5 text-gray-400" />
+                            <div>
+                              <p className="text-sm text-gray-500">Email</p>
+                              <p className="font-medium">{selectedClient.email}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Phone className="w-5 h-5 text-gray-400" />
+                            <div>
+                              <p className="text-sm text-gray-500">Phone</p>
+                              <p className="font-medium">{selectedClient.phone}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <MapPin className="w-5 h-5 text-gray-400" />
+                            <div>
+                              <p className="text-sm text-gray-500">Location</p>
+                              <p className="font-medium">{selectedClient.location}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Calendar className="w-5 h-5 text-gray-400" />
+                            <div>
+                              <p className="text-sm text-gray-500">Registered Date</p>
+                              <p className="font-medium">{new Date(selectedClient.registeredDate).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Clock className="w-5 h-5 text-gray-400" />
+                            <div>
+                              <p className="text-sm text-gray-500">Sessions Completed</p>
+                              <p className="font-medium">{selectedClient.sessionsCompleted}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <DollarSign className="w-5 h-5 text-gray-400" />
+                            <div>
+                              <p className="text-sm text-gray-500">Total Spent</p>
+                              <p className="font-medium">${selectedClient.totalSpent}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Student Package Section */}
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <GraduationCap className="w-5 h-5 text-gray-400" />
+                            <h4 className="font-semibold text-gray-900">Student Package Application</h4>
+                          </div>
+                          
+                          {selectedClient.studentPackage?.applied ? (
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">Status:</span>
+                                <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStudentPackageStatusBadge(selectedClient.studentPackage.status)}`}>
+                                  {selectedClient.studentPackage.status.charAt(0).toUpperCase() + selectedClient.studentPackage.status.slice(1)}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span className="text-gray-500">School:</span>
+                                  <p className="font-medium">{selectedClient.studentPackage.school}</p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Student ID:</span>
+                                  <p className="font-medium">{selectedClient.studentPackage.studentId}</p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Graduation Year:</span>
+                                  <p className="font-medium">{selectedClient.studentPackage.graduationYear}</p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Applied Date:</span>
+                                  <p className="font-medium">{selectedClient.studentPackage.appliedDate ? new Date(selectedClient.studentPackage.appliedDate).toLocaleDateString() : 'N/A'}</p>
+                                </div>
+                              </div>
+                              
+                              {selectedClient.studentPackage.verificationDocument && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <FileText className="w-4 h-4 text-gray-400" />
+                                  <span className="text-gray-500">Verification Document:</span>
+                                  <span className="font-medium text-blue-600">{selectedClient.studentPackage.verificationDocument}</span>
+                                </div>
+                              )}
+
+                              {selectedClient.studentPackage.status === 'rejected' && selectedClient.studentPackage.rejectionReason && (
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                                  <div className="flex items-start gap-2">
+                                    <AlertCircle className="w-4 h-4 text-red-500 mt-0.5" />
+                                    <div>
+                                      <p className="text-sm font-medium text-red-800">Rejection Reason:</p>
+                                      <p className="text-sm text-red-700">{selectedClient.studentPackage.rejectionReason}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="text-gray-500 text-sm">No student package application submitted.</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-2">Bio</h4>
+                          <p className="text-gray-600">{selectedClient.bio}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="mt-8 flex flex-col sm:flex-row justify-end gap-3">
+                      {selectedClient.studentPackage?.applied && selectedClient.studentPackage?.status === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => handleAction('reject')}
+                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                          >
+                            <X className="w-4 h-4" />
+                            <span>Reject</span>
+                          </button>
+                          <button
+                            onClick={() => handleAction('approve')}
+                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                          >
+                            <Check className="w-4 h-4" />
+                            <span>Approve</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Action Modal */}
+            {showActionModal && selectedClient && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-xl max-w-lg w-full p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-900">
+                      {actionType === 'approve' ? 'Approve Student Package' : 'Reject Student Package'}
+                    </h3>
+                    <button
+                      onClick={closeModals}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-gray-700 mb-2">
+                        {actionType === 'approve'
+                          ? `Are you sure you want to approve the student package application for ${selectedClient.name}?`
+                          : `Are you sure you want to reject the student package application for ${selectedClient.name}?`}
+                      </p>
+                      {actionType === 'reject' && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Rejection Reason
+                          </label>
+                          <textarea
+                            value={rejectionReason}
+                            onChange={e => setRejectionReason(e.target.value)}
+                            className="w-full border border-gray-300 rounded-lg p-2"
+                            rows={3}
+                            placeholder="Provide a reason for rejection..."
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex justify-end gap-3 mt-4">
+                      <button
+                        onClick={closeModals}
+                        className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={confirmAction}
+                        className={`px-4 py-2 rounded-lg text-white ${
+                          actionType === 'approve'
+                            ? 'bg-green-600 hover:bg-green-700'
+                            : 'bg-red-600 hover:bg-red-700'
+                        }`}
+                      >
+                        {actionType === 'approve' ? 'Approve' : 'Reject'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Confirmation Modal */}
+            {showConfirmation && selectedClient && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-xl max-w-md w-full p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-900">Confirm Action</h3>
+                    <button
+                      onClick={closeModals}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    <p className="text-gray-700">
+                      {actionType === 'approve'
+                        ? `Approve student package application for ${selectedClient.name}?`
+                        : `Reject student package application for ${selectedClient.name}?`}
+                    </p>
+                    <div className="flex justify-end gap-3 mt-4">
+                      <button
+                        onClick={closeModals}
+                        className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={executeAction}
+                        className={`px-4 py-2 rounded-lg text-white ${
+                          actionType === 'approve'
+                            ? 'bg-green-600 hover:bg-green-700'
+                            : 'bg-red-600 hover:bg-red-700'
+                        }`}
+                        disabled={loading}
+                      >
+                        {loading ? 'Processing...' : 'Confirm'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Client;
