@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Sidebar from '../../components/layout/Sidebar';
 import Navbar from '../../components/layout/Navbar';
 import { 
-  Users, 
+  Users, User, Clock, XCircle,
   X, 
   Mail, 
   Phone, 
@@ -55,138 +55,138 @@ function ManagementTeam() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
     {
       id: '1',
-      name: 'Sarah Johnson',
+      name: 'Nimal Perera',
       position: 'Senior Product Manager',
-      email: 'sarah.johnson@company.com',
-      phone: '+1 (555) 123-4567',
-      location: 'San Francisco, CA',
+      email: 'nimal.perera@sona.lk',
+      phone: '+94 77 123 4567',
+      location: 'Colombo 03, Sri Lanka',
       joinDate: '2024-01-15',
       department: 'Product',
-      avatar: 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=150',
+      avatar: 'https://images.pexels.com/photos/3778876/pexels-photo-3778876.jpeg?auto=compress&cs=tinysrgb&w=150',
       experience: '8 years',
-      skills: ['Product Strategy', 'User Research', 'Agile', 'Data Analysis'],
-      bio: 'Experienced product manager with a passion for creating user-centric solutions. Led multiple successful product launches and cross-functional teams.',
-      education: ['MBA - Stanford University', 'BS Computer Science - UC Berkeley'],
+      skills: ['Product Strategy', 'Agile Management', 'User Research', 'Data Analytics'],
+      bio: 'Experienced product manager with expertise in healthcare technology solutions. Led multiple successful product launches in the Sri Lankan healthcare sector.',
+      education: ['MBA - University of Colombo', 'BSc in Computer Science - University of Moratuwa'],
       certifications: ['Certified Scrum Product Owner', 'Google Analytics Certified'],
       previousRoles: [
-        { company: 'TechCorp', position: 'Product Manager', duration: '2020-2023' },
-        { company: 'StartupXYZ', position: 'Associate Product Manager', duration: '2018-2020' }
+        { company: 'Dialog Axiata', position: 'Product Manager', duration: '2020-2023' },
+        { company: 'Virtusa', position: 'Associate Product Manager', duration: '2018-2020' }
       ],
       achievements: [
-        'Increased user engagement by 45% through product optimization',
-        'Led team of 12 engineers and designers',
-        'Launched 3 major product features with 95% user satisfaction'
+        'Led the development of Sri Lanka\'s first telemedicine platform',
+        'Increased user engagement by 45% through localized product optimization',
+        'Successfully managed a team of 10 engineers and designers'
       ],
-      salary: '$145,000',
+      salary: 'Rs. 250,000',
       reportingTo: 'VP of Product'
     },
     {
       id: '2',
-      name: 'Michael Chen',
+      name: 'Chamari Silva',
       position: 'Engineering Lead',
-      email: 'michael.chen@company.com',
-      phone: '+1 (555) 234-5678',
-      location: 'Seattle, WA',
+      email: 'chamari.silva@sona.lk',
+      phone: '+94 76 234 5678',
+      location: 'Nugegoda, Sri Lanka',
       joinDate: '2024-01-10',
       department: 'Engineering',
-      avatar: 'https://images.pexels.com/photos/3778876/pexels-photo-3778876.jpeg?auto=compress&cs=tinysrgb&w=150',
+      avatar: 'https://images.pexels.com/photos/3992656/pexels-photo-3992656.jpeg?auto=compress&cs=tinysrgb&w=150',
       experience: '12 years',
       skills: ['Full Stack Development', 'Cloud Architecture', 'Team Leadership', 'DevOps'],
-      bio: 'Senior engineering leader with extensive experience in building scalable systems and leading high-performance teams.',
-      education: ['MS Computer Science - MIT', 'BS Software Engineering - Carnegie Mellon'],
-      certifications: ['AWS Solutions Architect', 'Kubernetes Certified Administrator'],
+      bio: 'Senior engineering leader with extensive experience in healthcare software development and team management.',
+      education: ['MSc in Computer Science - University of Moratuwa', 'BSc in Software Engineering - University of Colombo'],
+      certifications: ['AWS Solutions Architect', 'Microsoft Certified: Azure Solutions Architect'],
       previousRoles: [
-        { company: 'Amazon', position: 'Senior Software Engineer', duration: '2019-2023' },
-        { company: 'Microsoft', position: 'Software Engineer', duration: '2016-2019' }
+        { company: 'WSO2', position: 'Senior Software Engineer', duration: '2019-2023' },
+        { company: 'IFS', position: 'Software Engineer', duration: '2016-2019' }
       ],
       achievements: [
-        'Architected microservices handling 10M+ requests daily',
+        'Architected scalable healthcare solutions used by major hospitals in Sri Lanka',
         'Reduced system downtime by 80%',
         'Mentored 15+ junior engineers'
       ],
-      salary: '$165,000',
+      salary: 'Rs. 350,000',
       reportingTo: 'CTO'
     },
     {
       id: '3',
-      name: 'Emily Rodriguez',
+      name: 'Ashan Jayawardena',
       position: 'Head of Marketing',
-      email: 'emily.rodriguez@company.com',
-      phone: '+1 (555) 345-6789',
-      location: 'New York, NY',
+      email: 'ashan.jayawardena@sona.lk',
+      phone: '+94 71 345 6789',
+      location: 'Rajagiriya, Sri Lanka',
       joinDate: '2024-01-20',
       department: 'Marketing',
-      avatar: 'https://images.pexels.com/photos/3992656/pexels-photo-3992656.jpeg?auto=compress&cs=tinysrgb&w=150',
+      avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=150',
       experience: '10 years',
-      skills: ['Digital Marketing', 'Brand Strategy', 'Growth Hacking', 'Analytics'],
-      bio: 'Strategic marketing leader with proven track record in building brands and driving growth across multiple channels.',
-      education: ['MBA Marketing - Wharton', 'BA Communications - NYU'],
+      skills: ['Digital Marketing', 'Brand Strategy', 'Market Research', 'Content Strategy'],
+      bio: 'Marketing professional with expertise in healthcare and wellness sector marketing in Sri Lanka.',
+      education: ['MBA Marketing - University of Sri Jayewardenepura', 'BBA - University of Colombo'],
       certifications: ['Google Ads Certified', 'HubSpot Marketing Certified'],
       previousRoles: [
-        { company: 'Nike', position: 'Marketing Director', duration: '2021-2023' },
-        { company: 'Coca-Cola', position: 'Brand Manager', duration: '2018-2021' }
+        { company: 'Hemas Holdings', position: 'Marketing Manager', duration: '2021-2023' },
+        { company: 'Asiri Health', position: 'Brand Manager', duration: '2018-2021' }
       ],
       achievements: [
-        'Increased brand awareness by 60% in 18 months',
-        'Generated $5M in new revenue through campaigns',
-        'Built marketing team from 3 to 20 members'
+        'Increased brand awareness by 60% in Sri Lankan healthcare sector',
+        'Successfully launched digital health awareness campaigns',
+        'Built marketing team from 3 to 15 members'
       ],
-      salary: '$135,000',
+      salary: 'Rs. 275,000',
       reportingTo: 'CMO'
     },
     {
       id: '4',
-      name: 'David Kumar',
-      position: 'VP of Sales',
-      email: 'david.kumar@company.com',
-      phone: '+1 (555) 456-7890',
-      location: 'Austin, TX',
+      name: 'Dilini Gunasekara',
+      position: 'Head of Operations',
+      email: 'dilini.gunasekara@sona.lk',
+      phone: '+94 75 456 7890',
+      location: 'Battaramulla, Sri Lanka',
       joinDate: '2024-01-08',
-      department: 'Sales',
-      avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=150',
-      experience: '6 years',
-      skills: ['B2B Sales', 'CRM Management', 'Lead Generation', 'Negotiation'],
-      bio: 'Results-driven sales professional with expertise in enterprise sales and team management.',
-      education: ['MBA - UT Austin', 'BS Business Administration - Texas A&M'],
-      certifications: ['Salesforce Certified Administrator'],
+      department: 'Operations',
+      avatar: 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=150',
+      experience: '9 years',
+      skills: ['Operations Management', 'Process Optimization', 'Team Leadership', 'Healthcare Operations'],
+      bio: 'Operations expert with focus on healthcare service delivery and process optimization.',
+      education: ['MSc in Healthcare Management - PGIM Colombo', 'BBM - University of Kelaniya'],
+      certifications: ['Certified Healthcare Operations Professional', 'Six Sigma Green Belt'],
       previousRoles: [
-        { company: 'Oracle', position: 'Senior Sales Manager', duration: '2020-2023' },
-        { company: 'IBM', position: 'Sales Representative', duration: '2018-2020' }
+        { company: 'Durdans Hospital', position: 'Operations Manager', duration: '2020-2023' },
+        { company: 'Nawaloka Hospitals', position: 'Assistant Manager', duration: '2018-2020' }
       ],
       achievements: [
-        'Exceeded sales targets by 25% for 3 consecutive years',
-        'Closed $2M+ in enterprise deals',
-        'Built sales pipeline worth $10M+'
+        'Streamlined patient care processes reducing wait times by 40%',
+        'Implemented new healthcare service delivery protocols',
+        'Managed operations team of 25+ staff members'
       ],
-      salary: '$125,000',
-      reportingTo: 'Chief Revenue Officer'
+      salary: 'Rs. 225,000',
+      reportingTo: 'COO'
     },
     {
       id: '5',
-      name: 'Lisa Thompson',
-      position: 'Head of Design',
-      email: 'lisa.thompson@company.com',
-      phone: '+1 (555) 567-8901',
-      location: 'Los Angeles, CA',
+      name: 'Thilina Ranasinghe',
+      position: 'Head of Technology',
+      email: 'thilina.ranasinghe@sona.lk',
+      phone: '+94 77 567 8901',
+      location: 'Malabe, Sri Lanka',
       joinDate: '2024-01-25',
-      department: 'Design',
-      avatar: 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=150',
-      experience: '9 years',
-      skills: ['UI/UX Design', 'Design Systems', 'Prototyping', 'User Testing'],
-      bio: 'Creative design leader passionate about creating intuitive user experiences and building design systems at scale.',
-      education: ['MFA Design - Art Center', 'BA Graphic Design - UCLA'],
-      certifications: ['Adobe Certified Expert', 'Google UX Design Certificate'],
+      department: 'Technology',
+      avatar: 'https://images.pexels.com/photos/3778876/pexels-photo-3778876.jpeg?auto=compress&cs=tinysrgb&w=150',
+      experience: '15 years',
+      skills: ['Technology Strategy', 'System Architecture', 'Digital Transformation', 'Healthcare IT'],
+      bio: 'Technology leader with extensive experience in healthcare IT systems and digital transformation.',
+      education: ['MSc in IT - University of Moratuwa', 'BEng in Computer Engineering - University of Peradeniya'],
+      certifications: ['TOGAF Certified', 'Healthcare Information Security Certified'],
       previousRoles: [
-        { company: 'Airbnb', position: 'Senior UX Designer', duration: '2020-2023' },
-        { company: 'Spotify', position: 'Product Designer', duration: '2018-2020' }
+        { company: 'Lanka Hospitals', position: 'IT Director', duration: '2020-2023' },
+        { company: 'Millennium IT', position: 'Technical Lead', duration: '2018-2020' }
       ],
       achievements: [
-        'Redesigned core product increasing user satisfaction by 40%',
-        'Built design system used by 50+ designers',
-        'Led design for award-winning mobile app'
+        'Led digital transformation of major healthcare provider',
+        'Implemented enterprise-wide EMR system',
+        'Developed IT strategy aligned with healthcare standards'
       ],
-      salary: '$140,000',
-      reportingTo: 'VP of Design'
+      salary: 'Rs. 400,000',
+      reportingTo: 'CTO'
     }
   ]);
 
@@ -195,6 +195,7 @@ function ManagementTeam() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [viewingProfile, setViewingProfile] = useState<TeamMember | null>(null);
   const [emailSending, setEmailSending] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState('All Status');
   const [emailSent, setEmailSent] = useState(false);
   const [sortBy, setSortBy] = useState<'name' | 'position' | 'department' | 'joinDate'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -507,20 +508,75 @@ HR Management Team`);
         <div className="flex-1 overflow-auto">
           <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
           
-          <div className="p-4 lg:p-6">
+          <div className="p-4 lg:p-6 ">
             {/* Header */}
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-4">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Management Team</h1>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Management Team</h1>
                   <p className="text-gray-600">Manage and view management team members</p>
                 </div>
               </div>
 
-              {/* Search and Filters */}
-              <div className="flex flex-col lg:flex-row gap-4 mb-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+              {/* Total Psychiatrists */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <User className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{teamMembers.length}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Total Team Members</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pending
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-yellow-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Clock className="w-5 h-5 lg:w-6 lg:h-6 text-yellow-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{teamMembers.pending}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Pending</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Approved */}
+              {/* <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="w-5 h-5 lg:w-6 lg:h-6 text-green-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{teamMembers.approved}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Approved</p>
+                  </div>
+                </div>
+              </div> */}
+
+              {/* Rejected */}
+              {/* <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <XCircle className="w-5 h-5 lg:w-6 lg:h-6 text-red-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{teamMembers.rejected}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Rejected</p>
+                  </div>
+                </div>
+              </div> */}
+            </div>
+
+              {/* Search and Filters
+              <div className="flex flex-col lg:flex-row gap-4 mb-6"> */}
                 {/* Search Bar */}
-                <div className="relative flex-1">
+                {/* <div className="relative flex-1">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Search className="h-5 w-5 text-gray-400" />
                   </div>
@@ -531,10 +587,10 @@ HR Management Team`);
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
-                </div>
+                </div> */}
 
                 {/* Department Filter */}
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                   <Filter className="h-5 w-5 text-gray-400" />
                   <select
                     value={departmentFilter}
@@ -547,8 +603,8 @@ HR Management Team`);
                       </option>
                     ))}
                   </select>
-                </div>
-              </div>
+                </div> 
+              </div>*/}
 
               {/* Actions */}
               <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
@@ -562,6 +618,60 @@ HR Management Team`);
               </div>
             </div>
 
+            {/* Filters */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-6">
+              <div className="flex items-center gap-2">
+                <Filter className="w-5 h-5 text-gray-600" />
+                <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Filters</h2>
+              </div>
+              
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+                {/* Search */}
+                <div className="relative md:col-span-1 lg:col-span-2">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Search psychiatrists..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  />
+                </div>
+
+                {/* Category Filter */}
+                {/* <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  >
+                    <option value="All Categories">All Categories</option>
+                    <option value="Clinical">Clinical</option>
+                    <option value="Family">Family</option>
+                    <option value="Career">Career</option>
+                    <option value="Addiction">Addiction</option>
+                    <option value="Trauma">Trauma</option>
+                  </select>
+                </div> */}
+
+                {/* Status Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
+                  <select
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  >
+                    <option value="All Status">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+              </div>
+            </div>
             {/* Table */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="overflow-x-auto overflow-y-auto">
@@ -1021,7 +1131,7 @@ HR Management Team`);
                       </div>
 
                       {/* Skills */}
-                      <div className="bg-gray-50 rounded-lg p-4">
+                      {/* <div className="bg-gray-50 rounded-lg p-4">
                         <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
                           <Star className="w-4 h-4" />
                           Skills & Expertise
@@ -1058,10 +1168,10 @@ HR Management Team`);
                             </span>
                           ))}
                         </div>
-                      </div>
+                      </div> */}
 
                       {/* Education */}
-                      <div className="bg-gray-50 rounded-lg p-4">
+                      {/* <div className="bg-gray-50 rounded-lg p-4">
                         <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
                           <Award className="w-4 h-4" />
                           Education
@@ -1095,10 +1205,10 @@ HR Management Team`);
                             </div>
                           ))}
                         </div>
-                      </div>
+                      </div> */}
 
                       {/* Certifications */}
-                      <div className="bg-gray-50 rounded-lg p-4">
+                      {/* <div className="bg-gray-50 rounded-lg p-4">
                         <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
                           <FileText className="w-4 h-4" />
                           Certifications
@@ -1132,10 +1242,10 @@ HR Management Team`);
                             </div>
                           ))}
                         </div>
-                      </div>
+                      </div> */}
 
                       {/* Previous Roles */}
-                      <div className="bg-gray-50 rounded-lg p-4">
+                      {/* <div className="bg-gray-50 rounded-lg p-4">
                         <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
                           <Building className="w-4 h-4" />
                           Previous Roles
@@ -1185,10 +1295,10 @@ HR Management Team`);
                             </div>
                           ))}
                         </div>
-                      </div>
+                      </div> */}
 
                       {/* Achievements */}
-                      <div className="bg-gray-50 rounded-lg p-4">
+                      {/* <div className="bg-gray-50 rounded-lg p-4">
                         <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
                           <CheckCircle className="w-4 h-4" />
                           Key Achievements
@@ -1222,7 +1332,7 @@ HR Management Team`);
                             </div>
                           ))}
                         </div>
-                      </div>
+                      </div> */}
                     </div>
 
                     {/* Modal Footer */}

@@ -25,7 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const menuItems = [
     { icon: Grid2X2, label: 'Dashboard', href: '/admin-dashboard', id: 'home' },
-    { icon: User, label: 'Profile', href: '/admin-profile', id: 'profile' },
+    // { icon: User, label: 'Profile', href: '/admin-profile', id: 'profile' },
     // { icon: ChartAreaIcon, label: 'Analytics', href: '/admin-analytics', id: 'analytics' },
     { 
       icon: Users, 

@@ -47,10 +47,10 @@ const CounsellorFilterBar: React.FC<CounsellorFilterBarProps> = ({ onSearch, onF
   };
 
   return (
-    <div className="bg-red-200 shadow-sm border-b border-gray-200 px-6 py-4 m-6">
+    <div className="bg-blue-200 shadow-sm border-b border-gray-200 px-6 py-4 m-6">
       <div className="flex items-center justify-between space-x-4">
         {/* Search Bar */}
-        <div className="flex-1 max-w-md">
+        {/* <div className="flex-1">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
@@ -61,17 +61,17 @@ const CounsellorFilterBar: React.FC<CounsellorFilterBarProps> = ({ onSearch, onF
               className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Filters */}
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
+        {/* <div className="flex items-center space-x-4"> */}
+          {/* <div className="flex items-center space-x-2">
             <Filter className="h-4 w-4 text-gray-500" />
             <span className="text-sm text-gray-700 font-medium">Filters:</span>
-          </div>
+          </div> */}
 
           {/* Category Filter */}
-          <div className="flex items-center space-x-1">
+          {/* <div className="flex items-center space-x-1">
             <label htmlFor="category-filter" className="sr-only">
               Category
             </label>
@@ -88,10 +88,10 @@ const CounsellorFilterBar: React.FC<CounsellorFilterBarProps> = ({ onSearch, onF
               <option value="addiction">Addiction</option>
               <option value="trauma">Trauma</option>
             </select>
-          </div>
+          </div> */}
 
           {/* Experience Filter */}
-          <div className="flex items-center space-x-1">
+          {/* <div className="flex items-center space-x-1">
             <label htmlFor="experience-filter" className="sr-only">
               Experience
             </label>
@@ -106,8 +106,8 @@ const CounsellorFilterBar: React.FC<CounsellorFilterBarProps> = ({ onSearch, onF
               <option value="mid">Mid</option>
               <option value="senior">Senior</option>
             </select>
-          </div>
-        </div>
+          </div> */}
+        {/* </div> */}
       </div>
     </div>
   );

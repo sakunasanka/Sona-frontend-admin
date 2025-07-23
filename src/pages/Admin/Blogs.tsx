@@ -94,7 +94,7 @@ const mockPosts: BlogPost[] = [
   },
   {
     id: '2',
-    title: 'How to Support a Friend Facing Depression',
+    title: 'How to Support a random Friend Facing Depression',
     content: `Depression is a common mental health challenge in Sri Lanka. If you suspect a friend is struggling...`,
     excerpt: 'Learn how to help friends in Sri Lanka who may be experiencing depression.',
     author: mockAuthors[0],
