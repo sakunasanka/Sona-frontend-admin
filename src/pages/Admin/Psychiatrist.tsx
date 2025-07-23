@@ -23,78 +23,78 @@ const Psychiatrist: React.FC = () => {
   const [psychiatrists, setPsychiatrists] = useState<Psychiatrist[]>([
     {
       id: '1',
-      name: 'Dr. Sarah Johnson',
-      email: 'sarah.johnson@email.com',
-      phone: '+1 (555) 123-4567',
+      name: 'Dr. Ananda Wijesinghe',
+      email: 'ananda.wijesinghe@gmail.com',
+      phone: '+94 77 234 5678',
       registeredDate: '2024-01-15',
-      category: 'Clinical',
+      category: 'General',
       status: 'approved',
-      specialization: 'Clinical Psychology',
-      experience: '8 years',
-      education: 'PhD in Clinical Psychology, Harvard University',
-      license: 'PSY-12345-CA',
-      location: 'Los Angeles, CA',
-      bio: 'Specialized in anxiety disorders, depression, and trauma therapy with extensive experience in cognitive behavioral therapy.'
+      specialization: 'General Psychiatry',
+      experience: '15 years',
+      education: 'MD in Psychiatry - University of Colombo, MBBS - University of Peradeniya',
+      license: 'SLMC-12345',
+      location: 'Colombo 07, Sri Lanka',
+      bio: 'Senior consultant psychiatrist with extensive experience in general adult psychiatry. Former consultant at National Hospital of Sri Lanka and current visiting consultant at several private hospitals in Colombo.'
     },
     {
       id: '2',
-      name: 'Dr. Michael Chen',
-      email: 'michael.chen@email.com',
-      phone: '+1 (555) 234-5678',
+      name: 'Dr. Samanthi Perera',
+      email: 'samanthi.perera@outlook.com',
+      phone: '+94 76 345 6789',
       registeredDate: '2024-01-12',
-      category: 'Family',
+      category: 'Child',
       status: 'approved',
-      specialization: 'Family Therapy',
+      specialization: 'Child & Adolescent Psychiatry',
       experience: '12 years',
-      education: 'PhD in Marriage and Family Therapy, UCLA',
-      license: 'MFT-67890-CA',
-      location: 'San Francisco, CA',
-      bio: 'Expert in couples counseling, family dynamics, and relationship therapy with a focus on communication improvement.'
+      education: 'MD in Child Psychiatry - University of Colombo, MBBS - University of Sri Jayewardenepura',
+      license: 'SLMC-23456',
+      location: 'Nugegoda, Sri Lanka',
+      bio: 'Specialized in child and adolescent mental health with focus on developmental disorders and early intervention. Regular consultant at Lady Ridgeway Hospital for Children.'
     },
     {
       id: '3',
-      name: 'Dr. Emily Rodriguez',
-      email: 'emily.rodriguez@email.com',
-      phone: '+1 (555) 345-6789',
+      name: 'Dr. Rajitha Bandara',
+      email: 'rajitha.bandara@yahoo.com',
+      phone: '+94 71 456 7890',
       registeredDate: '2024-01-10',
-      category: 'Career',
+      category: 'Forensic',
       status: 'rejected',
-      specialization: 'Career Counseling',
-      experience: '5 years',
-      education: 'Masters in Career Development, Stanford University',
-      license: 'CC-11111-CA',
-      location: 'Palo Alto, CA',
-      bio: 'Helps professionals navigate career transitions, workplace stress, and professional development challenges.'
+      specialization: 'Forensic Psychiatry',
+      experience: '8 years',
+      education: 'MD in Forensic Psychiatry - University of Colombo, MBBS - University of Kelaniya',
+      license: 'SLMC-34567',
+      location: 'Kandy, Sri Lanka',
+      bio: 'Forensic psychiatrist with experience in criminal justice system consultations and court-ordered evaluations. Consultant at National Institute of Mental Health.'
     },
     {
       id: '4',
-      name: 'Dr. James Wilson',
-      email: 'james.wilson@email.com',
-      phone: '+1 (555) 456-7890',
+      name: 'Dr. Dilshan Gunasekara',
+      email: 'dilshan.gunasekara@gmail.com',
+      phone: '+94 75 567 8901',
       registeredDate: '2024-01-08',
       category: 'Addiction',
       status: 'approved',
-      specialization: 'Addiction Counseling',
+      specialization: 'Addiction Psychiatry',
       experience: '10 years',
-      education: 'PhD in Addiction Psychology, UC Berkeley',
-      license: 'AC-22222-CA',
-      location: 'Oakland, CA',
-      bio: 'Specialized in substance abuse treatment, addiction recovery, and behavioral interventions.'
+      education: 'MD in Psychiatry - University of Colombo, MBBS - University of Ruhuna',
+      license: 'SLMC-45678',
+      location: 'Galle, Sri Lanka',
+      bio: 'Expert in addiction psychiatry and rehabilitation medicine. Works closely with rehabilitation centers across Southern Province and conducts regular addiction treatment programs.'
     },
     {
       id: '5',
-      name: 'Dr. Lisa Thompson',
-      email: 'lisa.thompson@email.com',
-      phone: '+1 (555) 567-8901',
+      name: 'Dr. Malini Silva',
+      email: 'malini.silva@outlook.com',
+      phone: '+94 77 678 9012',
       registeredDate: '2024-01-05',
-      category: 'Trauma',
+      category: 'Geriatric',
       status: 'pending',
-      specialization: 'Trauma Therapy',
-      experience: '7 years',
-      education: 'PhD in Trauma Psychology, USC',
-      license: 'TT-33333-CA',
-      location: 'Los Angeles, CA',
-      bio: 'Expert in PTSD treatment, trauma recovery, and crisis intervention with specialized training in EMDR.'
+      specialization: 'Geriatric Psychiatry',
+      experience: '14 years',
+      education: 'MD in Geriatric Psychiatry - University of Colombo, MBBS - University of Peradeniya',
+      license: 'SLMC-56789',
+      location: 'Colombo 05, Sri Lanka',
+      bio: 'Specialized in geriatric psychiatry with focus on dementia care and late-life depression. Consultant at several elder care facilities in Western Province.'
     }
   ]);
 
@@ -266,7 +266,7 @@ const Psychiatrist: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-                    Psychiatrist Management
+                    Psychiatrists
                   </h1>
                   <p className="text-gray-600">View and manage psychiatrist applications</p>
                 </div>
@@ -274,7 +274,7 @@ const Psychiatrist: React.FC = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
               {/* Total Psychiatrists */}
               <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
                 <div className="flex items-center gap-3 w-full">
@@ -326,29 +326,16 @@ const Psychiatrist: React.FC = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Clinical */}
-              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
-                <div className="flex items-center gap-3 w-full">
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Shield className="w-5 h-5 lg:w-6 lg:h-6 text-purple-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{psychiatrists.filter(p => p.category === 'Clinical').length}</p>
-                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Clinical</p>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Filters */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-6">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2">
                 <Filter className="w-5 h-5 text-gray-600" />
                 <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Filters</h2>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
                 {/* Search */}
                 <div className="relative md:col-span-1 lg:col-span-2">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -362,7 +349,7 @@ const Psychiatrist: React.FC = () => {
                 </div>
 
                 {/* Category Filter */}
-                <div>
+                {/* <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
                   <select
                     value={selectedCategory}
@@ -376,7 +363,7 @@ const Psychiatrist: React.FC = () => {
                     <option value="Addiction">Addiction</option>
                     <option value="Trauma">Trauma</option>
                   </select>
-                </div>
+                </div> */}
 
                 {/* Status Filter */}
                 <div>
@@ -398,7 +385,7 @@ const Psychiatrist: React.FC = () => {
             {/* Psychiatrists Table */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6">
               {/* Table Header */}
-              <div className="px-6 py-4 bg-gray-50 grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 uppercase tracking-wider">
+              <div className="px-6 py-4 bg-gray-50 grid grid-cols-10 gap-4 text-sm font-medium text-gray-500 uppercase tracking-wider">
                 <div className="col-span-3 flex items-center gap-2">
                   <User className="w-4 h-4" />
                   <span>Psychiatrist</span>
@@ -411,7 +398,7 @@ const Psychiatrist: React.FC = () => {
                   <Calendar className="w-4 h-4" />
                   <span>Registered Date</span>
                 </div>
-                <div className="col-span-2">Category</div>
+                {/* <div className="col-span-2">Category</div> */}
                 <div className="col-span-1">Status</div>
                 <div className="col-span-1">Action</div>
               </div>
@@ -419,7 +406,7 @@ const Psychiatrist: React.FC = () => {
               {/* Table Body */}
               <div className="divide-y divide-gray-200">
                 {filteredPsychiatrists.map((psychiatrist) => (
-                  <div key={psychiatrist.id} className="px-6 py-4 grid grid-cols-12 gap-4 items-center hover:bg-gray-50 transition-colors">
+                  <div key={psychiatrist.id} className="px-6 py-4 grid grid-cols-10 gap-4 items-center hover:bg-gray-50 transition-colors">
                     <div className="col-span-3 flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
                         psychiatrist.status === 'approved' ? 'bg-green-500' :
@@ -439,11 +426,11 @@ const Psychiatrist: React.FC = () => {
                     <div className="col-span-2 text-gray-900">
                       {new Date(psychiatrist.registeredDate).toLocaleDateString()}
                     </div>
-                    <div className="col-span-2">
+                    {/* <div className="col-span-2">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${getCategoryBadge(psychiatrist.category)}`}>
                         {psychiatrist.category}
                       </span>
-                    </div>
+                    </div> */}
                     <div className="col-span-1">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusBadge(psychiatrist.status)}`}>
                         {psychiatrist.status.charAt(0).toUpperCase() + psychiatrist.status.slice(1)}

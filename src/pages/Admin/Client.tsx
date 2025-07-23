@@ -53,157 +53,112 @@ interface Client {
   subscriptionType?: string;
 }
 
+const mockClients: Client[] = [
+  {
+    id: '1',
+    name: 'Kavindi Rajapakse',
+    email: 'kavindi.r@gmail.com',
+    phone: '+94 77 123 4567',
+    registeredDate: '2024-01-15',
+    status: 'active',
+    age: 24,
+    location: 'Colombo 05, Sri Lanka',
+    bio: 'University student seeking counseling support for academic stress and career guidance.',
+    studentPackage: {
+      applied: true,
+      status: 'approved',
+      appliedDate: '2024-01-10',
+      school: 'University of Colombo',
+      studentId: 'UOC/2021/12345',
+      graduationYear: '2025',
+      verificationDocument: 'student_id_card.pdf'
+    },
+    clientType: 'student',
+    sessionsCompleted: 3,
+    totalSpent: 7500
+  },
+  {
+    id: '2',
+    name: 'Malith Fernando',
+    email: 'malith.f@outlook.com',
+    phone: '+94 76 234 5678',
+    registeredDate: '2024-01-12',
+    status: 'active',
+    age: 35,
+    location: 'Nugegoda, Sri Lanka',
+    bio: 'IT professional seeking work-life balance and stress management counseling.',
+    clientType: 'regular',
+    sessionsCompleted: 8,
+    totalSpent: 24000,
+    subscriptionType: 'premium'
+  },
+  {
+    id: '3',
+    name: 'Sachini Perera',
+    email: 'sachini.p@yahoo.com',
+    phone: '+94 71 345 6789',
+    registeredDate: '2024-01-08',
+    status: 'inactive',
+    age: 28,
+    location: 'Kandy, Sri Lanka',
+    bio: 'Young professional dealing with anxiety and relationship issues.',
+    studentPackage: {
+      applied: true,
+      status: 'rejected',
+      appliedDate: '2024-01-05',
+      school: 'University of Peradeniya',
+      studentId: 'UOP/2020/7890',
+      graduationYear: '2024',
+      verificationDocument: 'student_verification.pdf',
+      rejectionReason: 'Document verification failed'
+    },
+    clientType: 'student',
+    sessionsCompleted: 2,
+    totalSpent: 5000
+  },
+  {
+    id: '4',
+    name: 'Roshan Bandara',
+    email: 'roshan.b@gmail.com',
+    phone: '+94 75 456 7890',
+    registeredDate: '2024-01-05',
+    status: 'suspended',
+    age: 42,
+    location: 'Gampaha, Sri Lanka',
+    bio: 'Business owner seeking executive coaching and stress management.',
+    clientType: 'regular',
+    sessionsCompleted: 5,
+    totalSpent: 15000,
+    subscriptionType: 'basic'
+  },
+  {
+    id: '5',
+    name: 'Dilini Wickramasinghe',
+    email: 'dilini.w@outlook.com',
+    phone: '+94 77 567 8901',
+    registeredDate: '2024-01-02',
+    status: 'active',
+    age: 19,
+    location: 'Galle, Sri Lanka',
+    bio: 'First-year university student seeking career guidance and personal development counseling.',
+    studentPackage: {
+      applied: true,
+      status: 'pending',
+      appliedDate: '2024-01-01',
+      school: 'University of Ruhuna',
+      studentId: 'UOR/2023/5678',
+      graduationYear: '2027',
+      verificationDocument: 'admission_letter.pdf'
+    },
+    clientType: 'student',
+    sessionsCompleted: 1,
+    totalSpent: 2500
+  }
+];
+
 const Client: React.FC = () => {
   const navigate = useNavigate();
-  const [clients, setClients] = useState<Client[]>([
-    {
-      id: '1',
-      name: 'Alex Johnson',
-      email: 'alex.johnson@email.com',
-      phone: '+1 (555) 123-4567',
-      registeredDate: '2024-01-15',
-      status: 'active',
-      age: 28,
-      location: 'Los Angeles, CA',
-      bio: 'Working professional seeking therapy for work-life balance and stress management.',
-      clientType: 'regular',
-      sessionsCompleted: 12,
-      totalSpent: 480,
-      studentPackage: {
-        applied: false,
-        status: 'pending'
-      }
-    },
-    {
-      id: '2',
-      name: 'Emma Martinez',
-      email: 'emma.martinez@student.ucla.edu',
-      phone: '+1 (555) 234-5678',
-      registeredDate: '2024-01-12',
-      status: 'active',
-      age: 21,
-      location: 'Los Angeles, CA',
-      bio: 'College student dealing with academic stress and anxiety.',
-      clientType: 'student',
-      sessionsCompleted: 8,
-      totalSpent: 120,
-      studentPackage: {
-        applied: true,
-        status: 'approved',
-        appliedDate: '2024-01-12',
-        school: 'UCLA',
-        studentId: 'UCLA123456',
-        graduationYear: '2025',
-        verificationDocument: 'student-id-card.pdf'
-      }
-    },
-    {
-      id: '3',
-      name: 'Michael Chen',
-      email: 'michael.chen@student.stanford.edu',
-      phone: '+1 (555) 345-6789',
-      registeredDate: '2024-01-10',
-      status: 'active',
-      age: 22,
-      location: 'Palo Alto, CA',
-      bio: 'Graduate student working on thesis and managing academic pressure.',
-      clientType: 'regular',
-      sessionsCompleted: 4,
-      totalSpent: 160,
-      studentPackage: {
-        applied: true,
-        status: 'pending',
-        appliedDate: '2024-01-10',
-        school: 'Stanford University',
-        studentId: 'STAN789012',
-        graduationYear: '2024',
-        verificationDocument: 'enrollment-letter.pdf'
-      }
-    },
-    {
-      id: '4',
-      name: 'Sarah Thompson',
-      email: 'sarah.thompson@email.com',
-      phone: '+1 (555) 456-7890',
-      registeredDate: '2024-01-08',
-      status: 'inactive',
-      age: 35,
-      location: 'San Francisco, CA',
-      bio: 'Parent seeking family therapy and parenting guidance.',
-      clientType: 'regular',
-      sessionsCompleted: 6,
-      totalSpent: 240,
-      studentPackage: {
-        applied: false,
-        status: 'pending'
-      }
-    },
-    {
-      id: '5',
-      name: 'David Rodriguez',
-      email: 'david.rodriguez@student.usc.edu',
-      phone: '+1 (555) 567-8901',
-      registeredDate: '2024-01-05',
-      status: 'active',
-      age: 20,
-      location: 'Los Angeles, CA',
-      bio: 'Undergraduate student dealing with social anxiety and relationship issues.',
-      clientType: 'student',
-      sessionsCompleted: 2,
-      totalSpent: 0,
-      studentPackage: {
-        applied: true,
-        status: 'rejected',
-        appliedDate: '2024-01-05',
-        school: 'USC',
-        studentId: 'USC345678',
-        graduationYear: '2026',
-        verificationDocument: 'fake-document.pdf',
-        rejectionReason: 'Submitted verification document appears to be invalid. Please provide an official enrollment letter or current student ID card from your institution.'
-      }
-    },
-    {
-      id: '6',
-      name: 'Lisa Wilson',
-      email: 'lisa.wilson@email.com',
-      phone: '+1 (555) 678-9012',
-      registeredDate: '2024-01-03',
-      status: 'suspended',
-      age: 42,
-      location: 'Oakland, CA',
-      bio: 'Professional seeking therapy for career transitions and personal growth.',
-      clientType: 'student',
-      sessionsCompleted: 15,
-      totalSpent: 750,
-      studentPackage: {
-        applied: false,
-        status: 'pending'
-      }
-    },
-    {
-      id: '7',
-      name: 'Jessica Park',
-      email: 'jessica.park@student.berkeley.edu',
-      phone: '+1 (555) 789-0123',
-      registeredDate: '2024-01-01',
-      status: 'active',
-      age: 23,
-      location: 'Berkeley, CA',
-      bio: 'PhD student researching anxiety and depression, seeking personal therapy.',
-      clientType: 'regular',
-      sessionsCompleted: 1,
-      totalSpent: 0,
-      studentPackage: {
-        applied: true,
-        status: 'pending',
-        appliedDate: '2024-01-01',
-        school: 'UC Berkeley',
-        studentId: 'UCB456789',
-        graduationYear: '2026',
-        verificationDocument: 'student-transcript.pdf'
-      }
-    }
-  ]);
+  const [clients, setClients] = useState<Client[]>(mockClients);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('All Status');
@@ -379,7 +334,7 @@ const Client: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-                    Client Management
+                    Clients
                   </h1>
                   <p className="text-gray-600">View and manage your client relationships</p>
                 </div>
@@ -473,7 +428,7 @@ const Client: React.FC = () => {
 
             {/* Filters */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-6">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2">
                 <Filter className="w-5 h-5 text-gray-600" />
                 <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Filters</h2>
               </div>

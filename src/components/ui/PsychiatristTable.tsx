@@ -105,12 +105,6 @@ const PsychiatristTable: React.FC<PsychiatristTableProps> = ({ psychiatrists, on
                 </div>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <div className="flex items-center space-x-1">
-                  <FileText className="w-4 h-4" />
-                  <span>Category</span>
-                </div>
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -150,12 +144,6 @@ const PsychiatristTable: React.FC<PsychiatristTableProps> = ({ psychiatrists, on
                     month: 'short',
                     day: 'numeric'
                   })}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getCategoryColor(psychiatrist.category)}`}>
-                    {psychiatrist.category}
-                  </span>
-                  <div className="text-xs text-gray-500 mt-1">{psychiatrist.experience} Level</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(psychiatrist.status)}`}>
