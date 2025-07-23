@@ -659,7 +659,7 @@ const Client: React.FC = () => {
                             <DollarSign className="w-5 h-5 text-gray-400" />
                             <div>
                               <p className="text-sm text-gray-500">Total Spent</p>
-                              <p className="font-medium">${selectedClient.totalSpent}</p>
+                              <p className="font-medium">Rs.{selectedClient.totalSpent}</p>
                             </div>
                           </div>
                         </div>
