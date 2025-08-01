@@ -23,7 +23,7 @@ const SignIn = () => {
 
 
     // 🔍 Check full response
-    console.log('Login response:', response.data);
+    //console.log('Login response:', response.data);
 
 
     const token = response.data?.data?.token;
@@ -31,7 +31,7 @@ const SignIn = () => {
 
     if (token) {
       localStorage.setItem('token', token);
-      console.log('Token stored:', token);
+      //console.log('Token stored:', token);
     } else {
       console.warn('Token is missing in the response');
     }
