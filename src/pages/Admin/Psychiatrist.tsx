@@ -557,43 +557,37 @@ const executeAction = async () => {
 
                     {/* Action Buttons */}
                     <div className="mt-8 flex flex-col sm:flex-row justify-end gap-3">
-                      {selectedPsychiatrist.status === 'pending' && (
-                        <>
-                          <button
-                            onClick={() => handleAction('reject')}
-                            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
-                          >
-                            <X className="w-4 h-4" />
-                            <span>Reject</span>
-                          </button>
-                          <button
-                            onClick={() => handleAction('approve')}
-                            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
-                          >
-                            <Check className="w-4 h-4" />
-                            <span>Approve</span>
-                          </button>
-                        </>
-                      )}
-                      {selectedPsychiatrist.status === 'rejected' && (
-                        <button
-                          onClick={() => handleAction('approve')}
-                          className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
-                        >
-                          <Check className="w-4 h-4" />
-                          <span>Approve</span>
-                        </button>
-                      )}
-                      {selectedPsychiatrist.status === 'approved' && (
-                        <button
-                          onClick={() => handleAction('reject')}
-                          className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
-                        >
-                          <X className="w-4 h-4" />
-                          <span>Revoke Approval</span>
-                        </button>
-                      )}
-                    </div>
+  {selectedPsychiatrist.status === 'pending' && (
+    <>
+      <button
+        onClick={() => handleAction('reject')}
+        className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+      >
+        <X className="w-4 h-4" />
+        <span>Reject</span>
+      </button>
+      <button
+        onClick={() => handleAction('approve')}
+        className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+      >
+        <Check className="w-4 h-4" />
+        <span>Approve</span>
+      </button>
+    </>
+  )}
+  {selectedPsychiatrist.status === 'rejected' && (
+    <div className="bg-red-200 text-gray-800 px-6 py-2 rounded-lg flex items-center justify-center gap-2">
+      <X className="w-4 h-4 text-red-600" />
+      <span>Rejected</span>
+    </div>
+  )}
+  {selectedPsychiatrist.status === 'approved' && (
+    <div className="bg-green-200 text-gray-800 px-6 py-2 rounded-lg flex items-center justify-center gap-2">
+      <Check className="w-4 h-4 text-green-600 " />
+      <span>Approved</span>
+    </div>
+  )}
+</div>
                   </div>
                 </div>
               </div>
