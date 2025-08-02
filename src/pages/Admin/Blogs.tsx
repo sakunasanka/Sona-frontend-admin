@@ -126,14 +126,14 @@ const PostDetailsModal = ({
   onClose, 
   onApprove, 
   onReject, 
-  onRevoke 
+  //onRevoke 
 }: {
   post: BlogPost;
   isOpen: boolean;
   onClose: () => void;
   onApprove: (postId: string) => void;
   onReject: (post: BlogPost) => void;
-  onRevoke: (postId: string) => void;
+  //onRevoke: (postId: string) => void;
 }) => {
   if (!isOpen) return null;
 
@@ -330,17 +330,15 @@ const PostDetailsModal = ({
             )}
             
             {(post.status === 'approved' || post.status === 'rejected') && (
-              <button
-                onClick={() => {
-                  onRevoke(post.id);
-                  onClose();
-                }}
-                className="flex items-center gap-2 px-5 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+              <span
+                className={`inline-block px-4 py-2 rounded-lg text-white font-medium ${
+                  post.status === 'approved' ? 'bg-green-500' : 'bg-red-500'
+                }`}
               >
-                <RotateCcw className="w-5 h-5" />
-                Revoke
-              </button>
+                {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
+              </span>
             )}
+
           </div>
         </div>
       </div>
