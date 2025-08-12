@@ -548,17 +548,18 @@ HR Management Team`);
                     ))}
                   </select>
                 </div>
-              </div>
+              
 
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
-                <button
-                  onClick={() => setShowAddMemberModal(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 shadow-sm"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Member
-                </button>
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
+                  <button
+                    onClick={() => setShowAddMemberModal(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 shadow-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Member
+                  </button>
+                </div>
               </div>
             </div>
 
