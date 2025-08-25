@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../../components/layout/Sidebar';
 import Navbar from '../../components/layout/Navbar';
 import { 
@@ -23,10 +23,14 @@ import {
   Search,
   Filter,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Edit,
+  Trash2
 } from 'lucide-react';
+import API from '../../api/api';
 
 interface TeamMember {
+  _id?: string;
   id: string;
   name: string;
   position: string;
@@ -49,147 +53,16 @@ interface TeamMember {
   achievements: string[];
   salary: string;
   reportingTo: string;
+  status?: string;
+  rejectionReason?: string;
+  rejectionEmailSent?: boolean;
 }
 
 function ManagementTeam() {
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      position: 'Senior Product Manager',
-      email: 'sarah.johnson@company.com',
-      phone: '+1 (555) 123-4567',
-      location: 'San Francisco, CA',
-      joinDate: '2024-01-15',
-      department: 'Product',
-      avatar: 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=150',
-      experience: '8 years',
-      skills: ['Product Strategy', 'User Research', 'Agile', 'Data Analysis'],
-      bio: 'Experienced product manager with a passion for creating user-centric solutions. Led multiple successful product launches and cross-functional teams.',
-      education: ['MBA - Stanford University', 'BS Computer Science - UC Berkeley'],
-      certifications: ['Certified Scrum Product Owner', 'Google Analytics Certified'],
-      previousRoles: [
-        { company: 'TechCorp', position: 'Product Manager', duration: '2020-2023' },
-        { company: 'StartupXYZ', position: 'Associate Product Manager', duration: '2018-2020' }
-      ],
-      achievements: [
-        'Increased user engagement by 45% through product optimization',
-        'Led team of 12 engineers and designers',
-        'Launched 3 major product features with 95% user satisfaction'
-      ],
-      salary: '$145,000',
-      reportingTo: 'VP of Product'
-    },
-    {
-      id: '2',
-      name: 'Michael Chen',
-      position: 'Engineering Lead',
-      email: 'michael.chen@company.com',
-      phone: '+1 (555) 234-5678',
-      location: 'Seattle, WA',
-      joinDate: '2024-01-10',
-      department: 'Engineering',
-      avatar: 'https://images.pexels.com/photos/3778876/pexels-photo-3778876.jpeg?auto=compress&cs=tinysrgb&w=150',
-      experience: '12 years',
-      skills: ['Full Stack Development', 'Cloud Architecture', 'Team Leadership', 'DevOps'],
-      bio: 'Senior engineering leader with extensive experience in building scalable systems and leading high-performance teams.',
-      education: ['MS Computer Science - MIT', 'BS Software Engineering - Carnegie Mellon'],
-      certifications: ['AWS Solutions Architect', 'Kubernetes Certified Administrator'],
-      previousRoles: [
-        { company: 'Amazon', position: 'Senior Software Engineer', duration: '2019-2023' },
-        { company: 'Microsoft', position: 'Software Engineer', duration: '2016-2019' }
-      ],
-      achievements: [
-        'Architected microservices handling 10M+ requests daily',
-        'Reduced system downtime by 80%',
-        'Mentored 15+ junior engineers'
-      ],
-      salary: '$165,000',
-      reportingTo: 'CTO'
-    },
-    {
-      id: '3',
-      name: 'Emily Rodriguez',
-      position: 'Head of Marketing',
-      email: 'emily.rodriguez@company.com',
-      phone: '+1 (555) 345-6789',
-      location: 'New York, NY',
-      joinDate: '2024-01-20',
-      department: 'Marketing',
-      avatar: 'https://images.pexels.com/photos/3992656/pexels-photo-3992656.jpeg?auto=compress&cs=tinysrgb&w=150',
-      experience: '10 years',
-      skills: ['Digital Marketing', 'Brand Strategy', 'Growth Hacking', 'Analytics'],
-      bio: 'Strategic marketing leader with proven track record in building brands and driving growth across multiple channels.',
-      education: ['MBA Marketing - Wharton', 'BA Communications - NYU'],
-      certifications: ['Google Ads Certified', 'HubSpot Marketing Certified'],
-      previousRoles: [
-        { company: 'Nike', position: 'Marketing Director', duration: '2021-2023' },
-        { company: 'Coca-Cola', position: 'Brand Manager', duration: '2018-2021' }
-      ],
-      achievements: [
-        'Increased brand awareness by 60% in 18 months',
-        'Generated $5M in new revenue through campaigns',
-        'Built marketing team from 3 to 20 members'
-      ],
-      salary: '$135,000',
-      reportingTo: 'CMO'
-    },
-    {
-      id: '4',
-      name: 'David Kumar',
-      position: 'VP of Sales',
-      email: 'david.kumar@company.com',
-      phone: '+1 (555) 456-7890',
-      location: 'Austin, TX',
-      joinDate: '2024-01-08',
-      department: 'Sales',
-      avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=150',
-      experience: '6 years',
-      skills: ['B2B Sales', 'CRM Management', 'Lead Generation', 'Negotiation'],
-      bio: 'Results-driven sales professional with expertise in enterprise sales and team management.',
-      education: ['MBA - UT Austin', 'BS Business Administration - Texas A&M'],
-      certifications: ['Salesforce Certified Administrator'],
-      previousRoles: [
-        { company: 'Oracle', position: 'Senior Sales Manager', duration: '2020-2023' },
-        { company: 'IBM', position: 'Sales Representative', duration: '2018-2020' }
-      ],
-      achievements: [
-        'Exceeded sales targets by 25% for 3 consecutive years',
-        'Closed $2M+ in enterprise deals',
-        'Built sales pipeline worth $10M+'
-      ],
-      salary: '$125,000',
-      reportingTo: 'Chief Revenue Officer'
-    },
-    {
-      id: '5',
-      name: 'Lisa Thompson',
-      position: 'Head of Design',
-      email: 'lisa.thompson@company.com',
-      phone: '+1 (555) 567-8901',
-      location: 'Los Angeles, CA',
-      joinDate: '2024-01-25',
-      department: 'Design',
-      avatar: 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=150',
-      experience: '9 years',
-      skills: ['UI/UX Design', 'Design Systems', 'Prototyping', 'User Testing'],
-      bio: 'Creative design leader passionate about creating intuitive user experiences and building design systems at scale.',
-      education: ['MFA Design - Art Center', 'BA Graphic Design - UCLA'],
-      certifications: ['Adobe Certified Expert', 'Google UX Design Certificate'],
-      previousRoles: [
-        { company: 'Airbnb', position: 'Senior UX Designer', duration: '2020-2023' },
-        { company: 'Spotify', position: 'Product Designer', duration: '2018-2020' }
-      ],
-      achievements: [
-        'Redesigned core product increasing user satisfaction by 40%',
-        'Built design system used by 50+ designers',
-        'Led design for award-winning mobile app'
-      ],
-      salary: '$140,000',
-      reportingTo: 'VP of Design'
-    }
-  ]);
-
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
@@ -230,6 +103,29 @@ function ManagementTeam() {
   const [newAchievement, setNewAchievement] = useState('');
   const [newRole, setNewRole] = useState({ company: '', position: '', duration: '' });
   const [formSubmitting, setFormSubmitting] = useState(false);
+
+  // Edit member state
+  const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  // Fetch team members from API
+  const fetchTeamMembers = async () => {
+    try {
+      setLoading(true);
+      const response = await API.get('/adminmtmembers');
+      setTeamMembers(response.data);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch team members:', err);
+      setError('Failed to load team members. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTeamMembers();
+  }, []);
 
   // Add member functions
   const resetAddMemberForm = () => {
@@ -360,31 +256,63 @@ function ManagementTeam() {
     setFormSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await API.post('/adminmtmembers', newMemberForm);
       
-      // Generate new ID
-      const newId = (Math.max(...teamMembers.map(m => parseInt(m.id))) + 1).toString();
-      
-      // Create new member
-      const newMember: TeamMember = {
-        ...newMemberForm,
-        id: newId,
-        avatar: newMemberForm.avatar || 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=150'
-      };
-      
-      // Add to team members
-      setTeamMembers(prev => [...prev, newMember]);
+      // Refresh the list
+      await fetchTeamMembers();
       
       // Reset form and close modal
       resetAddMemberForm();
       setShowAddMemberModal(false);
       
-      console.log('New member added successfully:', newMember);
+      console.log('New member added successfully');
     } catch (error) {
       console.error('Failed to add member:', error);
+      setError('Failed to add team member. Please try again.');
     } finally {
       setFormSubmitting(false);
+    }
+  };
+
+  const handleEditMember = async () => {
+    if (!editingMember) return;
+    
+    setFormSubmitting(true);
+    
+    try {
+      await API.put(`/adminmtmembers/${editingMember._id || editingMember.id}`, editingMember);
+      
+      // Refresh the list
+      await fetchTeamMembers();
+      
+      // Close modal
+      setShowEditModal(false);
+      setEditingMember(null);
+      
+      console.log('Member updated successfully');
+    } catch (error) {
+      console.error('Failed to update member:', error);
+      setError('Failed to update team member. Please try again.');
+    } finally {
+      setFormSubmitting(false);
+    }
+  };
+
+  const handleDeleteMember = async (memberId: string) => {
+    if (!window.confirm('Are you sure you want to delete this team member?')) {
+      return;
+    }
+    
+    try {
+      await API.delete(`/adminmtmembers/${memberId}`);
+      
+      // Refresh the list
+      await fetchTeamMembers();
+      
+      console.log('Member deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete member:', error);
+      setError('Failed to delete team member. Please try again.');
     }
   };
 
@@ -392,6 +320,7 @@ function ManagementTeam() {
     setEmailSending(true);
     
     try {
+      // In a real implementation, you would call your email API here
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       console.log(`Sending rejection email to ${member.email}:`);
@@ -424,25 +353,28 @@ HR Management Team`);
     if (selectedMember && rejectionReason.trim()) {
       const emailSuccess = await sendRejectionEmail(selectedMember, rejectionReason.trim());
       
-      setTeamMembers(prev => 
-        prev.map(member => 
-          member.id === selectedMember.id 
-            ? { 
-                ...member, 
-                status: 'rejected' as const, 
-                rejectionReason: rejectionReason.trim(),
-                rejectionEmailSent: emailSuccess
-              }
-            : member
-        )
-      );
-      
-      setTimeout(() => {
-        setShowRejectModal(false);
-        setSelectedMember(null);
-        setRejectionReason('');
-        setEmailSent(false);
-      }, 2000);
+      // Update the member status
+      try {
+        await API.put(`/adminmtmembers/${selectedMember._id || selectedMember.id}`, {
+          ...selectedMember,
+          status: 'rejected',
+          rejectionReason: rejectionReason.trim(),
+          rejectionEmailSent: emailSuccess
+        });
+        
+        // Refresh the list
+        await fetchTeamMembers();
+        
+        setTimeout(() => {
+          setShowRejectModal(false);
+          setSelectedMember(null);
+          setRejectionReason('');
+          setEmailSent(false);
+        }, 2000);
+      } catch (error) {
+        console.error('Failed to update member status:', error);
+        setError('Failed to update member status. Please try again.');
+      }
     }
   };
 
@@ -495,6 +427,21 @@ HR Management Team`);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const closeSidebar = () => setSidebarOpen(false);
 
+  if (loading) {
+    return (
+      <div className="flex flex-col h-screen">
+        <div className="flex flex-1 overflow-hidden">
+          <div className="flex-1 overflow-auto">
+            <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen">
       <div className="flex flex-1 overflow-hidden">
@@ -516,6 +463,18 @@ HR Management Team`);
                   <p className="text-gray-600">Manage and view management team members</p>
                 </div>
               </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+                  {error}
+                  <button 
+                    onClick={() => setError(null)} 
+                    className="float-right text-red-800 hover:text-red-900"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
 
               {/* Search and Filters */}
               <div className="flex flex-col lg:flex-row gap-4 mb-6">
@@ -623,7 +582,7 @@ HR Management Team`);
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredAndSortedMembers.map((member) => (
-                      <tr key={member.id} className="hover:bg-gray-50 transition-colors">
+                      <tr key={member._id || member.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <img
@@ -652,13 +611,30 @@ HR Management Team`);
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {new Date(member.joinDate).toLocaleDateString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                           <button
                             onClick={() => setViewingProfile(member)}
                             className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
                           >
                             <Eye className="w-4 h-4" />
                             View
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingMember(member);
+                              setShowEditModal(true);
+                            }}
+                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
+                          >
+                            <Edit className="w-4 h-4" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteMember(member._id || member.id)}
+                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
                           </button>
                         </td>
                       </tr>
@@ -1242,7 +1218,7 @@ HR Management Team`);
                           onClick={handleSubmitNewMember}
                           disabled={!newMemberForm.name || !newMemberForm.position || !newMemberForm.email || !newMemberForm.department}
                           className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-                        >
+                          >
                           <Save className="w-4 h-4" />
                           Add Member
                         </button>
@@ -1254,6 +1230,97 @@ HR Management Team`);
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Adding Team Member</h3>
                     <p className="text-gray-600">Please wait while we add the new team member...</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Edit Member Modal */}
+          {showEditModal && editingMember && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                {!formSubmitting ? (
+                  <>
+                    {/* Modal Header */}
+                    <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-xl">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            <Edit className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <h3 className="text-xl font-semibold text-gray-900">Edit Team Member</h3>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setShowEditModal(false);
+                            setEditingMember(null);
+                          }}
+                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                          <X className="w-5 h-5 text-gray-500" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Modal Content - Similar to Add Member but with editingMember data */}
+                    <div className="p-6">
+                      <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                          <UserIcon className="w-4 h-4" />
+                          Basic Information
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                            <input
+                              type="text"
+                              value={editingMember.name}
+                              onChange={(e) => setEditingMember(prev => prev ? {...prev, name: e.target.value} : null)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Position *</label>
+                            <input
+                              type="text"
+                              value={editingMember.position}
+                              onChange={(e) => setEditingMember(prev => prev ? {...prev, position: e.target.value} : null)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                          </div>
+                          {/* Add other fields similarly */}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 rounded-b-xl">
+                      <div className="flex gap-3 justify-end">
+                        <button
+                          onClick={() => {
+                            setShowEditModal(false);
+                            setEditingMember(null);
+                          }}
+                          className="px-6 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleEditMember}
+                          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                        >
+                          <Save className="w-4 h-4" />
+                          Save Changes
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="p-12 text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Updating Team Member</h3>
+                    <p className="text-gray-600">Please wait while we update the team member...</p>
                   </div>
                 )}
               </div>
