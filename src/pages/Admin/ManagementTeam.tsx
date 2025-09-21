@@ -52,7 +52,7 @@ interface TeamMember {
   }>;
   achievements: string[];
   salary: string;
-  reportingTo: string;
+  //reportingTo: string;
   status?: string;
   rejectionReason?: string;
   rejectionEmailSent?: boolean;
@@ -95,7 +95,7 @@ function ManagementTeam() {
     previousRoles: [],
     achievements: [],
     salary: '',
-    reportingTo: ''
+    //reportingTo: ''
   });
   const [newSkill, setNewSkill] = useState('');
   const [newEducation, setNewEducation] = useState('');
@@ -113,7 +113,20 @@ function ManagementTeam() {
     try {
       setLoading(true);
       const response = await API.get('/adminmtmembers');
-      setTeamMembers(response.data);
+      // Flatten user fields into each member
+      const members = response.data.data.map((item: any) => ({
+        ...item,
+        name: item.user?.name || '',
+        email: item.user?.email || '',
+        avatar: item.user?.avatar || '',
+        id: item.user?.id || item.id || item._id || '',
+        skills: item.skills || [],
+        education: item.education || [],
+        certifications: item.certifications || [],
+        achievements: item.achievements || [],
+        previousRoles: item.previousRoles || [],
+      }));
+      setTeamMembers(members);
       setError(null);
     } catch (err) {
       console.error('Failed to fetch team members:', err);
@@ -146,7 +159,7 @@ function ManagementTeam() {
       previousRoles: [],
       achievements: [],
       salary: '',
-      reportingTo: ''
+      //reportingTo: ''
     });
     setNewSkill('');
     setNewEducation('');
@@ -253,26 +266,30 @@ function ManagementTeam() {
   };
 
   const handleSubmitNewMember = async () => {
-    setFormSubmitting(true);
-    
-    try {
-      await API.post('/adminmtmembers', newMemberForm);
-      
-      // Refresh the list
-      await fetchTeamMembers();
-      
-      // Reset form and close modal
-      resetAddMemberForm();
-      setShowAddMemberModal(false);
-      
-      console.log('New member added successfully');
-    } catch (error) {
-      console.error('Failed to add member:', error);
-      setError('Failed to add team member. Please try again.');
-    } finally {
-      setFormSubmitting(false);
-    }
-  };
+  setFormSubmitting(true);
+
+  try {
+    console.log("Payload being sent:", newMemberForm);
+
+    const response = await API.post("/adminmtmembers", newMemberForm);
+    console.log("API response:", response.data);
+
+    // Refresh the list
+    await fetchTeamMembers();
+
+    // Reset form and close modal
+    resetAddMemberForm();
+    setShowAddMemberModal(false);
+
+    console.log("New member added successfully");
+  } catch (error: any) {
+    console.error(" Failed to add member:", error.response?.data || error.message);
+    setError("Failed to add team member. Please try again.");
+  } finally {
+    setFormSubmitting(false);
+  }
+};
+
 
   const handleEditMember = async () => {
     if (!editingMember) return;
@@ -387,41 +404,48 @@ HR Management Team`);
     }
   };
 
-  // Get unique departments for filter
-  const departments = ['all', ...Array.from(new Set(teamMembers.map(member => member.department)))];
+  // // Get unique departments for filter
+  // const departments = ['all', ...Array.from(new Set(teamMembers.map(member => member.department)))];
 
   const filteredAndSortedMembers = teamMembers
-    .filter(member => {
-      // Search filter
-      const matchesSearch = searchTerm === '' || 
-        member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.department.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      // Department filter
-      const matchesDepartment = departmentFilter === 'all' || member.department === departmentFilter;
-      
-      return matchesSearch && matchesDepartment;
-    })
-    .sort((a, b) => {
-      let aValue: string | Date;
-      let bValue: string | Date;
+  .filter(member => {
+    // Safely normalize values for search
+    const name = member.name?.toLowerCase() ?? '';
+    const position = member.position?.toLowerCase() ?? '';
+    const email = member.email?.toLowerCase() ?? '';
+    const department = member.department?.toLowerCase() ?? '';
 
-      switch (sortBy) {
-        case 'joinDate':
-          aValue = new Date(a.joinDate);
-          bValue = new Date(b.joinDate);
-          break;
-        default:
-          aValue = a[sortBy].toLowerCase();
-          bValue = b[sortBy].toLowerCase();
-      }
+    // Search filter
+    const matchesSearch =
+      searchTerm === '' ||
+      name.includes(searchTerm.toLowerCase()) ||
+      position.includes(searchTerm.toLowerCase()) ||
+      email.includes(searchTerm.toLowerCase()) ||
+      department.includes(searchTerm.toLowerCase());
 
-      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
-      return 0;
-    });
+    return matchesSearch;
+  })
+  .sort((a, b) => {
+    let aValue: string | Date;
+    let bValue: string | Date;
+
+    switch (sortBy) {
+      case 'joinDate':
+        aValue = a.joinDate ? new Date(a.joinDate) : new Date(0); // default to epoch if null
+        bValue = b.joinDate ? new Date(b.joinDate) : new Date(0);
+        break;
+      default:
+        const aField = (a[sortBy] ?? '').toString().toLowerCase();
+        const bField = (b[sortBy] ?? '').toString().toLowerCase();
+        aValue = aField;
+        bValue = bField;
+    }
+
+    if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+
 
   // Sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -492,7 +516,7 @@ HR Management Team`);
                   />
                 </div>
 
-                {/* Department Filter */}
+                {/* Department Filter
                 <div className="flex items-center gap-2">
                   <Filter className="h-5 w-5 text-gray-400" />
                   <select
@@ -506,7 +530,7 @@ HR Management Team`);
                       </option>
                     ))}
                   </select>
-                </div>
+                </div> */}
               
 
                 {/* Actions */}
@@ -539,7 +563,7 @@ HR Management Team`);
                           )}
                         </button>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {/* <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <button
                           onClick={() => handleSort('position')}
                           className="flex items-center gap-1 hover:text-gray-700 transition-colors"
@@ -549,8 +573,8 @@ HR Management Team`);
                             sortOrder === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
                           )}
                         </button>
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      </th> */}
+                      {/* <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <button
                           onClick={() => handleSort('department')}
                           className="flex items-center gap-1 hover:text-gray-700 transition-colors"
@@ -560,7 +584,7 @@ HR Management Team`);
                             sortOrder === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
                           )}
                         </button>
-                      </th>
+                      </th> */}
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Contact
                       </th>
@@ -596,13 +620,13 @@ HR Management Team`);
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        {/* <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{member.position}</div>
                           <div className="text-sm text-gray-500">Reports to {member.reportingTo}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        </td> */}
+                        {/* <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{member.department}</div>
-                        </td>
+                        </td> */}
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{member.email}</div>
                           <div className="text-sm text-gray-500">{member.phone}</div>
@@ -611,31 +635,33 @@ HR Management Team`);
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {new Date(member.joinDate).toLocaleDateString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                          <button
-                            onClick={() => setViewingProfile(member)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
-                          >
-                            <Eye className="w-4 h-4" />
-                            View
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingMember(member);
-                              setShowEditModal(true);
-                            }}
-                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
-                          >
-                            <Edit className="w-4 h-4" />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteMember(member._id || member.id)}
-                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Delete
-                          </button>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setViewingProfile(member)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingMember(member);
+                                setShowEditModal(true);
+                              }}
+                              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
+                            >
+                              <Edit className="w-4 h-4" />
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteMember(member._id || member.id)}
+                              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -713,10 +739,10 @@ HR Management Team`);
                             <Calendar className="w-4 h-4" />
                             <span>Joined {new Date(viewingProfile.joinDate).toLocaleDateString()}</span>
                           </div>
-                          <div className="flex items-center gap-2 text-gray-600">
+                          {/* <div className="flex items-center gap-2 text-gray-600">
                             <UserIcon className="w-4 h-4" />
                             <span>Reports to {viewingProfile.reportingTo}</span>
-                          </div>
+                          </div> */}
                           <div className="flex items-center gap-2 text-gray-600">
                             <Building className="w-4 h-4" />
                             <span>{viewingProfile.experience} experience</span>
@@ -939,7 +965,7 @@ HR Management Team`);
                               placeholder="e.g., 5 years"
                             />
                           </div>
-                          <div>
+                          {/* <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Reports To</label>
                             <input
                               type="text"
@@ -948,7 +974,7 @@ HR Management Team`);
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                               placeholder="Enter reporting manager"
                             />
-                          </div>
+                          </div> */}
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Salary</label>
                             <input
