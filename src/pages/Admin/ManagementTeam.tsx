@@ -78,7 +78,7 @@ function ManagementTeam() {
   
   // Add member modal states
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
-  const [newMemberForm, setNewMemberForm] = useState<Omit<TeamMember, 'id'>>({
+  const [newMemberForm, setNewMemberForm] = useState<Omit<TeamMember, 'id'> & { password: string; displayName: string }>({
     name: '',
     position: '',
     email: '',
@@ -95,6 +95,8 @@ function ManagementTeam() {
     previousRoles: [],
     achievements: [],
     salary: '',
+    password: 'DefaultPassword123!', // Default password
+    displayName: '',
     //reportingTo: ''
   });
   const [newSkill, setNewSkill] = useState('');
@@ -113,19 +115,36 @@ function ManagementTeam() {
     try {
       setLoading(true);
       const response = await API.get('/adminmtmembers');
-      // Flatten user fields into each member
-      const members = response.data.data.map((item: any) => ({
-        ...item,
-        name: item.user?.name || '',
-        email: item.user?.email || '',
-        avatar: item.user?.avatar || '',
-        id: item.user?.id || item.id || item._id || '',
-        skills: item.skills || [],
-        education: item.education || [],
-        certifications: item.certifications || [],
-        achievements: item.achievements || [],
-        previousRoles: item.previousRoles || [],
-      }));
+      
+      // Handle different possible response structures
+      const members = response.data.data.map((item: any) => {
+        // If the data already has user fields flattened, use as is
+        if (item.name && item.email) {
+          return {
+            ...item,
+            skills: item.skills || [],
+            education: item.education || [],
+            certifications: item.certifications || [],
+            achievements: item.achievements || [],
+            previousRoles: item.previousRoles || [],
+          };
+        }
+        
+        // If data has nested user object, flatten it
+        return {
+          ...item,
+          name: item.user?.name || '',
+          email: item.user?.email || '',
+          avatar: item.user?.avatar || '',
+          id: item.user?.id || item.id || item._id || '',
+          skills: item.skills || [],
+          education: item.education || [],
+          certifications: item.certifications || [],
+          achievements: item.achievements || [],
+          previousRoles: item.previousRoles || [],
+        };
+      });
+      
       setTeamMembers(members);
       setError(null);
     } catch (err) {
@@ -150,7 +169,7 @@ function ManagementTeam() {
       location: '',
       joinDate: new Date().toISOString().split('T')[0],
       department: '',
-      avatar: '',
+      avatar: 'https://via.placeholder.com/150', // Default placeholder,
       experience: '',
       skills: [],
       bio: '',
@@ -159,6 +178,8 @@ function ManagementTeam() {
       previousRoles: [],
       achievements: [],
       salary: '',
+      password: 'DefaultPassword123!',
+      displayName: '',
       //reportingTo: ''
     });
     setNewSkill('');
@@ -254,24 +275,74 @@ function ManagementTeam() {
   };
 
   const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setNewMemberForm(prev => ({ ...prev, avatar: result }));
-      };
-      reader.readAsDataURL(file);
+  const file = event.target.files?.[0];
+  if (file) {
+    // For now, just use a placeholder URL to avoid database issues
+    // In a real app, you'd upload to a cloud service and get a URL
+    setNewMemberForm(prev => ({ 
+      ...prev, 
+      avatar: "https://via.placeholder.com/150" 
+    }));
+    setError("Note: Using placeholder avatar. In production, images would be uploaded to cloud storage.");
+  }
+};
+
+  const handleSalaryChange = (value: string) => {
+    // Remove any non-digit characters except decimal point
+    const numericValue = value.replace(/[^\d.]/g, '');
+    setNewMemberForm(prev => ({ ...prev, salary: numericValue }));
+  };
+
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
+    return password;
   };
 
   const handleSubmitNewMember = async () => {
   setFormSubmitting(true);
 
   try {
-    console.log("Payload being sent:", newMemberForm);
+    // Check if email already exists
+    const emailExists = await checkEmailExists(newMemberForm.email.trim());
+    if (emailExists) {
+      setError(`Email "${newMemberForm.email}" is already registered. Please use a different email address.`);
+      setFormSubmitting(false);
+      return;
+    }
 
-    const response = await API.post("/adminmtmembers", newMemberForm);
+    // Transform the data to match backend expectations
+    const payload = {
+      email: newMemberForm.email.trim(),
+      password: newMemberForm.password,
+      displayName: newMemberForm.name.trim(),
+      additionalData: {
+        position: newMemberForm.position.trim(),
+        phone: newMemberForm.phone.trim(),
+        location: newMemberForm.location.trim(),
+        joinDate: newMemberForm.joinDate,
+        department: newMemberForm.department,
+        experience: newMemberForm.experience.trim(),
+        skills: newMemberForm.skills,
+        bio: newMemberForm.bio.trim(),
+        education: newMemberForm.education,
+        certifications: newMemberForm.certifications,
+        previousRoles: newMemberForm.previousRoles,
+        achievements: newMemberForm.achievements,
+        salary: newMemberForm.salary.trim(),
+        // Use a simple placeholder instead of base64 to avoid database limits
+        avatar: newMemberForm.avatar && newMemberForm.avatar.length < 1000 
+          ? newMemberForm.avatar 
+          : "https://via.placeholder.com/150",
+      }
+    };
+
+    console.log("Payload being sent:", JSON.stringify(payload, null, 2));
+
+    const response = await API.post("/adminmtmembers", payload);
     console.log("API response:", response.data);
 
     // Refresh the list
@@ -283,13 +354,53 @@ function ManagementTeam() {
 
     console.log("New member added successfully");
   } catch (error: any) {
-    console.error(" Failed to add member:", error.response?.data || error.message);
-    setError("Failed to add team member. Please try again.");
+    console.error("Failed to add member:", error);
+    
+    if (error.response) {
+      console.error("Response data:", error.response.data);
+      console.error("Response status:", error.response.status);
+      
+      if (error.response.status === 500) {
+        const errorMessage = error.response.data?.message || 'Server error occurred';
+        
+        if (errorMessage.includes('email address is already in use')) {
+          setError(`Email "${newMemberForm.email}" is already registered. Please use a different email address.`);
+        } else if (errorMessage.includes('value too long')) {
+          setError("One of the fields is too long for the database. Please shorten your inputs, especially the avatar image.");
+        } else {
+          setError(`Server error: ${errorMessage}`);
+        }
+      } else {
+        setError(`Error ${error.response.status}: ${error.response.data?.message || 'Failed to add team member'}`);
+      }
+    } else if (error.request) {
+      console.error("No response received:", error.request);
+      setError("No response from server. Please check your connection.");
+    } else {
+      console.error("Error message:", error.message);
+      setError("Failed to add team member. Please try again.");
+    }
   } finally {
     setFormSubmitting(false);
   }
 };
 
+const checkEmailExists = async (email: string): Promise<boolean> => {
+  try {
+    const response = await API.get('/adminmtmembers');
+    const members = response.data.data;
+    
+    // Check if any existing member has this email
+    const emailExists = members.some((member: any) => 
+      member.email === email || (member.user && member.user.email === email)
+    );
+    
+    return emailExists;
+  } catch (error) {
+    console.error("Error checking email:", error);
+    return false; // If we can't check, proceed anyway
+  }
+};
 
   const handleEditMember = async () => {
     if (!editingMember) return;
@@ -297,7 +408,29 @@ function ManagementTeam() {
     setFormSubmitting(true);
     
     try {
-      await API.put(`/adminmtmembers/${editingMember._id || editingMember.id}`, editingMember);
+      const payload = {
+        user: {
+          name: editingMember.name,
+          email: editingMember.email,
+          avatar: editingMember.avatar
+        },
+        position: editingMember.position,
+        phone: editingMember.phone,
+        location: editingMember.location,
+        joinDate: editingMember.joinDate,
+        department: editingMember.department,
+        experience: editingMember.experience,
+        skills: editingMember.skills,
+        bio: editingMember.bio,
+        education: editingMember.education,
+        certifications: editingMember.certifications,
+        previousRoles: editingMember.previousRoles,
+        achievements: editingMember.achievements,
+        salary: editingMember.salary,
+        // reportingTo: editingMember.reportingTo
+      };
+
+      await API.put(`/adminmtmembers/${editingMember._id || editingMember.id}`, payload);
       
       // Refresh the list
       await fetchTeamMembers();
@@ -404,8 +537,8 @@ HR Management Team`);
     }
   };
 
-  // // Get unique departments for filter
-  // const departments = ['all', ...Array.from(new Set(teamMembers.map(member => member.department)))];
+  // Get unique departments for filter
+  const departments = ['all', ...Array.from(new Set(teamMembers.map(member => member.department)))];
 
   const filteredAndSortedMembers = teamMembers
   .filter(member => {
@@ -423,7 +556,10 @@ HR Management Team`);
       email.includes(searchTerm.toLowerCase()) ||
       department.includes(searchTerm.toLowerCase());
 
-    return matchesSearch;
+    // Department filter
+    const matchesDepartment = departmentFilter === 'all' || member.department === departmentFilter;
+
+    return matchesSearch && matchesDepartment;
   })
   .sort((a, b) => {
     let aValue: string | Date;
@@ -516,8 +652,8 @@ HR Management Team`);
                   />
                 </div>
 
-                {/* Department Filter
-                <div className="flex items-center gap-2">
+                {/* Department Filter */}
+                {/* <div className="flex items-center gap-2">
                   <Filter className="h-5 w-5 text-gray-400" />
                   <select
                     value={departmentFilter}
@@ -531,7 +667,6 @@ HR Management Team`);
                     ))}
                   </select>
                 </div> */}
-              
 
                 {/* Actions */}
                 <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
@@ -563,7 +698,7 @@ HR Management Team`);
                           )}
                         </button>
                       </th>
-                      {/* <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <button
                           onClick={() => handleSort('position')}
                           className="flex items-center gap-1 hover:text-gray-700 transition-colors"
@@ -573,7 +708,7 @@ HR Management Team`);
                             sortOrder === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
                           )}
                         </button>
-                      </th> */}
+                      </th>
                       {/* <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <button
                           onClick={() => handleSort('department')}
@@ -620,10 +755,10 @@ HR Management Team`);
                             </div>
                           </div>
                         </td>
-                        {/* <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{member.position}</div>
-                          <div className="text-sm text-gray-500">Reports to {member.reportingTo}</div>
-                        </td> */}
+                          {/* <div className="text-sm text-gray-500">Reports to {member.reportingTo}</div> */}
+                        </td>
                         {/* <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{member.department}</div>
                         </td> */}
@@ -883,7 +1018,7 @@ HR Management Team`);
                             <input
                               type="text"
                               value={newMemberForm.name}
-                              onChange={(e) => setNewMemberForm(prev => ({ ...prev, name: e.target.value }))}
+                              onChange={(e) => setNewMemberForm(prev => ({ ...prev, name: e.target.value, displayName: e.target.value }))}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                               placeholder="Enter full name"
                             />
@@ -907,6 +1042,29 @@ HR Management Team`);
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                               placeholder="Enter email address"
                             />
+                            {error && error.includes('already registered') && error.includes(newMemberForm.email) && (
+                              <p className="text-red-500 text-xs mt-1">This email is already in use. Please choose a different one.</p>
+                            )}
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={newMemberForm.password}
+                                onChange={(e) => setNewMemberForm(prev => ({ ...prev, password: e.target.value }))}
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter password"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setNewMemberForm(prev => ({ ...prev, password: generatePassword() }))}
+                                className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                              >
+                                Generate
+                              </button>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">Default password is provided. Click "Generate" for a secure one.</p>
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
@@ -980,9 +1138,9 @@ HR Management Team`);
                             <input
                               type="text"
                               value={newMemberForm.salary}
-                              onChange={(e) => setNewMemberForm(prev => ({ ...prev, salary: e.target.value }))}
+                              onChange={(e) => handleSalaryChange(e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="e.g., $120,000"
+                              placeholder="e.g., 250000"
                             />
                           </div>
                         </div>
@@ -1242,11 +1400,20 @@ HR Management Team`);
                         </button>
                         <button
                           onClick={handleSubmitNewMember}
-                          disabled={!newMemberForm.name || !newMemberForm.position || !newMemberForm.email || !newMemberForm.department}
+                          disabled={!newMemberForm.name || !newMemberForm.position || !newMemberForm.email || !newMemberForm.department || !newMemberForm.password || formSubmitting}
                           className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-                          >
-                          <Save className="w-4 h-4" />
-                          Add Member
+                        >
+                          {formSubmitting ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              Adding...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="w-4 h-4" />
+                              Add Member
+                            </>
+                          )}
                         </button>
                       </div>
                     </div>
