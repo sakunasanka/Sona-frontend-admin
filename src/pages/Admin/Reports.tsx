@@ -2034,9 +2034,9 @@ const Reports = () => {
                               {formatTypeName(report.type)}
                             </span>
                           </div>
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${getStatusColor(report.status)}`}>
+                          {/* <span className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${getStatusColor(report.status)}`}>
                             {report.status}
-                          </span>
+                          </span> */}
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
