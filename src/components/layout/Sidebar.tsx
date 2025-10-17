@@ -41,7 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       ]
     },
     { icon: Blog, label: 'Blogs', href: '/blogs', id: 'blogs' },
-    { icon: MessageCircle, label: 'Message', href: '/message', id: 'messages' },
+    // { icon: MessageCircle, label: 'Message', href: '/message', id: 'messages' },
     { icon: FileText, label: 'Reports', href: '/reports', id: 'reports' },
     { icon: AlertCircle, label: 'Feedback', href: '/feedback', id: 'feedback' },
   ];
