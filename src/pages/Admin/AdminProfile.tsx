@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { User, Lock, Edit3, Camera, Mail, Phone, MapPin, Calendar, Save, X } from 'lucide-react';
 import { NavBar, Sidebar } from '../../components/layout';
 
@@ -22,19 +22,17 @@ const AdminProfile: React.FC = () => {
   const [showPasswordSuccess, setShowPasswordSuccess] = useState(false);
   const [showEditConfirm, setShowEditConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
   const [profile, setProfile] = useState<AdminProfileData>({
-    id: '',
-    name: '',
-    email: '',
-    phone: '',
-    location: '',
-    joinDate: '',
-    role: '',
-    profilePicture: '',
-    lastLogin: '',
+    id: 'ADM001',
+    name: 'Abheeth Tilakaratna',
+    email: 'Abheeth.sona@company.com',
+    phone: '0112 245 145',
+    location: 'Colombo, SL',
+    joinDate: '2023-01-15',
+    role: 'Senior Administrator', 
+    profilePicture: '/assets/images/profiles/th.jpg',
+    lastLogin: '2024-01-15 14:30:00',
   });
 
   const [editForm, setEditForm] = useState(profile);
@@ -44,36 +42,6 @@ const AdminProfile: React.FC = () => {
     confirmPassword: ''
   });
 
-  // Fetch profile data on component mount
-  useEffect(() => {
-    fetchProfileData();
-  }, []);
-
-  const fetchProfileData = async () => {
-    try {
-      setLoading(true);
-      const token = await getAuthToken(); // Implement this based on your auth system
-      const response = await fetch('/api/admin/profile', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setProfile(data);
-        setEditForm(data);
-      } else {
-        console.error('Failed to fetch profile data');
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
@@ -82,147 +50,35 @@ const AdminProfile: React.FC = () => {
     setSidebarOpen(false);
   };
 
-  const handleProfileUpdate = async (e: React.FormEvent) => {
+  const handleProfileUpdate = (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
-    
-    try {
-      const token = await getAuthToken();
-      const response = await fetch('/api/admin/profile', {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: editForm.name,
-          phone: editForm.phone,
-          location: editForm.location,
-        }),
-      });
-
-      if (response.ok) {
-        const updatedProfile = await response.json();
-        setProfile(updatedProfile);
-        setActiveTab('profile');
-        setShowEditSuccess(true);
-        setTimeout(() => setShowEditSuccess(false), 2500);
-      } else {
-        console.error('Failed to update profile');
-      }
-    } catch (error) {
-      console.error('Error updating profile:', error);
-    } finally {
-      setSaving(false);
-    }
+    setProfile(editForm);
+    setActiveTab('profile');
+    setShowEditSuccess(true);
+    setTimeout(() => setShowEditSuccess(false), 2500);
   };
 
-  const handlePasswordChange = async (e: React.FormEvent) => {
+  const handlePasswordChange = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      alert('New passwords do not match');
-      return;
-    }
-
-    setSaving(true);
-    
-    try {
-      const token = await getAuthToken();
-      const response = await fetch('/api/admin/password', {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword,
-        }),
-      });
-
-      if (response.ok) {
-        setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-        setActiveTab('profile');
-        setShowPasswordSuccess(true);
-        setTimeout(() => setShowPasswordSuccess(false), 2500);
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to change password');
-      }
-    } catch (error) {
-      console.error('Error changing password:', error);
-      alert('Error changing password');
-    } finally {
-      setSaving(false);
-    }
+    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    setActiveTab('profile');
+    setShowPasswordSuccess(true);
+    setTimeout(() => setShowPasswordSuccess(false), 2500);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type and size
-    if (!file.type.startsWith('image/')) {
-      alert('Please select an image file');
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert('File size must be less than 5MB');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('profilePicture', file);
-
-    try {
-      const token = await getAuthToken();
-      const response = await fetch('/api/admin/profile-picture', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (response.ok) {
-        const updatedProfile = await response.json();
-        setProfile(updatedProfile);
-        setEditForm(updatedProfile);
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const newImageUrl = e.target?.result as string;
+        setProfile(prev => ({ ...prev, profilePicture: newImageUrl }));
+        setEditForm(prev => ({ ...prev, profilePicture: newImageUrl }));
         setShowImageUpload(false);
-      } else {
-        alert('Failed to upload image');
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      alert('Error uploading image');
+      };
+      reader.readAsDataURL(file);
     }
   };
-
-  // Mock function to get auth token - replace with your actual implementation
-  const getAuthToken = async (): Promise<string> => {
-    // This should return your actual auth token
-    return 'your-auth-token';
-  };
-
-  if (loading) {
-    return (
-      <div className="flex flex-col h-screen">
-        <div className="flex flex-1 overflow-hidden">
-          <div className="hidden lg:block">
-            <Sidebar isOpen={true} onClose={closeSidebar} />
-          </div>
-          <div className="flex-1 overflow-auto">
-            <NavBar onMenuClick={toggleSidebar} />
-            <div className="flex items-center justify-center h-64">
-              <div className="text-lg">Loading profile...</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-screen">
@@ -263,7 +119,7 @@ const AdminProfile: React.FC = () => {
                   <div className="relative">
                     <div className="w-32 h-32 rounded-full border-4 border-white shadow-md overflow-hidden bg-gray-100">
                       <img 
-                        src={profile.profilePicture || '/assets/images/profiles/default.jpg'} 
+                        src={profile.profilePicture} 
                         alt={profile.name}
                         className="w-full h-full object-cover"
                       />
@@ -429,7 +285,8 @@ const AdminProfile: React.FC = () => {
                           type="email"
                           value={editForm.email}
                           disabled
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                          onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
                       <div>
@@ -446,6 +303,7 @@ const AdminProfile: React.FC = () => {
                         <input
                           type="text"
                           value={editForm.location}
+                          disabled
                           onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
@@ -456,7 +314,8 @@ const AdminProfile: React.FC = () => {
                           type="text"
                           value={editForm.role}
                           disabled
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                          onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
                     </div>
@@ -465,17 +324,15 @@ const AdminProfile: React.FC = () => {
                         type="button"
                         onClick={() => setShowCancelConfirm(true)}
                         className="px-6 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-lg transition-colors"
-                        disabled={saving}
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50"
-                        disabled={saving}
+                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2"
                       >
                         <Save className="w-4 h-4" />
-                        <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                        <span>Save Changes</span>
                       </button>
                     </div>
                   </form>
@@ -522,17 +379,15 @@ const AdminProfile: React.FC = () => {
                         type="button"
                         onClick={() => setActiveTab('profile')}
                         className="px-6 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-lg transition-colors"
-                        disabled={saving}
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50"
-                        disabled={saving}
+                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2"
                       >
                         <Lock className="w-4 h-4" />
-                        <span>{saving ? 'Updating...' : 'Update Password'}</span>
+                        <span>Update Password</span>
                       </button>
                     </div>
                   </form>
@@ -587,7 +442,6 @@ const AdminProfile: React.FC = () => {
                   <button
                     onClick={() => setShowEditConfirm(false)}
                     className="px-6 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
-                    disabled={saving}
                   >
                     Cancel
                   </button>
@@ -596,11 +450,10 @@ const AdminProfile: React.FC = () => {
                       setShowEditConfirm(false);
                       handleProfileUpdate(e as any);
                     }}
-                    className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition flex items-center space-x-2 disabled:opacity-50"
-                    disabled={saving}
+                    className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition flex items-center space-x-2"
                   >
                     <Save className="w-4 h-4" />
-                    <span>{saving ? 'Saving...' : 'Save'}</span>
+                    <span>Save</span>
                   </button>
                 </div>
               </div>
