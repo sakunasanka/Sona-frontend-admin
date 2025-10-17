@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Eye, CheckCircle, XCircle, Clock, RotateCcw, Calendar, User, Heart, 
   TrendingUp, Filter, Search, X, AlertTriangle, MapPin, Mail, Tag,
@@ -6,149 +6,33 @@ import {
 } from 'lucide-react';
 import { NavBar, Sidebar } from '../../components/layout';
 import { useNavigate } from 'react-router-dom';
+import API from '../../api/api';
 
-interface Author {
-  id: string;
+interface User {
+  id: number;
   name: string;
   email: string;
-  avatar: string;
-  bio: string;
-  joinDate: string;
-  totalPosts: number;
-  location: string;
 }
 
 interface BlogPost {
   id: string;
-  title: string;
+  userId: number;
   content: string;
-  excerpt: string;
-  author: Author;
+  hashtags: string[];
+  views: number;
+  likes: number;
+  comments: number;
+  backgroundColor: string;
+  status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
   updatedAt: string;
-  status: 'pending' | 'approved' | 'rejected';
-  category: string;
-  tags: string[];
-  featuredImage: string;
-  readTime: string;
+  user: User;
   rejectionReason?: string;
   approvedBy?: string;
   approvedAt?: string;
   rejectedBy?: string;
   rejectedAt?: string;
-  viewCount: number;
-  likes: number;
-  isPublished: boolean;
 }
-
-const mockAuthors: Author[] = [
-  {
-    id: '1',
-    name: 'Dr. Nimal Perera',
-    email: 'nimal.perera@counselling.lk',
-    avatar: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-    bio: 'Licensed psychologist with 15+ years of experience in mental health counselling in Sri Lanka.',
-    joinDate: '2022-05-10',
-    totalPosts: 42,
-    location: 'Colombo, Sri Lanka'
-  },
-  {
-    id: '2',
-    name: 'Ms. Shanika Fernando',
-    email: 'shanika.fernando@counselling.lk',
-    avatar: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-    bio: 'Youth counsellor and advocate for mental wellness among Sri Lankan teens.',
-    joinDate: '2023-01-18',
-    totalPosts: 27,
-    location: 'Kandy, Sri Lanka'
-  },
-  {
-    id: '3',
-    name: 'Mr. Ruwan Jayasuriya',
-    email: 'ruwan.jayasuriya@counselling.lk',
-    avatar: 'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-    bio: 'Family therapist specializing in relationship and marriage counselling.',
-    joinDate: '2021-09-05',
-    totalPosts: 35,
-    location: 'Galle, Sri Lanka'
-  }
-];
-
-const mockPosts: BlogPost[] = [
-  {
-    id: '1',
-    title: 'Managing Exam Stress: Tips for Sri Lankan Students',
-    content: `Exams are a stressful time for many students in Sri Lanka. Here are some practical tips to manage anxiety and perform your best...`,
-    excerpt: 'Practical advice for students in Sri Lanka to cope with exam-related stress and anxiety.',
-    author: mockAuthors[1],
-    createdAt: '2024-05-01T09:00:00Z',
-    updatedAt: '2024-05-01T09:00:00Z',
-    status: 'pending',
-    category: 'Student Counselling',
-    tags: ['Stress', 'Exams', 'Students', 'Sri Lanka', 'Mental Health'],
-    featuredImage: 'https://images.pexels.com/photos/256401/pexels-photo-256401.jpeg?auto=compress&cs=tinysrgb&w=800&h=400&fit=crop',
-    readTime: '5 min read',
-    viewCount: 320,
-    likes: 18,
-    isPublished: false
-  },
-  {
-    id: '2',
-    title: 'How to Support a random Friend Facing Depression',
-    content: `Depression is a common mental health challenge in Sri Lanka. If you suspect a friend is struggling...`,
-    excerpt: 'Learn how to help friends in Sri Lanka who may be experiencing depression.',
-    author: mockAuthors[0],
-    createdAt: '2024-04-20T14:30:00Z',
-    updatedAt: '2024-04-20T14:30:00Z',
-    status: 'approved',
-    category: 'Mental Health',
-    tags: ['Depression', 'Support', 'Sri Lanka', 'Counselling'],
-    featuredImage: 'https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&w=800&h=400&fit=crop',
-    readTime: '7 min read',
-    approvedBy: 'Admin',
-    approvedAt: '2024-04-21T10:00:00Z',
-    viewCount: 540,
-    likes: 34,
-    isPublished: true
-  },
-  {
-    id: '3',
-    title: 'Family Counselling: Building Stronger Relationships',
-    content: `Family relationships can be challenging. Counselling helps families in Sri Lanka communicate better and resolve conflicts...`,
-    excerpt: 'Discover how family counselling can strengthen relationships in Sri Lankan families.',
-    author: mockAuthors[2],
-    createdAt: '2024-03-15T11:00:00Z',
-    updatedAt: '2024-03-15T11:00:00Z',
-    status: 'rejected',
-    category: 'Family Counselling',
-    tags: ['Family', 'Relationships', 'Sri Lanka', 'Therapy'],
-    featuredImage: 'https://images.pexels.com/photos/160994/pexels-photo-160994.jpeg?auto=compress&cs=tinysrgb&w=800&h=400&fit=crop',
-    readTime: '6 min read',
-    rejectionReason: 'Please include more local case studies and practical exercises for Sri Lankan families.',
-    rejectedBy: 'Admin',
-    rejectedAt: '2024-03-16T08:30:00Z',
-    viewCount: 210,
-    likes: 11,
-    isPublished: false
-  },
-  {
-    id: '4',
-    title: 'Online Counselling: Safe and Confidential Support in Sri Lanka',
-    content: `Online counselling is growing in Sri Lanka, offering privacy and convenience...`,
-    excerpt: 'Explore the benefits of online counselling services available in Sri Lanka.',
-    author: mockAuthors[0],
-    createdAt: '2024-02-10T16:45:00Z',
-    updatedAt: '2024-02-10T16:45:00Z',
-    status: 'pending',
-    category: 'Online Counselling',
-    tags: ['Online', 'Sri Lanka', 'Confidential', 'Support'],
-    featuredImage: 'https://images.pexels.com/photos/318439/pexels-photo-318439.jpeg?auto=compress&cs=tinysrgb&w=800&h=400&fit=crop',
-    readTime: '4 min read',
-    viewCount: 185,
-    likes: 9,
-    isPublished: false
-  }
-];
 
 const PostCard = ({ post, onView }: { post: BlogPost; onView: (post: BlogPost) => void }) => {
   const getStatusColor = (status: BlogPost['status']) => {
@@ -157,7 +41,7 @@ const PostCard = ({ post, onView }: { post: BlogPost; onView: (post: BlogPost) =
       case 'approved': return 'bg-green-100 text-green-800 border-green-200';
       case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    } 
+    }
   };
 
   const getStatusIcon = (status: BlogPost['status']) => {
@@ -177,14 +61,15 @@ const PostCard = ({ post, onView }: { post: BlogPost; onView: (post: BlogPost) =
     });
   };
 
+  // Extract first paragraph as excerpt
+  const excerpt = post.content.split('\n')[0];
+
   return (
     <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 overflow-hidden">
-      <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
-        <img
-          src={post.featuredImage}
-          alt={post.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
+      <div className="aspect-video overflow-hidden relative" style={{ backgroundColor: post.backgroundColor }}>
+        <div className="w-full h-full flex items-center justify-center">
+          <BookOpen className="w-16 h-16 text-gray-400" />
+        </div>
       </div>
 
       <div className="p-5">
@@ -193,22 +78,17 @@ const PostCard = ({ post, onView }: { post: BlogPost; onView: (post: BlogPost) =
             {getStatusIcon(post.status)}
             {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
           </span>
-          <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-            {post.category}
-          </span>
         </div>
 
-        <h3 className="text-lg font-bold text-gray-900 mb-2">{post.title}</h3>
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">{post.excerpt}</p>
+        <h3 className="text-lg font-bold text-gray-900 mb-2">Post by {post.user.name}</h3>
+        <p className="text-gray-600 text-sm mb-4 line-clamp-2">{excerpt}</p>
 
         <div className="flex items-center gap-3 mb-4">
-          <img
-            src={post.author.avatar}
-            alt={post.author.name}
-            className="w-8 h-8 rounded-full object-cover"
-          />
+          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+            <User className="w-4 h-4 text-gray-600" />
+          </div>
           <div>
-            <p className="text-sm font-medium text-gray-900">{post.author.name}</p>
+            <p className="text-sm font-medium text-gray-900">{post.user.name}</p>
             <p className="text-xs text-gray-500">{formatDate(post.createdAt)}</p>
           </div>
         </div>
@@ -216,13 +96,16 @@ const PostCard = ({ post, onView }: { post: BlogPost; onView: (post: BlogPost) =
         <div className="flex items-center gap-3 text-xs text-gray-500 mb-4">
           <span className="flex items-center gap-1">
             <Eye className="w-3 h-3" />
-            {post.viewCount.toLocaleString()}
+            {post.views.toLocaleString()}
           </span>
           <span className="flex items-center gap-1">
             <Heart className="w-3 h-3" />
             {post.likes}
           </span>
-          <span>{post.readTime}</span>
+          <span className="flex items-center gap-1">
+            <MessageCircle className="w-3 h-3" />
+            {post.comments}
+          </span>
         </div>
 
         <button
@@ -243,14 +126,14 @@ const PostDetailsModal = ({
   onClose, 
   onApprove, 
   onReject, 
-  onRevoke 
+  //onRevoke 
 }: {
   post: BlogPost;
   isOpen: boolean;
   onClose: () => void;
   onApprove: (postId: string) => void;
   onReject: (post: BlogPost) => void;
-  onRevoke: (postId: string) => void;
+  //onRevoke: (postId: string) => void;
 }) => {
   if (!isOpen) return null;
 
@@ -292,12 +175,8 @@ const PostDetailsModal = ({
                 {getStatusIcon(post.status)}
                 {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
               </span>
-              <span className="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                {post.category}
-              </span>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{post.title}</h2>
-            <p className="text-gray-600">{post.excerpt}</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Post by {post.user.name}</h2>
           </div>
           <button
             onClick={onClose}
@@ -310,12 +189,10 @@ const PostDetailsModal = ({
         <div className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-3">
-              <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden mb-6">
-                <img
-                  src={post.featuredImage}
-                  alt={post.title}
-                  className="w-full h-full object-cover"
-                />
+              <div className="aspect-video rounded-xl overflow-hidden mb-6" style={{ backgroundColor: post.backgroundColor }}>
+                <div className="w-full h-full flex items-center justify-center">
+                  <BookOpen className="w-24 h-24 text-gray-400" />
+                </div>
               </div>
 
               <div className="prose max-w-none mb-6">
@@ -324,49 +201,34 @@ const PostDetailsModal = ({
                 </div>
               </div>
 
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Tags</h3>
-                <div className="flex flex-wrap gap-2">
-                  {post.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-3 py-1 bg-gray-100 text-gray-800 text-sm rounded-full"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
+              {post.hashtags.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Tags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {post.hashtags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-3 py-1 bg-gray-100 text-gray-800 text-sm rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="space-y-4">
               <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Author Details</h3>
                 <div className="flex items-center gap-3 mb-4">
-                  <img
-                    src={post.author.avatar}
-                    alt={post.author.name}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                  <div>
-                    <h4 className="font-medium text-gray-900">{post.author.name}</h4>
-                    <p className="text-sm text-gray-600">{post.author.email}</p>
+                  <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                    <User className="w-6 h-6 text-gray-600" />
                   </div>
-                </div>
-                <p className="text-sm text-gray-600 mb-4">{post.author.bio}</p>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <p className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4" />
-                    {post.author.location}
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    Joined {formatDate(post.author.joinDate)}
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4" />
-                    {post.author.totalPosts} posts published
-                  </p>
+                  <div>
+                    <h4 className="font-medium text-gray-900">{post.user.name}</h4>
+                    <p className="text-sm text-gray-600">{post.user.email}</p>
+                  </div>
                 </div>
               </div>
 
@@ -378,7 +240,7 @@ const PostDetailsModal = ({
                       <Eye className="w-4 h-4" />
                       Views
                     </span>
-                    <span className="font-medium text-gray-900">{post.viewCount.toLocaleString()}</span>
+                    <span className="font-medium text-gray-900">{post.views.toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 flex items-center gap-2">
@@ -389,10 +251,10 @@ const PostDetailsModal = ({
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      Read Time
+                      <MessageCircle className="w-4 h-4" />
+                      Comments
                     </span>
-                    <span className="font-medium text-gray-900">{post.readTime}</span>
+                    <span className="font-medium text-gray-900">{post.comments}</span>
                   </div>
                 </div>
               </div>
@@ -442,7 +304,6 @@ const PostDetailsModal = ({
 
         <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6">
           <div className="flex gap-3 justify-end">
-            
             {post.status === 'pending' && (
               <>
                 <button
@@ -469,17 +330,15 @@ const PostDetailsModal = ({
             )}
             
             {(post.status === 'approved' || post.status === 'rejected') && (
-              <button
-                onClick={() => {
-                  onRevoke(post.id);
-                  onClose();
-                }}
-                className="flex items-center gap-2 px-5 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+              <span
+                className={`inline-block px-4 py-2 rounded-lg text-white font-medium ${
+                  post.status === 'approved' ? 'bg-green-500' : 'bg-red-500'
+                }`}
               >
-                <RotateCcw className="w-5 h-5" />
-                Revoke
-              </button>
+                {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
+              </span>
             )}
+
           </div>
         </div>
       </div>
@@ -531,7 +390,7 @@ const RejectModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full shadow-xl">
+      <div className="bg-white rounded-lg w-full max-w-xl p-4 h-80 overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-red-100 rounded-full">
@@ -610,7 +469,9 @@ const RejectModal = ({
 };
 
 const BlogAdmin = () => {
-  const [posts, setPosts] = useState<BlogPost[]>(mockPosts);
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
@@ -620,6 +481,28 @@ const BlogAdmin = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
+useEffect(() => {
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      const response = await API.get('/adminblogs');
+      
+      // Ensure we always set an array, even if response.data is null/undefined
+      const postsData = Array.isArray(response.data) ? response.data : [];
+      setPosts(postsData);
+      
+    } catch (err) {
+      setError('Failed to fetch posts');
+      console.error(err);
+      setPosts([]); // Set empty array on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchPosts();
+}, []);
+
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
@@ -628,53 +511,54 @@ const BlogAdmin = () => {
     setSidebarOpen(false);
   };
 
-  const handleAction = (action: { type: 'approve' | 'reject' | 'revoke'; postId: string; reason?: string }) => {
-    setPosts(prevPosts => 
-      prevPosts.map(post => {
-        if (post.id === action.postId) {
-          const now = new Date().toISOString();
-          
-          switch (action.type) {
-            case 'approve':
-              return {
-                ...post,
-                status: 'approved',
-                approvedBy: 'Admin',
-                approvedAt: now,
-                rejectionReason: undefined,
-                rejectedBy: undefined,
-                rejectedAt: undefined,
-                isPublished: true
-              };
-            case 'reject':
-              return {
-                ...post,
-                status: 'rejected',
-                rejectionReason: action.reason,
-                rejectedBy: 'Admin',
-                rejectedAt: now,
-                approvedBy: undefined,
-                approvedAt: undefined,
-                isPublished: false
-              };
-            case 'revoke':
-              return {
-                ...post,
-                status: 'pending',
-                approvedBy: undefined,
-                approvedAt: undefined,
-                rejectedBy: undefined,
-                rejectedAt: undefined,
-                rejectionReason: undefined,
-                isPublished: false
-              };
-            default:
-              return post;
+  const handleAction = async (action: { type: 'approve' | 'reject' | 'revoke'; postId: string; reason?: string }) => {
+    try {
+      const status = action.type === 'approve' ? 'approved' : 
+                    action.type === 'reject' ? 'rejected' : 
+                    'pending';
+      
+      await API.patch(`/adminblogs/${action.postId}/status`, { status, reason: action.reason });
+      
+      setPosts(prevPosts => 
+        prevPosts.map(post => {
+          if (post.id === action.postId) {
+            const now = new Date().toISOString();
+            
+            switch (action.type) {
+              case 'approve':
+                return {
+                  ...post,
+                  status: 'approved',
+                  approvedAt: now,
+                  rejectionReason: undefined,
+                  rejectedAt: undefined,
+                };
+              case 'reject':
+                return {
+                  ...post,
+                  status: 'rejected',
+                  rejectionReason: action.reason,
+                  rejectedAt: now,
+                  approvedAt: undefined,
+                };
+              case 'revoke':
+                return {
+                  ...post,
+                  status: 'pending',
+                  approvedAt: undefined,
+                  rejectedAt: undefined,
+                  rejectionReason: undefined,
+                };
+              default:
+                return post;
+            }
           }
-        }
-        return post;
-      })
-    );
+          return post;
+        })
+      );
+    } catch (err) {
+      console.error('Failed to update post status:', err);
+    }
   };
 
   const handleViewPost = (post: BlogPost) => {
@@ -704,8 +588,8 @@ const BlogAdmin = () => {
   };
 
   const filteredPosts = posts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.author.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         post.user.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || post.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -720,6 +604,22 @@ const BlogAdmin = () => {
   };
 
   const statusCounts = getStatusCounts();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-red-500 text-lg">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen">
@@ -741,7 +641,7 @@ const BlogAdmin = () => {
                   <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
                     Blog Management
                   </h1>
-                  <p className="text-gray-600">Review and approve counseling blog posts</p>
+                  <p className="text-gray-600">Review and approve blog posts</p>
                 </div>
               </div>
             </div>
@@ -836,20 +736,18 @@ const BlogAdmin = () => {
               </div>
             </div>
 
-
             {/* Posts Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredPosts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  onView={handleViewPost}
-                />
-              ))}
-            </div>
-
-            {/* Empty State */}
-            {filteredPosts.length === 0 && (
+            {filteredPosts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredPosts.map((post) => (
+                  <PostCard
+                    key={post.id}
+                    post={post}
+                    onView={handleViewPost}
+                  />
+                ))}
+              </div>
+            ) : (
               <div className="text-center py-16">
                 <div className="text-gray-400 mb-6">
                   <Search className="w-16 h-16 mx-auto" />

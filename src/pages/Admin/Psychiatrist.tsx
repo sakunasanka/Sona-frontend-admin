@@ -1,103 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavBar, Sidebar } from '../../components/layout';
 import { Search, Filter, Eye, Check, X, Mail, AlertCircle, CheckCircle, XCircle, User, Phone, Calendar, MapPin, GraduationCap, Clock, Shield } from 'lucide-react';
+import API from '../../api/api';
 
 interface Psychiatrist {
-  id: string;
+  id: number;
   name: string;
   email: string;
-  phone: string;
-  registeredDate: string;
-  category: string;
+  contact_no: string;
+  createdAt: string;
+  specialities: string[];
+  title: string;
+  address: string;
+  description?: string;
+  license_no: string;
   status: 'pending' | 'approved' | 'rejected';
-  specialization: string;
-  experience: string;
-  education: string;
-  license: string;
-  location: string;
-  bio: string;
   avatar?: string;
+  isAvailable?: boolean;
+  rating?: number;
+  sessionFee?: number;
 }
 
 const Psychiatrist: React.FC = () => {
-  const [psychiatrists, setPsychiatrists] = useState<Psychiatrist[]>([
-    {
-      id: '1',
-      name: 'Dr. Ananda Wijesinghe',
-      email: 'ananda.wijesinghe@gmail.com',
-      phone: '+94 77 234 5678',
-      registeredDate: '2024-01-15',
-      category: 'General',
-      status: 'approved',
-      specialization: 'General Psychiatry',
-      experience: '15 years',
-      education: 'MD in Psychiatry - University of Colombo, MBBS - University of Peradeniya',
-      license: 'SLMC-12345',
-      location: 'Colombo 07, Sri Lanka',
-      bio: 'Senior consultant psychiatrist with extensive experience in general adult psychiatry. Former consultant at National Hospital of Sri Lanka and current visiting consultant at several private hospitals in Colombo.'
-    },
-    {
-      id: '2',
-      name: 'Dr. Samanthi Perera',
-      email: 'samanthi.perera@outlook.com',
-      phone: '+94 76 345 6789',
-      registeredDate: '2024-01-12',
-      category: 'Child',
-      status: 'approved',
-      specialization: 'Child & Adolescent Psychiatry',
-      experience: '12 years',
-      education: 'MD in Child Psychiatry - University of Colombo, MBBS - University of Sri Jayewardenepura',
-      license: 'SLMC-23456',
-      location: 'Nugegoda, Sri Lanka',
-      bio: 'Specialized in child and adolescent mental health with focus on developmental disorders and early intervention. Regular consultant at Lady Ridgeway Hospital for Children.'
-    },
-    {
-      id: '3',
-      name: 'Dr. Rajitha Bandara',
-      email: 'rajitha.bandara@yahoo.com',
-      phone: '+94 71 456 7890',
-      registeredDate: '2024-01-10',
-      category: 'Forensic',
-      status: 'rejected',
-      specialization: 'Forensic Psychiatry',
-      experience: '8 years',
-      education: 'MD in Forensic Psychiatry - University of Colombo, MBBS - University of Kelaniya',
-      license: 'SLMC-34567',
-      location: 'Kandy, Sri Lanka',
-      bio: 'Forensic psychiatrist with experience in criminal justice system consultations and court-ordered evaluations. Consultant at National Institute of Mental Health.'
-    },
-    {
-      id: '4',
-      name: 'Dr. Dilshan Gunasekara',
-      email: 'dilshan.gunasekara@gmail.com',
-      phone: '+94 75 567 8901',
-      registeredDate: '2024-01-08',
-      category: 'Addiction',
-      status: 'approved',
-      specialization: 'Addiction Psychiatry',
-      experience: '10 years',
-      education: 'MD in Psychiatry - University of Colombo, MBBS - University of Ruhuna',
-      license: 'SLMC-45678',
-      location: 'Galle, Sri Lanka',
-      bio: 'Expert in addiction psychiatry and rehabilitation medicine. Works closely with rehabilitation centers across Southern Province and conducts regular addiction treatment programs.'
-    },
-    {
-      id: '5',
-      name: 'Dr. Malini Silva',
-      email: 'malini.silva@outlook.com',
-      phone: '+94 77 678 9012',
-      registeredDate: '2024-01-05',
-      category: 'Geriatric',
-      status: 'pending',
-      specialization: 'Geriatric Psychiatry',
-      experience: '14 years',
-      education: 'MD in Geriatric Psychiatry - University of Colombo, MBBS - University of Peradeniya',
-      license: 'SLMC-56789',
-      location: 'Colombo 05, Sri Lanka',
-      bio: 'Specialized in geriatric psychiatry with focus on dementia care and late-life depression. Consultant at several elder care facilities in Western Province.'
-    }
-  ]);
-
+  const [psychiatrists, setPsychiatrists] = useState<Psychiatrist[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [selectedStatus, setSelectedStatus] = useState('All Status');
@@ -110,6 +35,36 @@ const Psychiatrist: React.FC = () => {
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [statusCounts, setStatusCounts] = useState({
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    total: 0
+  });
+
+  // Fetch psychiatrists and counts on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [psychiatristsRes, countsRes] = await Promise.all([
+          API.get('/adminpsychiatrists'),
+          API.get('/adminpsychiatrists/stats/counts')
+        ]);
+        
+        // Use the data directly from the API (no transformation needed)
+        setPsychiatrists(psychiatristsRes.data);
+        setStatusCounts(countsRes.data);
+      } catch (error: any) {
+        console.error('Error fetching data:', error);
+        showNotification('error', 'Failed to fetch psychiatrists data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -119,8 +74,14 @@ const Psychiatrist: React.FC = () => {
     setSidebarOpen(false);
   };
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  const getInitials = (name: string | undefined) => {
+    if (!name || typeof name !== 'string') return '';
+    return name
+      .split(' ')
+      .filter(Boolean)
+      .map(n => n[0])
+      .join('')
+      .toUpperCase();
   };
 
   const getStatusBadge = (status: string) => {
@@ -132,34 +93,22 @@ const Psychiatrist: React.FC = () => {
     return badges[status as keyof typeof badges] || badges.pending;
   };
 
-  const getCategoryBadge = (category: string) => {
-    const badges = {
-      'Clinical': 'bg-purple-100 text-purple-800',
-      'Family': 'bg-blue-100 text-blue-800',
-      'Career': 'bg-green-100 text-green-800',
-      'Addiction': 'bg-red-100 text-red-800',
-      'Trauma': 'bg-orange-100 text-orange-800'
-    };
-    return badges[category as keyof typeof badges] || 'bg-gray-100 text-gray-800';
-  };
-
   const filteredPsychiatrists = psychiatrists.filter(psychiatrist => {
-    const matchesSearch = psychiatrist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         psychiatrist.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         psychiatrist.specialization.toLowerCase().includes(searchTerm.toLowerCase());
+    const name = psychiatrist?.name || '';
+    const email = psychiatrist?.email || '';
+    const specialities = psychiatrist?.specialities?.join(' ') || '';
+    const title = psychiatrist?.title || '';
+    const status = psychiatrist?.status || '';
     
-    const matchesCategory = selectedCategory === 'All Categories' || psychiatrist.category === selectedCategory;
-    const matchesStatus = selectedStatus === 'All Status' || psychiatrist.status === selectedStatus;
+    const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         specialities.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         title.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return matchesSearch && matchesCategory && matchesStatus;
+    const matchesStatus = selectedStatus === 'All Status' || status === selectedStatus;
+    
+    return matchesSearch && matchesStatus;
   });
-
-  const getStatusCounts = () => {
-    const pending = psychiatrists.filter(p => p.status === 'pending').length;
-    const approved = psychiatrists.filter(p => p.status === 'approved').length;
-    const rejected = psychiatrists.filter(p => p.status === 'rejected').length;
-    return { pending, approved, rejected };
-  };
 
   const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
     setNotification({ type, message });
@@ -175,6 +124,7 @@ const Psychiatrist: React.FC = () => {
     if (!selectedPsychiatrist) return;
     
     setActionType(type);
+    setRejectionReason(''); // Reset rejection reason
     setShowActionModal(true);
   };
 
@@ -195,27 +145,58 @@ const Psychiatrist: React.FC = () => {
     setLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const newStatus = actionType === 'approve' ? 'approved' : 'rejected';
       
+      // Prepare the request data
+      const requestData: any = { status: newStatus };
+      if (actionType === 'reject') {
+        requestData.rejectionReason = rejectionReason;
+      }
+
+      console.log('Updating psychiatrist:', selectedPsychiatrist.id, 'with data:', requestData);
+
+      // Make the API call
+      await API.put(
+        `/adminpsychiatrists/${selectedPsychiatrist.id}/status`,
+        requestData
+      );
+
+      // Update local state
       setPsychiatrists(prev => 
         prev.map(p => 
-          p.id === selectedPsychiatrist.id 
-            ? { ...p, status: actionType as 'approved' | 'rejected' }
+          p.id === selectedPsychiatrist.id
+            ? { 
+                ...p, 
+                status: newStatus as 'pending' | 'approved' | 'rejected',
+              }
             : p
         )
       );
+
+      // Update counts
+      const newCounts = { ...statusCounts };
+      const oldStatus = selectedPsychiatrist.status;
       
+      // Decrement old status count
+      if (oldStatus === 'pending') newCounts.pending--;
+      if (oldStatus === 'approved') newCounts.approved--;
+      if (oldStatus === 'rejected') newCounts.rejected--;
+      
+      // Increment new status count
+      newCounts[newStatus]++;
+      setStatusCounts(newCounts);
+
       showNotification('success', `Psychiatrist ${actionType}d successfully!`);
       
-      setShowProfileModal(false);
-      setShowActionModal(false);
-      setShowConfirmation(false);
-      setSelectedPsychiatrist(null);
-      setRejectionReason('');
+      // Close all modals
+      closeModals();
       
-    } catch (error) {
-      showNotification('error', 'An error occurred. Please try again.');
+    } catch (error: any) {
+      console.error('Error updating psychiatrist status:', error);
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.errors?.[0]?.msg ||
+                          'Failed to update status. Please try again.';
+      showNotification('error', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -229,7 +210,14 @@ const Psychiatrist: React.FC = () => {
     setRejectionReason('');
   };
 
-  const statusCounts = getStatusCounts();
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
   return (
     <div className="flex flex-col h-screen">
@@ -262,7 +250,7 @@ const Psychiatrist: React.FC = () => {
             )}
 
             {/* Header */}
-            <div className="mb-6 lg:mb-8">
+            <div className="mb-6 lg:mb-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
@@ -274,22 +262,22 @@ const Psychiatrist: React.FC = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6 mb-6">
               {/* Total Psychiatrists */}
-              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 h-[80px] flex items-center">
                 <div className="flex items-center gap-3 w-full">
                   <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <User className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{psychiatrists.length}</p>
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{statusCounts.total}</p>
                     <p className="text-gray-600 text-xs lg:text-sm leading-tight">Total Psychiatrists</p>
                   </div>
                 </div>
               </div>
 
               {/* Pending */}
-              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 h-[80px] flex items-center">
                 <div className="flex items-center gap-3 w-full">
                   <div className="w-10 h-10 lg:w-12 lg:h-12 bg-yellow-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Clock className="w-5 h-5 lg:w-6 lg:h-6 text-yellow-600" />
@@ -302,7 +290,7 @@ const Psychiatrist: React.FC = () => {
               </div>
 
               {/* Approved */}
-              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 h-[80px] flex items-center">
                 <div className="flex items-center gap-3 w-full">
                   <div className="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <CheckCircle className="w-5 h-5 lg:w-6 lg:h-6 text-green-600" />
@@ -315,7 +303,7 @@ const Psychiatrist: React.FC = () => {
               </div>
 
               {/* Rejected */}
-              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 h-[80px] flex items-center">
                 <div className="flex items-center gap-3 w-full">
                   <div className="w-10 h-10 lg:w-12 lg:h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <XCircle className="w-5 h-5 lg:w-6 lg:h-6 text-red-600" />
@@ -329,7 +317,7 @@ const Psychiatrist: React.FC = () => {
             </div>
 
             {/* Filters */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-1 lg:p-6 mb-6">
               <div className="flex items-center gap-2">
                 <Filter className="w-5 h-5 text-gray-600" />
                 <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Filters</h2>
@@ -337,33 +325,16 @@ const Psychiatrist: React.FC = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
                 {/* Search */}
-                <div className="relative md:col-span-1 lg:col-span-2">
+                <div className="relative md:col-span-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
-                    placeholder="Search psychiatrists..."
+                    placeholder="Search by name, email, or specialities..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                   />
                 </div>
-
-                {/* Category Filter */}
-                {/* <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-                  >
-                    <option value="All Categories">All Categories</option>
-                    <option value="Clinical">Clinical</option>
-                    <option value="Family">Family</option>
-                    <option value="Career">Career</option>
-                    <option value="Addiction">Addiction</option>
-                    <option value="Trauma">Trauma</option>
-                  </select>
-                </div> */}
 
                 {/* Status Filter */}
                 <div>
@@ -383,70 +354,101 @@ const Psychiatrist: React.FC = () => {
             </div>
 
             {/* Psychiatrists Table */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6 overflow-x-auto">
               {/* Table Header */}
-              <div className="px-6 py-4 bg-gray-50 grid grid-cols-10 gap-4 text-sm font-medium text-gray-500 uppercase tracking-wider">
+              <div className="px-4 py-4 bg-gray-50 grid grid-cols-12 gap-2 text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[1000px]">
                 <div className="col-span-3 flex items-center gap-2">
-                  <User className="w-4 h-4" />
+                  <User className="w-3 h-3" />
                   <span>Psychiatrist</span>
                 </div>
-                <div className="col-span-3 flex items-center gap-2">
-                  <Mail className="w-4 h-4" />
+                <div className="col-span-2 flex items-center gap-2">
+                  <Mail className="w-3 h-3" />
                   <span>Contact</span>
                 </div>
                 <div className="col-span-2 flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  <span>Registered Date</span>
+                  <Calendar className="w-3 h-3" />
+                  <span>Registered</span>
                 </div>
-                {/* <div className="col-span-2">Category</div> */}
-                <div className="col-span-1">Status</div>
-                <div className="col-span-1">Action</div>
+                <div className="col-span-2">Specialities</div>
+                <div className="col-span-2 text-center">Status</div>
+                <div className="col-span-1 text-center">Action</div>
               </div>
 
               {/* Table Body */}
-              <div className="divide-y divide-gray-200">
-                {filteredPsychiatrists.map((psychiatrist) => (
-                  <div key={psychiatrist.id} className="px-6 py-4 grid grid-cols-10 gap-4 items-center hover:bg-gray-50 transition-colors">
-                    <div className="col-span-3 flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
-                        psychiatrist.status === 'approved' ? 'bg-green-500' :
-                        psychiatrist.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
-                      }`}>
-                        {getInitials(psychiatrist.name)}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">{psychiatrist.name}</p>
-                        <p className="text-sm text-gray-500">{psychiatrist.specialization}</p>
-                      </div>
-                    </div>
-                    <div className="col-span-3">
-                      <p className="text-gray-900 text-sm">{psychiatrist.email}</p>
-                      <p className="text-sm text-gray-500">{psychiatrist.phone}</p>
-                    </div>
-                    <div className="col-span-2 text-gray-900">
-                      {new Date(psychiatrist.registeredDate).toLocaleDateString()}
-                    </div>
-                    {/* <div className="col-span-2">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${getCategoryBadge(psychiatrist.category)}`}>
-                        {psychiatrist.category}
-                      </span>
-                    </div> */}
-                    <div className="col-span-1">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusBadge(psychiatrist.status)}`}>
-                        {psychiatrist.status.charAt(0).toUpperCase() + psychiatrist.status.slice(1)}
-                      </span>
-                    </div>
-                    <div className="col-span-1">
-                      <button
-                        onClick={() => handleViewProfile(psychiatrist)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg transition-colors flex items-center gap-1 text-sm"
-                      >
-                        <Eye className="w-3 h-3" />
-                        <span>View</span>
-                      </button>
-                    </div>
+              <div className="divide-y divide-gray-200 min-w-[1000px]">
+                {loading ? (
+                  <div className="px-6 py-8 text-center">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <p className="mt-2 text-gray-600">Loading psychiatrists...</p>
                   </div>
-                ))}
+                ) : filteredPsychiatrists.length === 0 ? (
+                  <div className="px-6 py-8 text-center text-gray-500">
+                    No psychiatrists found matching your criteria.
+                  </div>
+                ) : (
+                  filteredPsychiatrists.map((psychiatrist) => {
+                    // Safe access to properties with fallbacks
+                    const status = psychiatrist?.status || 'pending';
+                    const name = psychiatrist?.name || 'Unknown';
+                    const title = psychiatrist?.title || '';
+                    const email = psychiatrist?.email || '';
+                    const contact_no = psychiatrist?.contact_no || '';
+                    const specialities = psychiatrist?.specialities || [];
+                    const createdAt = psychiatrist?.createdAt || new Date().toISOString();
+
+                    return (
+                      <div key={psychiatrist.id} className="px-4 py-4 grid grid-cols-12 gap-2 items-center hover:bg-gray-50 transition-colors">
+                        <div className="col-span-3 flex items-center gap-2">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold ${
+                            status === 'approved' ? 'bg-green-500' :
+                            status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+                          }`}>
+                            {getInitials(name)}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-gray-900 text-sm truncate">{name}</p>
+                            <p className="text-xs text-gray-500 truncate">{title}</p>
+                          </div>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-gray-900 text-xs truncate">{email}</p>
+                          <p className="text-xs text-gray-500 truncate">{contact_no}</p>
+                        </div>
+                        <div className="col-span-2 text-gray-900 text-xs">
+                          {formatDate(createdAt)}
+                        </div>
+                        <div className="col-span-2">
+                          <div className="flex flex-wrap gap-1">
+                            {specialities.slice(0, 1).map((speciality, index) => (
+                              <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded truncate max-w-[120px]">
+                                {speciality}
+                              </span>
+                            ))}
+                            {specialities.length > 1 && (
+                              <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                                +{specialities.length - 1} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="col-span-2 text-center">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadge(status)}`}>
+                            {status.charAt(0).toUpperCase() + status.slice(1)}
+                          </span>
+                        </div>
+                        <div className="col-span-1 text-center">
+                          <button
+                            onClick={() => handleViewProfile(psychiatrist)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs transition-colors flex items-center gap-1 mx-auto"
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span>View</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
 
@@ -472,16 +474,16 @@ const Psychiatrist: React.FC = () => {
                       <div className="lg:col-span-1">
                         <div className="text-center">
                           <div className={`w-24 h-24 rounded-full mx-auto flex items-center justify-center text-white text-2xl font-bold ${
-                            selectedPsychiatrist.status === 'approved' ? 'bg-green-500' :
-                            selectedPsychiatrist.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+                            (selectedPsychiatrist.status || 'pending') === 'approved' ? 'bg-green-500' :
+                            (selectedPsychiatrist.status || 'pending') === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
                           }`}>
                             {getInitials(selectedPsychiatrist.name)}
                           </div>
                           <h3 className="mt-4 text-xl font-bold text-gray-900">{selectedPsychiatrist.name}</h3>
-                          <p className="text-gray-600">{selectedPsychiatrist.specialization}</p>
+                          <p className="text-gray-600">{selectedPsychiatrist.title}</p>
                           <div className="mt-4">
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusBadge(selectedPsychiatrist.status)}`}>
-                              {selectedPsychiatrist.status.charAt(0).toUpperCase() + selectedPsychiatrist.status.slice(1)}
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusBadge(selectedPsychiatrist.status || 'pending')}`}>
+                              {(selectedPsychiatrist.status || 'pending').charAt(0).toUpperCase() + (selectedPsychiatrist.status || 'pending').slice(1)}
                             </span>
                           </div>
                         </div>
@@ -501,57 +503,67 @@ const Psychiatrist: React.FC = () => {
                             <Phone className="w-5 h-5 text-gray-400" />
                             <div>
                               <p className="text-sm text-gray-500">Phone</p>
-                              <p className="font-medium">{selectedPsychiatrist.phone}</p>
+                              <p className="font-medium">{selectedPsychiatrist.contact_no}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
                             <MapPin className="w-5 h-5 text-gray-400" />
                             <div>
-                              <p className="text-sm text-gray-500">Location</p>
-                              <p className="font-medium">{selectedPsychiatrist.location}</p>
+                              <p className="text-sm text-gray-500">Address</p>
+                              <p className="font-medium">{selectedPsychiatrist.address}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
                             <Calendar className="w-5 h-5 text-gray-400" />
                             <div>
                               <p className="text-sm text-gray-500">Registered Date</p>
-                              <p className="font-medium">{new Date(selectedPsychiatrist.registeredDate).toLocaleDateString()}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Clock className="w-5 h-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm text-gray-500">Experience</p>
-                              <p className="font-medium">{selectedPsychiatrist.experience}</p>
+                              <p className="font-medium">{formatDate(selectedPsychiatrist.createdAt)}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
                             <Shield className="w-5 h-5 text-gray-400" />
                             <div>
                               <p className="text-sm text-gray-500">License</p>
-                              <p className="font-medium">{selectedPsychiatrist.license}</p>
+                              <p className="font-medium">{selectedPsychiatrist.license_no}</p>
                             </div>
                           </div>
+                          {selectedPsychiatrist.rating && (
+                            <div className="flex items-center gap-3">
+                              <div className="w-5 h-5 text-gray-400">⭐</div>
+                              <div>
+                                <p className="text-sm text-gray-500">Rating</p>
+                                <p className="font-medium">{selectedPsychiatrist.rating}/5</p>
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         <div>
                           <div className="flex items-center gap-3 mb-3">
                             <GraduationCap className="w-5 h-5 text-gray-400" />
-                            <p className="text-sm text-gray-500">Education</p>
+                            <p className="text-sm text-gray-500">Specialities</p>
                           </div>
-                          <p className="font-medium">{selectedPsychiatrist.education}</p>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedPsychiatrist.specialities?.map((speciality, index) => (
+                              <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                                {speciality}
+                              </span>
+                            ))}
+                          </div>
                         </div>
 
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Bio</h4>
-                          <p className="text-gray-600">{selectedPsychiatrist.bio}</p>
-                        </div>
+                        {selectedPsychiatrist.description && (
+                          <div>
+                            <h4 className="font-semibold text-gray-900 mb-2">Bio</h4>
+                            <p className="text-gray-600">{selectedPsychiatrist.description}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* Action Buttons */}
                     <div className="mt-8 flex flex-col sm:flex-row justify-end gap-3">
-                      {selectedPsychiatrist.status === 'pending' && (
+                      {(selectedPsychiatrist.status || 'pending') === 'pending' && (
                         <>
                           <button
                             onClick={() => handleAction('reject')}
@@ -569,23 +581,17 @@ const Psychiatrist: React.FC = () => {
                           </button>
                         </>
                       )}
-                      {selectedPsychiatrist.status === 'rejected' && (
-                        <button
-                          onClick={() => handleAction('approve')}
-                          className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
-                        >
-                          <Check className="w-4 h-4" />
-                          <span>Approve</span>
-                        </button>
-                      )}
-                      {selectedPsychiatrist.status === 'approved' && (
-                        <button
-                          onClick={() => handleAction('reject')}
-                          className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
-                        >
+                      {(selectedPsychiatrist.status || 'pending') === 'rejected' && (
+                        <div className="bg-red-100 text-red-800 px-6 py-2 rounded-lg flex items-center justify-center gap-2">
                           <X className="w-4 h-4" />
-                          <span>Revoke Approval</span>
-                        </button>
+                          <span>Rejected</span>
+                        </div>
+                      )}
+                      {(selectedPsychiatrist.status || 'pending') === 'approved' && (
+                        <div className="bg-green-100 text-green-800 px-6 py-2 rounded-lg flex items-center justify-center gap-2">
+                          <Check className="w-4 h-4" />
+                          <span>Approved</span>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -627,7 +633,7 @@ const Psychiatrist: React.FC = () => {
                             value={rejectionReason}
                             onChange={(e) => setRejectionReason(e.target.value)}
                             placeholder="Provide a reason for rejection..."
-                            className="w-full border border-gray-300 rounded-lg p-3"
+                            className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                             rows={4}
                           />
                         </div>
