@@ -1,346 +1,365 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../../components/layout/Navbar';
-import Sidebar from '../../components/layout/Sidebar';
-import CounsellorFilter from '../../components/ui/CounsellorFilter';
-import CounsellorTable from '../../components/ui/CounsellorTable';
-import StatusTabs from '../../components/ui/StatusTabs';
-import CounsellorReviewModal from '../../components/Modals/CounsellorReviewModal'; 
-import { User, Clock, CheckCircle, XCircle, Filter, Search } from 'lucide-react';
+import { NavBar, Sidebar } from '../../components/layout';
+import { Search, Filter, Eye, Check, X, Mail, AlertCircle, CheckCircle, XCircle, User, Phone, Calendar, GraduationCap, Clock, Shield } from 'lucide-react';
+import API from '../../api/api';
 
-export interface Counsellor {
-    id: string;
-    name: string;
-    email: string;
-    registeredDate: string;
-    category: string;
-    status: 'pending' | 'approved' | 'rejected';
-    phone?: string;
-    specialization?: string;
-    experience?: string;
-    qualifications?: string[];
-    bio?: string;
-    avatar?: string;
+interface Counselor {
+  userId: number;
+  name: string;
+  email: string;
+  contact_no: string;
+  registeredDate: string;
+  specialization: string[];
+  experience: string;
+  education: string;
+  licenseNo: string;
+  address: string;
+  bio: string;
+  status: 'pending' | 'approved' | 'rejected' | 'unset';
+  avatar?: string;
 }
 
-export interface CounsellorFilters {
-    status: 'all' | 'pending' | 'approved' | 'rejected';
-    category: 'all' | 'clinical' | 'family' | 'career' | 'addiction' | 'trauma';
-    experience: 'all' | 'junior' | 'mid' | 'senior';
-}
-
-// Mock data for counsellor registrations with Sri Lankan data
-const mockCounsellors: Counsellor[] = [
-  {
-    id: '1',
-    name: 'Dr. Kumari Jayawardena',
-    email: 'kumari.jayawardena@gmail.com',
-    phone: '+94 77 123 4567',
-    registeredDate: '2024-01-15',
-    category: 'clinical',
-    status: 'pending',
-    specialization: 'Clinical Psychology',
-    experience: 'senior',
-    qualifications: [
-      'Ph.D. in Clinical Psychology - University of Colombo',
-      'Licensed Clinical Psychologist (SLCP)',
-      'Advanced Certificate in CBT - National Institute of Mental Health'
-    ],
-    bio: 'Senior clinical psychologist with over 15 years of experience in treating anxiety, depression, and trauma-related disorders. Specialized in cognitive behavioral therapy with extensive research in Sri Lankan mental health practices.'
-  },
-  {
-    id: '2',
-    name: 'Asanka Perera',
-    email: 'asanka.perera@outlook.com',
-    phone: '+94 76 234 5678',
-    registeredDate: '2024-01-12',
-    category: 'family',
-    status: 'approved',
-    specialization: 'Family Therapy',
-    experience: 'mid',
-    qualifications: [
-      'M.A. in Family Counseling - University of Peradeniya',
-      'Certified Family Therapist - Sri Lanka Association of Family Counselors',
-      'Diploma in Marriage Counseling - Institute of Professional Counselors'
-    ],
-    bio: 'Experienced family therapist focusing on relationship dynamics in Sri Lankan families. Expertise in marriage counseling and family conflict resolution.'
-  },
-  {
-    id: '3',
-    name: 'Dr. Malini Fernando',
-    email: 'malini.fernando@yahoo.com',
-    phone: '+94 71 345 6789',
-    registeredDate: '2024-01-10',
-    category: 'career',
-    status: 'rejected',
-    specialization: 'Career Counseling',
-    experience: 'junior',
-    qualifications: [
-      'M.Sc. in Career Guidance - University of Kelaniya',
-      'Career Development Facilitator - National Career Development Association',
-      'Professional Diploma in HR Management - IPM Sri Lanka'
-    ],
-    bio: 'Specializes in career guidance for young professionals and university students. Experience in conducting career development workshops across Sri Lankan universities.'
-  },
-  {
-    id: '4',
-    name: 'Dinesh Gunaratne',
-    email: 'dinesh.gunaratne@gmail.com',
-    phone: '+94 75 456 7890',
-    registeredDate: '2024-01-08',
-    category: 'addiction',
-    status: 'approved',
-    specialization: 'Addiction Counseling',
-    experience: 'senior',
-    qualifications: [
-      'M.A. in Psychology - University of Sri Jayewardenepura',
-      'Certified Addiction Professional - National Dangerous Drugs Control Board',
-      'Advanced Certificate in Rehabilitation Counseling - NIMH Sri Lanka'
-    ],
-    bio: 'Leading addiction counselor with extensive experience in substance abuse treatment and rehabilitation programs across Sri Lanka. Worked with major rehabilitation centers in Colombo and Kandy.'
-  },
-  {
-    id: '5',
-    name: 'Dr. Priyanka Dissanayake',
-    email: 'priyanka.dissanayake@outlook.com',
-    phone: '+94 77 567 8901',
-    registeredDate: '2024-01-05',
-    category: 'trauma',
-    status: 'pending',
-    specialization: 'Trauma Therapy',
-    experience: 'mid',
-    qualifications: [
-      'Ph.D. in Clinical Psychology - University of Colombo',
-      'Certified Trauma Professional - International Association of Trauma Professionals',
-      'Advanced Training in EMDR Therapy - Sri Lanka Psychological Association'
-    ],
-    bio: 'Specialized in trauma therapy and PTSD treatment, with particular focus on post-war trauma rehabilitation in Sri Lanka. Experienced in working with both adults and children affected by natural disasters and civil conflicts.'
-  },
-  {
-    id: '6',
-    name: 'Rohan Wijesinghe',
-    email: 'rohan.wijesinghe@yahoo.com',
-    phone: '+94 76 678 9012',
-    registeredDate: '2024-01-03',
-    category: 'clinical',
-    status: 'pending',
-    specialization: 'Child Psychology',
-    experience: 'junior',
-    qualifications: [
-      'M.A. in Child Psychology - University of Ruhuna',
-      'Special Education Certification - National Institute of Education',
-      'Play Therapy Certificate - Sri Lanka Association of Child Psychologists'
-    ],
-    bio: 'Child psychologist specializing in developmental disorders and early intervention. Experience in working with schools and child development centers across Southern Province.'
-  }
-];
-
-const CounsellorManagement = () => {
-  const [counsellors, setCounsellors] = useState<Counsellor[]>(mockCounsellors);
-  const [filteredCounsellors, setFilteredCounsellors] = useState<Counsellor[]>(mockCounsellors);
-  const [selectedCounsellor, setSelectedCounsellor] = useState<Counsellor | null>(null);
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+const Counselor: React.FC = () => {
+  const [counselors, setCounselors] = useState<Counselor[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory] = useState('All Categories');
   const [selectedStatus, setSelectedStatus] = useState('All Status');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeStatus, setActiveStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
-  const [activeFilters, setActiveFilters] = useState<CounsellorFilters>({
-    status: 'all',
-    category: 'all',
-    experience: 'all'
+  const [selectedCounselor, setSelectedCounselor] = useState<Counselor | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [actionType, setActionType] = useState<'approve' | 'reject'>('approve');
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [statusCounts, setStatusCounts] = useState({
+    pending: 0,
+    approved: 0,
+    rejected: 0
   });
 
-  // Sidebar state
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const closeSidebar = () => setSidebarOpen(false);
+// Fetch counselors and counts on component mount
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      console.log('Starting to fetch counselor data...');
+      
+      const [counselorsRes, countsRes] = await Promise.all([
+        API.get('/admincounsellors'),
+        API.get('/admincounsellors/stats/counts')
+      ]);
 
-  useEffect(() => {
-    filterCounsellors();
-  }, [searchQuery, activeFilters, activeStatus, counsellors]);
+      console.log('API responses:', {
+        counselorsResponse: counselorsRes,
+        countsResponse: countsRes
+      });
+      
+      // Transform data to match your UI structure
+      const transformedCounselors = counselorsRes.data.map((c: any) => ({
+        userId: c.userId,
+        name: c.user?.name,
+        email: c.user?.email,
+        contact_no: c.contact_no,
+        registeredDate: c.createdAt.split(' ')[0],
+        status: c.status.toLowerCase() as 'pending' | 'approved' | 'rejected',
+        specialization: c.specialities || [],
+        experience: c.experience,
+        education: c.education,
+        licenseNo: c.licenseNo,
+        address: c.address,
+        bio: c.description
+      }));
 
-  const filterCounsellors = () => {
-    let filtered = [...counsellors];
+      console.log('Transformed counselors data:', transformedCounselors);
+      
+      setCounselors(transformedCounselors);
+      
+      // Transform counts to match your UI
+      const countsData = {
+        pending: countsRes.data.pending || 0,
+        approved: countsRes.data.approved || 0,
+        rejected: countsRes.data.rejected || 0
+      };
 
-    // Status filter from tabs
-    if (activeStatus !== 'all') {
-      filtered = filtered.filter(counsellor => counsellor.status === activeStatus);
+      console.log('Counts data:', countsData);
+      setStatusCounts(countsData);
+
+    } catch (error: any) {
+      console.error('Error fetching counselor data:', {
+        error: error,
+        message: error.message,
+        response: error.response ? {
+          status: error.response.status,
+          data: error.response.data,
+          headers: error.response.headers
+        } : 'No response',
+        request: error.request,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers
+        }
+      });
+
+      showNotification('error', 'Failed to fetch counselors. Check console for details.');
+    } finally {
+      setLoading(false);
+      console.log('Finished loading counselor data');
     }
-
-    // Search filter
-    if (searchQuery) {
-      filtered = filtered.filter(counsellor =>
-        counsellor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        counsellor.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        counsellor.specialization?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        counsellor.category.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Category filter
-    if (activeFilters.category !== 'all') {
-      filtered = filtered.filter(counsellor => counsellor.category === activeFilters.category);
-    }
-
-    // Experience filter
-    if (activeFilters.experience !== 'all') {
-      filtered = filtered.filter(counsellor => counsellor.experience === activeFilters.experience);
-    }
-
-    setFilteredCounsellors(filtered);
   };
 
-  const getStatusCounts = () => {
-    return {
-      all: counsellors.length,
-      pending: counsellors.filter(c => c.status === 'pending').length,
-      approved: counsellors.filter(c => c.status === 'approved').length,
-      rejected: counsellors.filter(c => c.status === 'rejected').length,
+  fetchData();
+}, []);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+  };
+
+  const getInitials = (name: string | undefined) => {
+    if (!name || typeof name !== 'string') return '';
+    return name
+      .split(' ')
+      .filter(Boolean)
+      .map(n => n[0])
+      .join('')
+      .toUpperCase();
+  };
+
+  const getStatusBadge = (status: string) => {
+    const badges = {
+      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      approved: 'bg-green-100 text-green-800 border-green-200',
+      rejected: 'bg-red-100 text-red-800 border-red-200'
     };
+    return badges[status as keyof typeof badges] || badges.pending;
   };
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
+  const getCategoryBadge = (category: string) => {
+    const badges = {
+      'Clinical': 'bg-purple-100 text-purple-800',
+      'Family': 'bg-blue-100 text-blue-800',
+      'Career': 'bg-green-100 text-green-800',
+      'Addiction': 'bg-red-100 text-red-800',
+      'Trauma': 'bg-orange-100 text-orange-800'
+    };
+    return badges[category as keyof typeof badges] || 'bg-gray-100 text-gray-800';
   };
 
-  const handleFilterChange = (filters: CounsellorFilters) => {
-    setActiveFilters(filters);
-  };
-
-  const handleReview = (counsellor: Counsellor) => {
-    setSelectedCounsellor(counsellor);
-    setIsReviewModalOpen(true);
-  };
-
-  const handleStatusUpdate = (counsellorId: string, status: 'approved' | 'rejected' | 'pending', comment?: string) => {
-    const updatedCounsellors = counsellors.map(counsellor =>
-      counsellor.id === counsellorId
-        ? { ...counsellor, status }
-        : counsellor
-    );
-    setCounsellors(updatedCounsellors);
-    setIsReviewModalOpen(false);
-    setSelectedCounsellor(null);
+  const filteredCounselors = counselors.filter(counselor => {
+    const name = counselor?.name || '';
+    const email = counselor?.email || '';
+    const specialization = counselor?.specialization || [];
+    const status = counselor?.status || '';
     
-    // Show success message (in a real app, this would be a toast notification)
-    console.log(`Counsellor ${counsellorId} status updated to ${status}`, comment);
+    const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         specialization.some(spec => spec.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesCategory = selectedCategory === 'All Categories';
+    const matchesStatus = selectedStatus === 'All Status' || status === selectedStatus;
+    
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+
+  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
   };
 
-  const handleCloseModal = () => {
-    setIsReviewModalOpen(false);
-    setSelectedCounsellor(null);
+  const handleViewProfile = (counselor: Counselor) => {
+    setSelectedCounselor(counselor);
+    setShowProfileModal(true);
+  };
+
+  const handleAction = (type: 'approve' | 'reject') => {
+    if (!selectedCounselor) return;
+    
+    setActionType(type);
+    setShowActionModal(true);
+  };
+
+  const confirmAction = () => {
+    if (!selectedCounselor) return;
+    
+    if (actionType === 'reject' && !rejectionReason.trim()) {
+      showNotification('error', 'Please provide a rejection reason.');
+      return;
+    }
+    
+    setShowConfirmation(true);
+  };
+
+  const executeAction = async () => {
+    if (!selectedCounselor) return;
+    
+    setLoading(true);
+    
+    try {
+      const newStatus = actionType === 'approve' ? 'approved' : 'rejected';
+      
+      const requestData = actionType === 'approve' 
+        ? { status: newStatus }
+        : { 
+            status: newStatus,
+            rejectionReason: rejectionReason || "No reason provided"
+          };
+
+      await API.put(
+        `/admincounsellors/${selectedCounselor.userId}/status`,
+        requestData
+      );
+
+      // Update local state
+      setCounselors(prev => 
+        prev.map(c => 
+          c.userId === selectedCounselor.userId
+            ? { 
+                ...c, 
+                status: newStatus as 'pending' | 'approved' | 'rejected',
+              }
+            : c
+        )
+      );
+
+      // Update counts
+      const newCounts = { ...statusCounts };
+      if (selectedCounselor.status === 'pending') newCounts.pending--;
+      if (selectedCounselor.status === 'approved') newCounts.approved--;
+      if (selectedCounselor.status === 'rejected') newCounts.rejected--;
+      
+      newCounts[newStatus]++;
+      setStatusCounts(newCounts);
+
+      showNotification('success', `Counselor ${actionType}d successfully!`);
+      
+      setShowProfileModal(false);
+      setShowActionModal(false);
+      setShowConfirmation(false);
+      setSelectedCounselor(null);
+      setRejectionReason('');
+      
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 
+                          'Failed to update status. Please try again.';
+      showNotification('error', errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const closeModals = () => {
+    setShowProfileModal(false);
+    setShowActionModal(false);
+    setShowConfirmation(false);
+    setSelectedCounselor(null);
+    setRejectionReason('');
   };
 
   return (
     <div className="flex flex-col h-screen">
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar - Desktop */}
-        <div className={`fixed inset-y-0 left-0 z-50 lg:static lg:block ${sidebarOpen ? 'block' : 'hidden'}`}>
-          <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
+        <div className="hidden lg:block">
+          <Sidebar isOpen={true} onClose={closeSidebar} />
         </div>
         
         {/* Main Content */}
         <div className="flex-1 overflow-auto">
-          <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+          <NavBar onMenuClick={toggleSidebar} />
           
           <div className="p-4 lg:p-6">
-            {/* <CounsellorFilter onSearch={handleSearch} onFilterChange={handleFilterChange} /> */}
+            {/* Notification */}
+            {notification && (
+              <div className={`fixed top-5 right-4 z-50 p-4 rounded-lg shadow-lg flex items-center space-x-2 ${
+                notification.type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
+                notification.type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
+                'bg-blue-100 text-blue-800 border border-blue-200'
+              }`}>
+                {notification.type === 'success' && <CheckCircle className="w-5 h-5" />}
+                {notification.type === 'error' && <XCircle className="w-5 h-5" />}
+                {notification.type === 'info' && <AlertCircle className="w-5 h-5" />}
+                <span>{notification.message}</span>
+                <button onClick={() => setNotification(null)} className="ml-2 hover:opacity-70">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
             {/* Header */}
-            <div className="mb-6 lg:mb-8">
+            <div className="mb-6 lg:mb-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Counsellors</h1>
-                  <p className="text-gray-600">View and manage psychiatrist applications</p>
+                  <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+                    Counselors
+                  </h1>
+                  <p className="text-gray-600">View and manage counselor applications</p>
                 </div>
-                
-                {/* <div className="flex items-center space-x-4 mt-4 lg:mt-0">
-                  <div className="flex items-center space-x-4 text-sm">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                      <span className="text-gray-600">
-                        {counsellors.filter(c => c.status === 'pending').length} Pending
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                      <span className="text-gray-600">
-                        {counsellors.filter(c => c.status === 'approved').length} Approved
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                      <span className="text-gray-600">
-                        {counsellors.filter(c => c.status === 'rejected').length} Rejected
-                      </span>
-                    </div>
-                  </div>
-                </div> */}
               </div>
-
-              {/* Status Tabs
-              <StatusTabs
-                activeStatus={activeStatus}
-                onStatusChange={setActiveStatus}
-                counts={getStatusCounts()}
-              /> */}
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
-              {/* Total Psychiatrists */}
-              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6 mb-6">
+              {/* Total Counselors */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 h-[80px] flex items-center">
                 <div className="flex items-center gap-3 w-full">
                   <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <User className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{mockCounsellors.length}</p>
-                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Total Counsellors</p>
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{counselors.length}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Total Counselors</p>
                   </div>
                 </div>
               </div>
 
               {/* Pending */}
-              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 h-[80px] flex items-center">
                 <div className="flex items-center gap-3 w-full">
                   <div className="w-10 h-10 lg:w-12 lg:h-12 bg-yellow-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Clock className="w-5 h-5 lg:w-6 lg:h-6 text-yellow-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xl lg:text-2xl font-bold text-gray-900">10</p>
-                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Busy</p>
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{statusCounts.pending}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Pending</p>
                   </div>
                 </div>
               </div>
 
               {/* Approved */}
-              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 h-[80px] flex items-center">
                 <div className="flex items-center gap-3 w-full">
                   <div className="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <CheckCircle className="w-5 h-5 lg:w-6 lg:h-6 text-green-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xl lg:text-2xl font-bold text-gray-900">7</p>
-                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Online</p>
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{statusCounts.approved}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Approved</p>
                   </div>
                 </div>
               </div>
 
               {/* Rejected */}
-              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 h-[80px] flex items-center">
                 <div className="flex items-center gap-3 w-full">
                   <div className="w-10 h-10 lg:w-12 lg:h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <XCircle className="w-5 h-5 lg:w-6 lg:h-6 text-red-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xl lg:text-2xl font-bold text-gray-900">4</p>
-                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Offline</p>
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{statusCounts.rejected}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Rejected</p>
                   </div>
                 </div>
               </div>
             </div>
-            
+
             {/* Filters */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-1 lg:p-6 mb-6">
               <div className="flex items-center gap-2">
                 <Filter className="w-5 h-5 text-gray-600" />
                 <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Filters</h2>
@@ -348,11 +367,11 @@ const CounsellorManagement = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
                 {/* Search */}
-                <div className="relative md:col-span-1 lg:col-span-2">
+                <div className="relative md:col-span-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
-                    placeholder="Search psychiatrists..."
+                    placeholder="Search counselors..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
@@ -377,8 +396,7 @@ const CounsellorManagement = () => {
                 </div> */}
 
                 {/* Status Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
+                <div> 
                   <select
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
@@ -393,25 +411,326 @@ const CounsellorManagement = () => {
               </div>
             </div>
 
-            {/* Table */}
-            <CounsellorTable
-              counsellors={filteredCounsellors}
-              onReview={handleReview}
-            />
-            
-          </div>
+            {/* Counselors Table */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6">
+              {/* Table Header */}
+              <div className="px-6 py-4 bg-gray-50 grid grid-cols-10 gap-4 text-sm font-medium text-gray-500 uppercase tracking-wider">
+                <div className="col-span-3 flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  <span>Counselor</span>
+                </div>
+                <div className="col-span-3 flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  <span>Contact</span>
+                </div>
+                <div className="col-span-2 flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  <span>Registered Date</span>
+                </div>
+                <div className="col-span-1">Status</div>
+                <div className="col-span-1">Action</div>
+              </div>
 
-          {/* Review Modal */}
-          <CounsellorReviewModal
-            counsellor={selectedCounsellor}
-            isOpen={isReviewModalOpen}
-            onClose={handleCloseModal}
-            onStatusUpdate={handleStatusUpdate}
-          />
+              {/* Table Body */}
+              <div className="divide-y divide-gray-200">
+                {filteredCounselors.map((counselor) => (
+                  <div key={counselor.userId} className="px-6 py-4 grid grid-cols-10 gap-4 items-center hover:bg-gray-50 transition-colors">
+                    <div className="col-span-3 flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
+                        counselor.status === 'approved' ? 'bg-green-500' :
+                        counselor.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+                      }`}>
+                        {getInitials(counselor.name)}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{counselor.name}</p>
+                        <p className="text-sm text-gray-500">{counselor.specialization.join(', ')}</p>
+                      </div>
+                    </div>
+                    <div className="col-span-3">
+                      <p className="text-gray-900 text-sm">{counselor.email}</p>
+                      <p className="text-sm text-gray-500">{counselor.contact_no}</p>
+                    </div>
+                    <div className="col-span-2 text-gray-900">
+                      {new Date(counselor.registeredDate).toLocaleDateString()}
+                    </div>
+                    <div className="col-span-1">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusBadge(counselor.status)}`}>
+                        {counselor.status.charAt(0).toUpperCase() + counselor.status.slice(1)}
+                      </span>
+                    </div>
+                    <div className="col-span-1">
+                      <button
+                        onClick={() => handleViewProfile(counselor)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg transition-colors flex items-center gap-1 text-sm"
+                      >
+                        <Eye className="w-3 h-3" />
+                        <span>View</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Profile Modal */}
+            {showProfileModal && selectedCounselor && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                  <div className="p-6 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-2xl font-bold text-gray-900">Counselor Profile</h2>
+                      <button
+                        onClick={closeModals}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <X className="w-6 h-6" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      {/* Profile Info */}
+                      <div className="lg:col-span-1">
+                        <div className="text-center">
+                          <div className={`w-24 h-24 rounded-full mx-auto flex items-center justify-center text-white text-2xl font-bold ${
+                            selectedCounselor.status === 'approved' ? 'bg-green-500' :
+                            selectedCounselor.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+                          }`}>
+                            {getInitials(selectedCounselor.name)}
+                          </div>
+                          <h3 className="mt-4 text-xl font-bold text-gray-900">{selectedCounselor.name}</h3>
+                          <p className="text-gray-600">{selectedCounselor.specialization.join(', ')}</p>
+                          <div className="mt-4">
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusBadge(selectedCounselor.status)}`}>
+                              {selectedCounselor.status.charAt(0).toUpperCase() + selectedCounselor.status.slice(1)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Details */}
+                      <div className="lg:col-span-2 space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="flex items-center gap-3">
+                            <Mail className="w-5 h-5 text-gray-400" />
+                            <div>
+                              <p className="text-sm text-gray-500">Email</p>
+                              <p className="font-medium">{selectedCounselor.email}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Phone className="w-5 h-5 text-gray-400" />
+                            <div>
+                              <p className="text-sm text-gray-500">Phone</p>
+                              <p className="font-medium">{selectedCounselor.contact_no}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Calendar className="w-5 h-5 text-gray-400" />
+                            <div>
+                              <p className="text-sm text-gray-500">Registered Date</p>
+                              <p className="font-medium">{new Date(selectedCounselor.registeredDate).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Clock className="w-5 h-5 text-gray-400" />
+                            <div>
+                              <p className="text-sm text-gray-500">Experience</p>
+                              <p className="font-medium">{selectedCounselor.experience}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Shield className="w-5 h-5 text-gray-400" />
+                            <div>
+                              <p className="text-sm text-gray-500">License</p>
+                              <p className="font-medium">{selectedCounselor.licenseNo}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center gap-3 mb-3">
+                            <GraduationCap className="w-5 h-5 text-gray-400" />
+                            <p className="text-sm text-gray-500">Education</p>
+                          </div>
+                          <p className="font-medium">{selectedCounselor.education}</p>
+                        </div>
+
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-2">Bio</h4>
+                          <p className="text-gray-600">{selectedCounselor.bio}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="mt-8 flex flex-col sm:flex-row justify-end gap-3">
+                      {selectedCounselor.status === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => handleAction('reject')}
+                            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                          >
+                            <X className="w-4 h-4" />
+                            <span>Reject</span>
+                          </button>
+                          <button
+                            onClick={() => handleAction('approve')}
+                            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                          >
+                            <Check className="w-4 h-4" />
+                            <span>Approve</span>
+                          </button>
+                        </>
+                      )}
+                      {selectedCounselor.status === 'rejected' && (
+                        <div className="bg-red-200 text-gray-800 px-6 py-2 rounded-lg flex items-center justify-center gap-2">
+                          <X className="w-4 h-4 text-red-600" />
+                          <span>Rejected</span>
+                        </div>
+                      )}
+                      {selectedCounselor.status === 'approved' && (
+                        <div className="bg-green-200 text-gray-800 px-6 py-2 rounded-lg flex items-center justify-center gap-2">
+                          <Check className="w-4 h-4 text-green-600" />
+                          <span>Approved</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Action Modal */}
+            {showActionModal && selectedCounselor && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-xl max-w-lg w-full">
+                  <div className="p-6 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-xl font-bold text-gray-900">
+                        {actionType === 'approve' ? 'Approve Counselor' : 'Reject Counselor'}
+                      </h2>
+                      <button
+                        onClick={closeModals}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <X className="w-6 h-6" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-6">
+                    <div className="space-y-4">
+                      <p className="text-gray-700">
+                        {actionType === 'approve'
+                          ? `Are you sure you want to approve ${selectedCounselor.name}'s application?`
+                          : `Are you sure you want to reject ${selectedCounselor.name}'s application?`}
+                      </p>
+                      {actionType === 'reject' && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Rejection Reason
+                          </label>
+                          <textarea
+                            value={rejectionReason}
+                            onChange={(e) => setRejectionReason(e.target.value)}
+                            placeholder="Provide a reason for rejection..."
+                            className="w-full border border-gray-300 rounded-lg p-3"
+                            rows={4}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-6 flex justify-end gap-3">
+                      <button
+                        onClick={closeModals}
+                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={confirmAction}
+                        disabled={actionType === 'reject' && !rejectionReason.trim()}
+                        className={`px-4 py-2 rounded-lg text-white transition-colors ${
+                          actionType === 'approve'
+                            ? 'bg-green-600 hover:bg-green-700 disabled:bg-green-300'
+                            : 'bg-red-600 hover:bg-red-700 disabled:bg-red-300'
+                        }`}
+                      >
+                        {actionType === 'approve' ? 'Approve' : 'Reject'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Confirmation Modal */}
+            {showConfirmation && selectedCounselor && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-xl max-w-md w-full">
+                  <div className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        actionType === 'approve' ? 'bg-green-100' : 'bg-red-100'
+                      }`}>
+                        {actionType === 'approve' ? (
+                          <Check className="w-6 h-6 text-green-600" />
+                        ) : (
+                          <X className="w-6 h-6 text-red-600" />
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {actionType === 'approve' ? 'Confirm Approval' : 'Confirm Rejection'}
+                        </h3>
+                        <p className="text-gray-600">
+                          {actionType === 'approve'
+                            ? `This will approve ${selectedCounselor.name}'s application.`
+                            : `This will reject ${selectedCounselor.name}'s application.`}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button
+                        onClick={closeModals}
+                        disabled={loading}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={executeAction}
+                        disabled={loading}
+                        className={`flex-1 px-4 py-2 rounded-lg text-white transition-colors flex items-center justify-center gap-2 ${
+                          actionType === 'approve'
+                            ? 'bg-green-600 hover:bg-green-700 disabled:bg-green-300'
+                            : 'bg-red-600 hover:bg-red-700 disabled:bg-red-300'
+                        }`}
+                      >
+                        {loading ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>Processing...</span>
+                          </>
+                        ) : (
+                          <span>Confirm {actionType === 'approve' ? 'Approval' : 'Rejection'}</span>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default CounsellorManagement;
+export default Counselor;

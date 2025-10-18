@@ -6,9 +6,9 @@ import {
 import API from '../../api/api';
 
 
-export interface Counsellor {
+export interface Psychiatrist {
   id: string;  // user.id
-  userId: number; // counselor.userId
+  userId: number; // psychiatrist.userId
   name: string;
   email: string;
   registeredDate: string;
@@ -23,55 +23,53 @@ export interface Counsellor {
 }
 
 
-interface CounsellorReviewModalProps {
-  counsellor: Counsellor | null;
+interface PsychiatristReviewModalProps {
+  psychiatrist: Psychiatrist | null;
   isOpen: boolean;
   onClose: () => void;
   onStatusUpdate: (
-    counsellorId: string,
+    psychiatristId: string,
     status: 'approved' | 'rejected' | 'pending',
-    //comment?: string
   ) => void;
   isLoading?: boolean;
 }
 
 
-const CounsellorReviewModal: React.FC<CounsellorReviewModalProps> = ({
-  counsellor,
+const PsychiatristReviewModal: React.FC<PsychiatristReviewModalProps> = ({
+  psychiatrist,
   isOpen,
   onClose,
   onStatusUpdate,
   isLoading = false,
 }) => {
   const [selectedStatus, setSelectedStatus] = useState<'approved' | 'rejected' | 'pending'>('pending');
-  //const [comment, setComment] = useState('');
 
 
-  // Sync status & comment when modal opens or counsellor changes
   useEffect(() => {
-    if (counsellor) {
-      setSelectedStatus(counsellor.status);
-      //setComment('');
+    if (psychiatrist) {
+      setSelectedStatus(psychiatrist.status);
     }
-  }, [counsellor, isOpen]);
+  }, [psychiatrist, isOpen]);
 
 
-  if (!isOpen || !counsellor) return null;
+  if (!isOpen || !psychiatrist) return null;
 
 
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
-
   try {
-    // Use counsellor.userId instead of id
-    const res = await API.put(`/admincounsellors/${counsellor.userId}/status`, {
+    if (!psychiatrist.userId) {
+      alert("psychiatrist.userId is missing.");
+      return;
+    }
+
+    const res = await API.put(`/adminpsychiatrists/${psychiatrist.userId}/status`, {
       status: selectedStatus,
     });
 
-
     if (res.status === 200) {
-      onStatusUpdate(counsellor.userId, selectedStatus);
+      onStatusUpdate(psychiatrist.userId, selectedStatus);
       onClose();
     } else {
       alert('Failed to update status');
@@ -81,7 +79,6 @@ const CounsellorReviewModal: React.FC<CounsellorReviewModalProps> = ({
     alert('Failed to update status. Please try again.');
   }
 };
-
 
 
 
@@ -98,14 +95,14 @@ const CounsellorReviewModal: React.FC<CounsellorReviewModalProps> = ({
       label: 'Approved',
       icon: CheckCircle,
       color: 'green',
-      description: 'Accept this counsellor registration',
+      description: 'Accept this psychiatrist registration',
     },
     {
       value: 'rejected' as const,
       label: 'Rejected',
       icon: XCircle,
       color: 'red',
-      description: 'Reject this counsellor application',
+      description: 'Reject this psychiatrist application',
     },
   ];
 
@@ -120,8 +117,8 @@ const CounsellorReviewModal: React.FC<CounsellorReviewModalProps> = ({
               <User className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Review Counsellor Application</h2>
-              <p className="text-sm text-gray-600">Evaluate counsellor registration details</p>
+              <h2 className="text-xl font-semibold text-gray-900">Review Psychiatrist Application</h2>
+              <p className="text-sm text-gray-600">Evaluate psychiatrist registration details</p>
             </div>
           </div>
           <button
@@ -137,43 +134,43 @@ const CounsellorReviewModal: React.FC<CounsellorReviewModalProps> = ({
         {/* Content */}
         <div className="flex-1 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 200px)' }}>
           <div className="p-6">
-            {/* Counsellor Profile */}
+            {/* Psychiatrist Profile */}
             <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Counsellor Profile</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Psychiatrist Profile</h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="flex items-center space-x-4">
                   <div className="h-16 w-16 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-full flex items-center justify-center">
                     <span className="text-white text-lg font-bold">
-                      {counsellor.name?.split(' ').map(n => n.charAt(0)).join('').toUpperCase()}
+                      {psychiatrist.name?.split(' ').map(n => n.charAt(0)).join('').toUpperCase()}
                     </span>
                   </div>
                   <div>
-                    <h4 className="text-xl font-semibold text-gray-900">{counsellor.user?.name ?? 'N/A'}</h4>
-                    <p className="text-gray-600">{counsellor.specialities ?? 'N/A'}</p>
+                    <h4 className="text-xl font-semibold text-gray-900">{psychiatrist.user?.name ?? 'N/A'}</h4>
+                    <p className="text-gray-600">{psychiatrist.specialization.join('') ?? 'N/A'}</p>
                     <div className="flex items-center space-x-1 mt-1">
                       <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <span className="text-sm text-gray-600">{counsellor.experience ?? 'N/A'} Experience</span>
+                      <span className="text-sm text-gray-600">{psychiatrist.experience ?? 'N/A'} Experience</span>
                     </div>
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 text-sm">
                     <Mail className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">{counsellor.user?.email ?? 'N/A'}</span>
+                    <span className="text-gray-600">{psychiatrist.user?.email ?? 'N/A'}</span>
                   </div>
                   <div className="flex items-center space-x-3 text-sm">
                     <Phone className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">{counsellor.contact_no ?? 'N/A'}</span>
+                    <span className="text-gray-600">{psychiatrist.contact_no ?? 'N/A'}</span>
                   </div>
                   <div className="flex items-center space-x-3 text-sm">
                     <Calendar className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">Registered: {counsellor.createdAt ? counsellor.createdAt.split('T')[0] : 'N/A'}</span>
+                    <span className="text-gray-600">Registered: {psychiatrist.createdAt ? psychiatrist.createdAt.split('T')[0] : 'N/A'}</span>
                   </div>
                   <div className="flex items-center space-x-3 text-sm">
                     <Tag className="h-4 w-4 text-gray-400" />
                     <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium">
-                      {counsellor.category
-                        ? counsellor.category.charAt(0).toUpperCase() + counsellor.category.slice(1)
+                      {psychiatrist.category
+                        ? psychiatrist.category.charAt(0).toUpperCase() + psychiatrist.category.slice(1)
                         : 'N/A'}
                     </span>
                   </div>
@@ -183,14 +180,14 @@ const CounsellorReviewModal: React.FC<CounsellorReviewModalProps> = ({
 
 
             {/* Qualifications */}
-            {counsellor.qualifications?.length > 0 && (
+            {psychiatrist.qualifications?.length > 0 && (
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center space-x-2">
                   <Award className="h-5 w-5 text-indigo-600" />
                   <span>Qualifications</span>
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {counsellor.qualifications.map((qualification, index) => (
+                  {psychiatrist.qualifications.map((qualification, index) => (
                     <div key={index} className="bg-white border border-gray-200 rounded-lg p-3">
                       <p className="text-sm font-medium text-gray-900">{qualification}</p>
                     </div>
@@ -207,7 +204,7 @@ const CounsellorReviewModal: React.FC<CounsellorReviewModalProps> = ({
                 <span>Professional Bio</span>
               </h3>
               <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <p className="text-gray-700 leading-relaxed">{counsellor.description ?? 'N/A'}</p>
+                <p className="text-gray-700 leading-relaxed">{psychiatrist.description ?? 'N/A'}</p>
               </div>
             </div>
 
@@ -254,20 +251,18 @@ const CounsellorReviewModal: React.FC<CounsellorReviewModalProps> = ({
               </div>
 
 
-              {/* <div className="mb-6">
+              <div className="mb-6">
                 <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-2">
                   Review Notes (Optional)
                 </label>
                 <textarea
                   id="comment"
                   rows={3}
-                  //value={comment}
-                  //onChange={(e) => setComment(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 resize-none"
                   placeholder="Add any review notes..."
                   disabled={isLoading}
                 />
-              </div> */}
+              </div>
 
 
               <div className="flex justify-end gap-3 border-t pt-4">
@@ -306,4 +301,4 @@ const CounsellorReviewModal: React.FC<CounsellorReviewModalProps> = ({
 };
 
 
-export default CounsellorReviewModal;
+export default PsychiatristReviewModal;
