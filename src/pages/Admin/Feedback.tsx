@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavBar, Sidebar } from '../../components/layout';
+import { feedbackAPI } from '../../api/feedbackAPI';
 import { 
   MessageSquare, 
   Clock, 
@@ -16,10 +17,24 @@ import {
   ArrowRight,
   FileText,
   Image,
-  Eye
+  Eye,
+  Loader2
 } from 'lucide-react';
 
 // Types
+interface ApiFeedback {
+  review_id: number;
+  sessionId: number;
+  rating: number;
+  comment: string;
+  createdDate: string;
+  sessionDate: string;
+  timeSlot: string;
+  clientName: string;
+  counselorName: string;
+  sessionStatus: string;
+}
+
 interface Feedback {
   id: string;
   type: 'complaint' | 'session' | 'suggestion' | 'emergency' | 'general' | 'testimonial';
@@ -31,7 +46,6 @@ interface Feedback {
   counsellorName: string;
   createdAt: Date;
   updatedAt: Date;
-  status: 'pending' | 'in-progress' | 'resolved' | 'rejected' | 'urgent';
   additionalDetails?: string;
   proof?: {
     type: 'pdf' | 'image';
@@ -42,6 +56,12 @@ interface Feedback {
   tags: string[];
   rating?: number;
   isAnonymous: boolean;
+  // Additional session info from API
+  sessionDate?: string;
+  timeSlot?: string;
+  sessionStatus?: string;
+  // Status only for complaints, not for session feedback
+  status?: 'pending' | 'in-progress' | 'resolved' | 'rejected' | 'urgent';
 }
 
 interface FeedbackFilters {
@@ -54,121 +74,41 @@ interface FeedbackFilters {
 type SortField = 'createdAt' | 'updatedAt' | 'status' | 'rating';
 type SortDirection = 'asc' | 'desc';
 
-// Mock Data
-const mockFeedback: Feedback[] = [
-  {
-    id: '1',
-    type: 'complaint',
-    category: 'individual',
-    title: 'Counsellor was late for online session',
-    description: 'My scheduled video counselling session at 2:00 PM was delayed by 30 minutes without prior notice.',
-    author: 'Nimal Perera',
-    nickname: 'NP123',
-    counsellorName: 'Dr. Kamani Silva',
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-01-15'),
-    status: 'pending',
-    additionalDetails: 'This caused inconvenience as I had to reschedule my work commitments. The counsellor did not provide any explanation for the delay.',
-    proof: {
-      type: 'image',
-      url: '/proofs/session-delay-1.jpg',
-      name: 'session_schedule.jpg'
-    },
-    tags: ['punctuality', 'scheduling', 'individual-therapy'],
-    isAnonymous: false
-  },
-  {
-    id: '2',
-    type: 'session',
-    category: 'family',
-    title: 'Family counselling session feedback',
-    description: 'The family counselling session via video call was very helpful. Dr. Mendis provided excellent guidance for our communication issues.',
-    author: 'Priya Jayawardena',
-    nickname: 'PJ456',
-    counsellorName: 'Dr. Sunil Mendis',
-    createdAt: new Date('2024-01-14'),
-    updatedAt: new Date('2024-01-16'),
-    status: 'resolved',
-    tags: ['family-therapy', 'communication', 'cultural-sensitivity'],
-    rating: 5,
-    isAnonymous: false
-  },
-  {
-    id: '3',
-    type: 'complaint',
-    category: 'individual',
-    title: 'Poor audio quality during session',
-    description: 'The audio quality was very poor throughout the entire session, making it difficult to communicate effectively.',
-    author: 'Saman Kumara',
-    nickname: 'SK789',
-    counsellorName: 'Dr. Sandun Perera',
-    createdAt: new Date('2024-01-13'),
-    updatedAt: new Date('2024-01-17'),
-    status: 'in-progress',
-    additionalDetails: 'I tried switching between devices but the issue persisted. This affected the quality of the therapy session.',
-    proof: {
-      type: 'pdf',
-      url: '/proofs/audio-issue-report.pdf',
-      name: 'audio_quality_report.pdf'
-    },
-    tags: ['technical-issues', 'audio-quality'],
-    isAnonymous: false
-  },
-  {
-    id: '4',
-    type: 'complaint',
-    category: 'online',
-    title: 'Unprofessional behavior',
-    description: 'The counsellor displayed unprofessional behavior during our session.',
-    author: 'Tharaka Silva',
-    nickname: 'TS321',
-    counsellorName: 'Dr. Anura Wickramasinghe',
-    createdAt: new Date('2024-01-12'),
-    updatedAt: new Date('2024-01-18'),
-    status: 'rejected',
-    additionalDetails: 'The counsellor was frequently distracted and checking their phone during the session.',
-    resolutionReason: 'After reviewing the session recording and discussing with the counsellor, we found no evidence of unprofessional behavior. The counsellor was referring to case notes on their device.',
-    tags: ['professionalism', 'behavior'],
-    isAnonymous: false
-  },
-  {
-    id: '5',
-    type: 'session',
-    category: 'group',
-    title: 'Group therapy session feedback',
-    description: 'The group therapy session via messaging was very beneficial.',
-    author: 'Malini Fernando',
-    nickname: 'MF654',
-    counsellorName: 'Dr. Nayomi Gunasekara',
-    createdAt: new Date('2024-01-11'),
-    updatedAt: new Date('2024-01-19'),
-    status: 'resolved',
-    tags: ['group-therapy', 'peer-support', 'messaging'],
-    rating: 5,
-    isAnonymous: false
-  },
-  {
-    id: '6',
-    type: 'complaint',
-    category: 'crisis',
-    title: 'Delayed response to crisis call',
-    description: 'Called the crisis helpline during an emergency but had to wait 15 minutes before getting connected.',
-    author: 'Anonymous',
-    nickname: 'ANON001',
-    counsellorName: 'Crisis Team',
-    createdAt: new Date('2024-01-10'),
-    updatedAt: new Date('2024-01-10'),
-    status: 'resolved',
-    additionalDetails: 'This delay could be critical in emergency situations where immediate support is needed.',
-    resolutionReason: 'We have increased our crisis team staffing during peak hours and implemented a callback system to ensure no calls are missed.',
-    tags: ['crisis-intervention', 'emergency', 'response-time'],
-    isAnonymous: true
-  }
-];
+// Helper function to transform API data to component format
+const transformApiFeedback = (apiFeedback: ApiFeedback): Feedback => ({
+  id: apiFeedback.review_id.toString(),
+  type: 'session', // All API data is session feedback
+  category: 'individual', // Default category
+  title: `Session feedback - Rating: ${apiFeedback.rating}/5`,
+  description: apiFeedback.comment,
+  author: apiFeedback.clientName,
+  nickname: apiFeedback.clientName.split(' ').map(n => n[0]).join('') + apiFeedback.review_id,
+  counsellorName: apiFeedback.counselorName,
+  createdAt: new Date(apiFeedback.createdDate),
+  updatedAt: new Date(apiFeedback.createdDate),
+  tags: [`session-${apiFeedback.sessionId}`, 'feedback', `${apiFeedback.sessionDate}-${apiFeedback.timeSlot}`],
+  rating: apiFeedback.rating, // Keep decimal rating
+  isAnonymous: false,
+  // Store additional session info for display
+  sessionDate: apiFeedback.sessionDate,
+  timeSlot: apiFeedback.timeSlot,
+  sessionStatus: apiFeedback.sessionStatus
+  // No status field for session feedback
+});
 
 const FeedbackManagement: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [feedback, setFeedback] = useState<Feedback[]>(mockFeedback);
+  const [feedback, setFeedback] = useState<Feedback[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false
+  });
   const [sessionFilters, setSessionFilters] = useState<FeedbackFilters>({
     type: 'session',
     category: '',
@@ -189,10 +129,37 @@ const FeedbackManagement: React.FC = () => {
   const [resolutionReason, setResolutionReason] = useState<{ [key: string]: string }>({});
   const [selectedProof, setSelectedProof] = useState<{ url: string; name: string; type: 'pdf' | 'image' } | null>(null);
 
+  // Fetch feedbacks from API
+  const fetchFeedbacks = async (page: number = 1) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await feedbackAPI.getAllFeedbacks(page, pagination.limit);
+      
+      if (response.data.success) {
+        const transformedFeedbacks = response.data.data.feedbacks.map(transformApiFeedback);
+        setFeedback(transformedFeedbacks);
+        setPagination(response.data.data.pagination);
+      } else {
+        setError('Failed to fetch feedbacks');
+      }
+    } catch (err) {
+      setError('Error fetching feedbacks: ' + (err as Error).message);
+      console.error('Error fetching feedbacks:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchFeedbacks(1);
+  }, []);
+
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const closeSidebar = () => setSidebarOpen(false);
 
-  const handleStatusChange = (id: string, status: Feedback['status']) => {
+  const handleStatusChange = (id: string, status: 'pending' | 'in-progress' | 'resolved' | 'rejected' | 'urgent') => {
     setFeedback(prev => 
       prev.map(item => 
         item.id === id 
@@ -237,7 +204,7 @@ const FeedbackManagement: React.FC = () => {
     let filtered = feedback.filter(item => {
       const matchesType = !filters.type || item.type === filters.type;
       const matchesCategory = !filters.category || item.category === filters.category;
-      const matchesStatus = !filters.status || item.status === filters.status;
+      const matchesStatus = !filters.status || (item.status && item.status === filters.status);
       const matchesSearch = !filters.search || 
         item.title.toLowerCase().includes(filters.search.toLowerCase()) ||
         item.description.toLowerCase().includes(filters.search.toLowerCase()) ||
@@ -259,8 +226,8 @@ const FeedbackManagement: React.FC = () => {
           break;
         case 'status':
           const statusOrder = { pending: 1, 'in-progress': 2, resolved: 3, rejected: 4, urgent: 5 };
-          aValue = statusOrder[a.status];
-          bValue = statusOrder[b.status];
+          aValue = a.status ? statusOrder[a.status] : 999; // Put items without status at end
+          bValue = b.status ? statusOrder[b.status] : 999;
           break;
         case 'rating':
           aValue = a.rating || 0;
@@ -285,8 +252,8 @@ const FeedbackManagement: React.FC = () => {
   const complaintFeedback = getFilteredAndSorted(complaintFilters, complaintSortField, complaintSortDirection);
 
   // Stats calculation
-  const totalFeedback = feedback.length;
-  const pendingCount = feedback.filter(f => f.status === 'pending').length;
+  const totalFeedback = pagination.total; // Use API pagination total
+  const pendingCount = feedback.filter(f => f.status === 'pending').length; // Only for complaints
   const sessionFeedbackCount = feedback.filter(f => f.type === 'session').length;
   const complaintsCount = feedback.filter(f => f.type === 'complaint').length;
   const averageRating = feedback.filter(f => f.rating).length > 0 
@@ -303,7 +270,7 @@ const FeedbackManagement: React.FC = () => {
     });
   };
 
-  const getStatusColor = (status: Feedback['status']) => {
+  const getStatusColor = (status?: 'pending' | 'in-progress' | 'resolved' | 'rejected' | 'urgent') => {
     switch (status) {
       case 'pending':
         return 'bg-orange-100 text-orange-700 border-orange-200';
@@ -324,13 +291,21 @@ const FeedbackManagement: React.FC = () => {
     if (!rating) return null;
     return (
       <div className="flex items-center gap-1">
-        {[...Array(5)].map((_, i) => (
-          <Star 
-            key={i} 
-            className={`w-4 h-4 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
-          />
-        ))}
-        <span className="ml-1 text-sm text-gray-600">({rating}/5)</span>
+        {[...Array(5)].map((_, i) => {
+          const filled = i < Math.floor(rating);
+          const halfFilled = i === Math.floor(rating) && rating % 1 >= 0.5;
+          return (
+            <Star 
+              key={i} 
+              className={`w-4 h-4 ${
+                filled ? 'text-yellow-400 fill-current' : 
+                halfFilled ? 'text-yellow-400 fill-current opacity-50' : 
+                'text-gray-300'
+              }`} 
+            />
+          );
+        })}
+        <span className="ml-1 text-sm text-gray-600">({rating.toFixed(1)}/5)</span>
       </div>
     );
   };
@@ -524,14 +499,46 @@ const FeedbackManagement: React.FC = () => {
         {/* Main content */}
         <div className="flex-1 overflow-auto">
           <NavBar onMenuClick={toggleSidebar} />
-          <div className="p-4 lg:p-6">
-            {/* Page Header */}
-            <div className="mb-6 lg:mb-8">
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-                Feedback Management
-              </h1>
-              <p className="text-gray-600">Manage session reviews and handle client complaints efficiently.</p>
+          
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center h-64">
+              <div className="flex items-center gap-3">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                <span className="text-gray-600">Loading feedbacks...</span>
+              </div>
             </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <div className="p-4 lg:p-6">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                  <span className="text-red-800 font-medium">Error</span>
+                </div>
+                <p className="text-red-700 mt-1">{error}</p>
+                <button
+                  onClick={() => fetchFeedbacks(pagination.page)}
+                  className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Main Content - Only show if not loading and no error */}
+          {!loading && !error && (
+            <div className="p-4 lg:p-6">
+              {/* Page Header */}
+              <div className="mb-6 lg:mb-8">
+                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+                  Feedback Management
+                </h1>
+                <p className="text-gray-600">Manage session reviews and handle client complaints efficiently.</p>
+              </div>
 
             {/* Tab Navigation */}
             <div className="flex items-center gap-2 mb-6">
@@ -572,7 +579,7 @@ const FeedbackManagement: React.FC = () => {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-xl lg:text-2xl font-bold text-gray-900">{pendingCount}</p>
-                        <p className="text-gray-600 text-xs lg:text-sm leading-tight">Pending</p>
+                        <p className="text-gray-600 text-xs lg:text-sm leading-tight">Pending Complaints</p>
                       </div>
                     </div>
                   </div>
@@ -658,20 +665,29 @@ const FeedbackManagement: React.FC = () => {
                       </button>
                     </div>
                     <div className="space-y-4">
-                      {feedback.filter(f => f.type === 'complaint').slice(0, 3).map((item) => (
-                        <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                          <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-                            <AlertTriangle className="w-4 h-4 text-red-600" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900 text-sm">{item.title}</p>
-                            <p className="text-xs text-gray-600">{item.nickname}</p>
-                          </div>
-                          <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(item.status)}`}>
-                            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                          </span>
+                      {feedback.filter(f => f.type === 'complaint').length === 0 ? (
+                        <div className="text-center py-6 text-gray-500">
+                          <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                          <p className="text-sm">No complaints found</p>
                         </div>
-                      ))}
+                      ) : (
+                        feedback.filter(f => f.type === 'complaint').slice(0, 3).map((item) => (
+                          <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                            <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                              <AlertTriangle className="w-4 h-4 text-red-600" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-900 text-sm">{item.title}</p>
+                              <p className="text-xs text-gray-600">{item.nickname}</p>
+                            </div>
+                            {item.status && (
+                              <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(item.status)}`}>
+                                {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                              </span>
+                            )}
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 </div>
@@ -681,11 +697,11 @@ const FeedbackManagement: React.FC = () => {
             {/* Session Reviews Tab */}
             {activeTab === 'sessions' && (
               <>
-                <FilterComponent 
+                {/* <FilterComponent 
                   filters={sessionFilters} 
                   onFiltersChange={setSessionFilters}
                   showTypeFilter={false}
-                />
+                /> */}
                 
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6">
                   <div className="p-4 lg:p-6 border-b border-gray-200">
@@ -697,7 +713,6 @@ const FeedbackManagement: React.FC = () => {
                         <span className="text-sm text-gray-600 mr-2">Sort by:</span>
                         <SortButton field="createdAt" type="session">Created Date</SortButton>
                         <SortButton field="rating" type="session">Rating</SortButton>
-                        <SortButton field="status" type="session">Status</SortButton>
                       </div>
                     </div>
                   </div>
@@ -731,11 +746,17 @@ const FeedbackManagement: React.FC = () => {
 
                             <p className="text-gray-700 mb-4 leading-relaxed">{item.description}</p>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
                               <div className="flex items-center gap-2 text-sm text-gray-600">
                                 <Calendar className="w-4 h-4" />
-                                <span>{formatDate(item.createdAt)}</span>
+                                <span>Feedback: {formatDate(item.createdAt)}</span>
                               </div>
+                              {item.sessionDate && (
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <Calendar className="w-4 h-4" />
+                                  <span>Session: {item.sessionDate} at {item.timeSlot}</span>
+                                </div>
+                              )}
                               <div className="flex items-center gap-2 text-sm text-gray-600">
                                 <User className="w-4 h-4" />
                                 <span>Counsellor: {item.counsellorName}</span>
@@ -743,6 +764,34 @@ const FeedbackManagement: React.FC = () => {
                             </div>
                           </div>
                         ))}
+                      </div>
+                    )}
+                    
+                    {/* Pagination Controls */}
+                    {sessionFeedback.length > 0 && (
+                      <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                        <div className="text-sm text-gray-600">
+                          Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} reviews
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => fetchFeedbacks(pagination.page - 1)}
+                            disabled={!pagination.hasPrev}
+                            className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Previous
+                          </button>
+                          <span className="px-3 py-2 text-sm text-gray-600">
+                            Page {pagination.page} of {pagination.totalPages}
+                          </span>
+                          <button
+                            onClick={() => fetchFeedbacks(pagination.page + 1)}
+                            disabled={!pagination.hasNext}
+                            className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Next
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -796,9 +845,9 @@ const FeedbackManagement: React.FC = () => {
                                 </div>
                               </div>
                               <select
-                                value={item.status}
-                                onChange={(e) => handleStatusChange(item.id, e.target.value as Feedback['status'])}
-                                className={`px-3 py-2 rounded-xl text-xs font-medium border cursor-pointer transition-colors ${getStatusColor(item.status)}`}
+                                value={item.status || 'pending'}
+                                onChange={(e) => handleStatusChange(item.id, e.target.value as 'pending' | 'in-progress' | 'resolved' | 'rejected' | 'urgent')}
+                                className={`px-3 py-2 rounded-xl text-xs font-medium border cursor-pointer transition-colors ${getStatusColor(item.status || 'pending')}`}
                               >
                                 <option value="pending">Pending</option>
                                 <option value="in-progress">In Progress</option>
@@ -891,7 +940,8 @@ const FeedbackManagement: React.FC = () => {
                 </div>
               </>
             )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
