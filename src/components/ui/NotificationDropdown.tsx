@@ -138,10 +138,8 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
       if (notification.relatedURL) {
         navigate(notification.relatedURL);
         onClose();
-      } else {
-        // Show notification details in modal
-        setSelectedNotification(notification);
       }
+      // If relatedURL is null, do nothing (already marked as read above)
     } catch (error) {
       console.error('Error handling notification click:', error);
     }
