@@ -35,6 +35,22 @@ interface ApiFeedback {
   sessionStatus: string;
 }
 
+interface ApiComplaint {
+  complaintId: number;
+  sessionId: number;
+  description: string;
+  proof: string | null;
+  status: 'pending' | 'resolved' | 'rejected';
+  reason: string;
+  createdDate: string;
+  updatedDate: string;
+  clientName: string;
+  counselorName: string;
+  sessionDate: string;
+  timeSlot: string;
+  rejectedReason: string | null;
+}
+
 interface Feedback {
   id: string;
   type: 'complaint' | 'session' | 'suggestion' | 'emergency' | 'general' | 'testimonial';
@@ -61,7 +77,7 @@ interface Feedback {
   timeSlot?: string;
   sessionStatus?: string;
   // Status only for complaints, not for session feedback
-  status?: 'pending' | 'in-progress' | 'resolved' | 'rejected' | 'urgent';
+  status?: 'pending' | 'resolved' | 'rejected';
 }
 
 interface FeedbackFilters {
@@ -96,9 +112,35 @@ const transformApiFeedback = (apiFeedback: ApiFeedback): Feedback => ({
   // No status field for session feedback
 });
 
+const transformApiComplaint = (apiComplaint: ApiComplaint): Feedback => ({
+  id: apiComplaint.complaintId.toString(),
+  type: 'complaint',
+  category: 'individual', // Default category
+  title: `Complaint: ${apiComplaint.reason.replace('_', ' ')}`,
+  description: apiComplaint.description || 'No description provided',
+  author: apiComplaint.clientName,
+  nickname: apiComplaint.clientName.split(' ').map(n => n[0]).join('') + apiComplaint.complaintId,
+  counsellorName: apiComplaint.counselorName,
+  createdAt: new Date(apiComplaint.createdDate),
+  updatedAt: new Date(apiComplaint.updatedDate),
+  tags: [`complaint-${apiComplaint.complaintId}`, apiComplaint.reason],
+  isAnonymous: false,
+  // Store complaint-specific info
+  sessionDate: apiComplaint.sessionDate,
+  timeSlot: apiComplaint.timeSlot,
+  status: apiComplaint.status,
+  resolutionReason: apiComplaint.rejectedReason || undefined,
+  proof: apiComplaint.proof ? {
+    type: 'image' as const,
+    url: apiComplaint.proof,
+    name: `complaint_proof_${apiComplaint.complaintId}.jpg`
+  } : undefined
+});
+
 const FeedbackManagement: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
+  const [complaints, setComplaints] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
@@ -109,7 +151,15 @@ const FeedbackManagement: React.FC = () => {
     hasNext: false,
     hasPrev: false
   });
-  const [sessionFilters, setSessionFilters] = useState<FeedbackFilters>({
+  const [complaintsPagination, setComplaintsPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false
+  });
+  const [sessionFilters] = useState<FeedbackFilters>({
     type: 'session',
     category: '',
     status: '',
@@ -151,16 +201,39 @@ const FeedbackManagement: React.FC = () => {
     }
   };
 
+  // Fetch complaints from API
+  const fetchComplaints = async (page: number = 1) => {
+    try {
+      const response = await feedbackAPI.getAllComplaints(page, complaintsPagination.limit);
+      
+      if (response.data.success) {
+        const transformedComplaints = response.data.data.complaints.map(transformApiComplaint);
+        setComplaints(transformedComplaints);
+        setComplaintsPagination(response.data.data.pagination);
+      } else {
+        console.error('Failed to fetch complaints');
+      }
+    } catch (err) {
+      console.error('Error fetching complaints:', err);
+    }
+  };
+
   // Fetch data on component mount
   useEffect(() => {
-    fetchFeedbacks(1);
+    const fetchData = async () => {
+      await Promise.all([
+        fetchFeedbacks(1),
+        fetchComplaints(1)
+      ]);
+    };
+    fetchData();
   }, []);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const closeSidebar = () => setSidebarOpen(false);
 
-  const handleStatusChange = (id: string, status: 'pending' | 'in-progress' | 'resolved' | 'rejected' | 'urgent') => {
-    setFeedback(prev => 
+  const handleStatusChange = (id: string, status: 'pending' | 'resolved' | 'rejected') => {
+    setComplaints(prev => 
       prev.map(item => 
         item.id === id 
           ? { 
@@ -225,7 +298,7 @@ const FeedbackManagement: React.FC = () => {
           bValue = new Date(b[sortField]).getTime();
           break;
         case 'status':
-          const statusOrder = { pending: 1, 'in-progress': 2, resolved: 3, rejected: 4, urgent: 5 };
+          const statusOrder = { pending: 1, resolved: 2, rejected: 3 };
           aValue = a.status ? statusOrder[a.status] : 999; // Put items without status at end
           bValue = b.status ? statusOrder[b.status] : 999;
           break;
@@ -248,14 +321,29 @@ const FeedbackManagement: React.FC = () => {
     return filtered;
   };
 
+  // Use different data sources for sessions vs complaints
   const sessionFeedback = getFilteredAndSorted(sessionFilters, sessionSortField, sessionSortDirection);
-  const complaintFeedback = getFilteredAndSorted(complaintFilters, complaintSortField, complaintSortDirection);
+  const complaintFeedback = (() => {
+    let filtered = complaints.filter(item => {
+      const matchesType = !complaintFilters.type || item.type === complaintFilters.type;
+      const matchesCategory = !complaintFilters.category || item.category === complaintFilters.category;
+      const matchesStatus = !complaintFilters.status || (item.status && item.status === complaintFilters.status);
+      const matchesSearch = !complaintFilters.search || 
+        item.title.toLowerCase().includes(complaintFilters.search.toLowerCase()) ||
+        item.description.toLowerCase().includes(complaintFilters.search.toLowerCase()) ||
+        item.author.toLowerCase().includes(complaintFilters.search.toLowerCase()) ||
+        item.counsellorName.toLowerCase().includes(complaintFilters.search.toLowerCase());
+      
+      return matchesType && matchesCategory && matchesStatus && matchesSearch;
+    });
+    return filtered;
+  })();
 
   // Stats calculation
   const totalFeedback = pagination.total; // Use API pagination total
-  const pendingCount = feedback.filter(f => f.status === 'pending').length; // Only for complaints
-  const sessionFeedbackCount = feedback.filter(f => f.type === 'session').length;
-  const complaintsCount = feedback.filter(f => f.type === 'complaint').length;
+  const pendingCount = complaints.filter(f => f.status === 'pending').length; // Only for complaints
+  const sessionFeedbackCount = feedback.length;
+  const complaintsCount = complaints.length;
   const averageRating = feedback.filter(f => f.rating).length > 0 
     ? feedback.filter(f => f.rating).reduce((acc, f) => acc + (f.rating || 0), 0) / feedback.filter(f => f.rating).length
     : 0;
@@ -270,17 +358,16 @@ const FeedbackManagement: React.FC = () => {
     });
   };
 
-  const getStatusColor = (status?: 'pending' | 'in-progress' | 'resolved' | 'rejected' | 'urgent') => {
+  const getStatusColor = (status?: 'pending' | 'resolved' | 'rejected') => {
     switch (status) {
       case 'pending':
         return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'in-progress':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'resolved':
+        return 'bg-green-100 text-green-700 border-green-200';
       case 'resolved':
         return 'bg-green-100 text-green-700 border-green-200';
       case 'rejected':
         return 'bg-red-100 text-red-700 border-red-200';
-      case 'urgent':
         return 'bg-purple-100 text-purple-700 border-purple-200';
       default:
         return 'bg-gray-100 text-gray-700 border-gray-200';
@@ -432,7 +519,6 @@ const FeedbackManagement: React.FC = () => {
 
           {/* Status Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
             <select
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
@@ -440,10 +526,8 @@ const FeedbackManagement: React.FC = () => {
             >
               <option value="">All Statuses</option>
               <option value="pending">Pending</option>
-              <option value="in-progress">In Progress</option>
               <option value="resolved">Resolved</option>
               <option value="rejected">Rejected</option>
-              <option value="urgent">Urgent</option>
             </select>
           </div>
         </div>
@@ -665,13 +749,13 @@ const FeedbackManagement: React.FC = () => {
                       </button>
                     </div>
                     <div className="space-y-4">
-                      {feedback.filter(f => f.type === 'complaint').length === 0 ? (
+                      {complaints.length === 0 ? (
                         <div className="text-center py-6 text-gray-500">
                           <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-gray-300" />
                           <p className="text-sm">No complaints found</p>
                         </div>
                       ) : (
-                        feedback.filter(f => f.type === 'complaint').slice(0, 3).map((item) => (
+                        complaints.slice(0, 3).map((item) => (
                           <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                             <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
                               <AlertTriangle className="w-4 h-4 text-red-600" />
@@ -846,18 +930,28 @@ const FeedbackManagement: React.FC = () => {
                               </div>
                               <select
                                 value={item.status || 'pending'}
-                                onChange={(e) => handleStatusChange(item.id, e.target.value as 'pending' | 'in-progress' | 'resolved' | 'rejected' | 'urgent')}
+                                onChange={(e) => handleStatusChange(item.id, e.target.value as 'pending' | 'resolved' | 'rejected')}
                                 className={`px-3 py-2 rounded-xl text-xs font-medium border cursor-pointer transition-colors ${getStatusColor(item.status || 'pending')}`}
                               >
                                 <option value="pending">Pending</option>
-                                <option value="in-progress">In Progress</option>
                                 <option value="resolved">Resolved</option>
                                 <option value="rejected">Rejected</option>
-                                <option value="urgent">Urgent</option>
                               </select>
                             </div>
 
                             <p className="text-gray-700 mb-4 leading-relaxed">{item.description}</p>
+
+                            {/* Display Complaint Reason - Only for resolved/rejected complaints */}
+                            {(item.status === 'resolved' || item.status === 'rejected') && (
+                              <div className="mb-4">
+                                <h4 className="font-medium text-gray-900 mb-2">Complaint Reason</h4>
+                                <div className="bg-blue-50 rounded-lg p-3">
+                                  <span className="text-sm text-blue-800 font-medium">
+                                    {item.tags[1]?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Not specified'}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
 
                             {item.additionalDetails && (
                               <div className="mb-4">
@@ -886,7 +980,7 @@ const FeedbackManagement: React.FC = () => {
                             </div>
 
                             {/* Resolution Reason Input */}
-                            {(item.status === 'pending' || item.status === 'in-progress') && (
+                            {(item.status === 'pending') && (
                               <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                   Resolution Reason (Required for Resolved/Rejected status)
@@ -934,6 +1028,34 @@ const FeedbackManagement: React.FC = () => {
                             )}
                           </div>
                         ))}
+                      </div>
+                    )}
+                    
+                    {/* Pagination Controls for Complaints */}
+                    {complaintFeedback.length > 0 && (
+                      <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                        <div className="text-sm text-gray-600">
+                          Showing {((complaintsPagination.page - 1) * complaintsPagination.limit) + 1} to {Math.min(complaintsPagination.page * complaintsPagination.limit, complaintsPagination.total)} of {complaintsPagination.total} complaints
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => fetchComplaints(complaintsPagination.page - 1)}
+                            disabled={!complaintsPagination.hasPrev}
+                            className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Previous
+                          </button>
+                          <span className="px-3 py-2 text-sm text-gray-600">
+                            Page {complaintsPagination.page} of {complaintsPagination.totalPages}
+                          </span>
+                          <button
+                            onClick={() => fetchComplaints(complaintsPagination.page + 1)}
+                            disabled={!complaintsPagination.hasNext}
+                            className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Next
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
