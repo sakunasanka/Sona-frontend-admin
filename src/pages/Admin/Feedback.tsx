@@ -32,6 +32,7 @@ interface ApiFeedback {
   timeSlot: string;
   clientName: string;
   counselorName: string;
+  counselorRole: 'Counselor' | 'Psychiatrist';
   sessionStatus: string;
 }
 
@@ -46,6 +47,7 @@ interface ApiComplaint {
   updatedDate: string;
   clientName: string;
   counselorName: string;
+  counselorRole: 'Counselor' | 'Psychiatrist';
   sessionDate: string;
   timeSlot: string;
   rejectedReason: string | null;
@@ -59,7 +61,8 @@ interface Feedback {
   description: string;
   author: string;
   nickname: string;
-  counsellorName: string;
+  providerName: string; // Generic name for counselor/psychiatrist
+  providerRole: 'Counselor' | 'Psychiatrist'; // Role of the provider
   createdAt: Date;
   updatedAt: Date;
   additionalDetails?: string;
@@ -95,11 +98,12 @@ const transformApiFeedback = (apiFeedback: ApiFeedback): Feedback => ({
   id: apiFeedback.review_id.toString(),
   type: 'session', // All API data is session feedback
   category: 'individual', // Default category
-  title: `Session feedback - Rating: ${apiFeedback.rating}/5`,
+  title: `${apiFeedback.counselorRole} session feedback - Rating: ${apiFeedback.rating}/5`,
   description: apiFeedback.comment,
   author: apiFeedback.clientName,
   nickname: apiFeedback.clientName.split(' ').map(n => n[0]).join('') + apiFeedback.review_id,
-  counsellorName: apiFeedback.counselorName,
+  providerName: apiFeedback.counselorName,
+  providerRole: apiFeedback.counselorRole,
   createdAt: new Date(apiFeedback.createdDate),
   updatedAt: new Date(apiFeedback.createdDate),
   tags: [`session-${apiFeedback.sessionId}`, 'feedback', `${apiFeedback.sessionDate}-${apiFeedback.timeSlot}`],
@@ -120,7 +124,8 @@ const transformApiComplaint = (apiComplaint: ApiComplaint): Feedback => ({
   description: apiComplaint.description || 'No description provided',
   author: apiComplaint.clientName,
   nickname: apiComplaint.clientName.split(' ').map(n => n[0]).join('') + apiComplaint.complaintId,
-  counsellorName: apiComplaint.counselorName,
+  providerName: apiComplaint.counselorName,
+  providerRole: apiComplaint.counselorRole,
   createdAt: new Date(apiComplaint.createdDate),
   updatedAt: new Date(apiComplaint.updatedDate),
   tags: [`complaint-${apiComplaint.complaintId}`, apiComplaint.reason],
@@ -282,7 +287,7 @@ const FeedbackManagement: React.FC = () => {
         item.title.toLowerCase().includes(filters.search.toLowerCase()) ||
         item.description.toLowerCase().includes(filters.search.toLowerCase()) ||
         item.author.toLowerCase().includes(filters.search.toLowerCase()) ||
-        item.counsellorName.toLowerCase().includes(filters.search.toLowerCase());
+        item.providerName.toLowerCase().includes(filters.search.toLowerCase());
       
       return matchesType && matchesCategory && matchesStatus && matchesSearch;
     });
@@ -332,7 +337,7 @@ const FeedbackManagement: React.FC = () => {
         item.title.toLowerCase().includes(complaintFilters.search.toLowerCase()) ||
         item.description.toLowerCase().includes(complaintFilters.search.toLowerCase()) ||
         item.author.toLowerCase().includes(complaintFilters.search.toLowerCase()) ||
-        item.counsellorName.toLowerCase().includes(complaintFilters.search.toLowerCase());
+        item.providerName.toLowerCase().includes(complaintFilters.search.toLowerCase());
       
       return matchesType && matchesCategory && matchesStatus && matchesSearch;
     });
@@ -843,7 +848,7 @@ const FeedbackManagement: React.FC = () => {
                               )}
                               <div className="flex items-center gap-2 text-sm text-gray-600">
                                 <User className="w-4 h-4" />
-                                <span>Counsellor: {item.counsellorName}</span>
+                                <span>{item.providerRole}: {item.providerName}</span>
                               </div>
                             </div>
                           </div>
@@ -975,7 +980,7 @@ const FeedbackManagement: React.FC = () => {
                               </div>
                               <div className="flex items-center gap-2 text-sm text-gray-600">
                                 <User className="w-4 h-4" />
-                                <span>Counsellor: {item.counsellorName}</span>
+                                <span>{item.providerRole}: {item.providerName}</span>
                               </div>
                             </div>
 
