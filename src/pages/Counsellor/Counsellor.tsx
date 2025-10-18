@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavBar, Sidebar } from '../../components/layout';
-import { Search, Filter, Eye, Check, X, Mail, AlertCircle, CheckCircle, XCircle, User, Phone, Calendar, MapPin, GraduationCap, Clock, Shield } from 'lucide-react';
+import { Search, Filter, Eye, Check, X, Mail, AlertCircle, CheckCircle, XCircle, User, Phone, Calendar, GraduationCap, Clock, Shield } from 'lucide-react';
 import API from '../../api/api';
 
 interface Counselor {
@@ -15,14 +15,14 @@ interface Counselor {
   licenseNo: string;
   address: string;
   bio: string;
-  status: 'Pending' | 'Approved' | 'Rejected' | 'Unset';
+  status: 'pending' | 'approved' | 'rejected' | 'unset';
   avatar?: string;
 }
 
 const Counselor: React.FC = () => {
   const [counselors, setCounselors] = useState<Counselor[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All Categories');
+  const [selectedCategory] = useState('All Categories');
   const [selectedStatus, setSelectedStatus] = useState('All Status');
   const [selectedCounselor, setSelectedCounselor] = useState<Counselor | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -58,18 +58,17 @@ useEffect(() => {
       
       // Transform data to match your UI structure
       const transformedCounselors = counselorsRes.data.map((c: any) => ({
-        userId: c.userId.toString(),
+        userId: c.userId,
         name: c.user?.name,
         email: c.user?.email,
-        phone: c.contact_no,
+        contact_no: c.contact_no,
         registeredDate: c.createdAt.split(' ')[0],
-        //category: c.specialization[0] || 'General',
         status: c.status.toLowerCase() as 'pending' | 'approved' | 'rejected',
-        specialization: c.specialities.join(', '),
+        specialization: c.specialities || [],
         experience: c.experience,
         education: c.education,
-        license: c.licenseNo,
-        location: c.address,
+        licenseNo: c.licenseNo,
+        address: c.address,
         bio: c.description
       }));
 
@@ -155,15 +154,14 @@ useEffect(() => {
   const filteredCounselors = counselors.filter(counselor => {
     const name = counselor?.name || '';
     const email = counselor?.email || '';
-    const specialization = counselor?.specialization || '';
-    //const category = counselor?.category || '';
+    const specialization = counselor?.specialization || [];
     const status = counselor?.status || '';
     
     const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         specialization.toLowerCase().includes(searchTerm.toLowerCase());
+                         specialization.some(spec => spec.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesCategory = selectedCategory === 'All Categories' || category === selectedCategory;
+    const matchesCategory = selectedCategory === 'All Categories';
     const matchesStatus = selectedStatus === 'All Status' || status === selectedStatus;
     
     return matchesSearch && matchesCategory && matchesStatus;
@@ -246,7 +244,7 @@ useEffect(() => {
       setSelectedCounselor(null);
       setRejectionReason('');
       
-    } catch (error) {
+    } catch (error: any) {
       const errorMessage = error.response?.data?.message || 
                           'Failed to update status. Please try again.';
       showNotification('error', errorMessage);
@@ -398,8 +396,7 @@ useEffect(() => {
                 </div> */}
 
                 {/* Status Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
+                <div> 
                   <select
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
@@ -447,12 +444,12 @@ useEffect(() => {
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900">{counselor.name}</p>
-                        <p className="text-sm text-gray-500">{counselor.specialization}</p>
+                        <p className="text-sm text-gray-500">{counselor.specialization.join(', ')}</p>
                       </div>
                     </div>
                     <div className="col-span-3">
                       <p className="text-gray-900 text-sm">{counselor.email}</p>
-                      <p className="text-sm text-gray-500">{counselor.phone}</p>
+                      <p className="text-sm text-gray-500">{counselor.contact_no}</p>
                     </div>
                     <div className="col-span-2 text-gray-900">
                       {new Date(counselor.registeredDate).toLocaleDateString()}
@@ -504,7 +501,7 @@ useEffect(() => {
                             {getInitials(selectedCounselor.name)}
                           </div>
                           <h3 className="mt-4 text-xl font-bold text-gray-900">{selectedCounselor.name}</h3>
-                          <p className="text-gray-600">{selectedCounselor.specialization}</p>
+                          <p className="text-gray-600">{selectedCounselor.specialization.join(', ')}</p>
                           <div className="mt-4">
                             <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusBadge(selectedCounselor.status)}`}>
                               {selectedCounselor.status.charAt(0).toUpperCase() + selectedCounselor.status.slice(1)}
@@ -527,7 +524,7 @@ useEffect(() => {
                             <Phone className="w-5 h-5 text-gray-400" />
                             <div>
                               <p className="text-sm text-gray-500">Phone</p>
-                              <p className="font-medium">{selectedCounselor.phone}</p>
+                              <p className="font-medium">{selectedCounselor.contact_no}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
@@ -548,7 +545,7 @@ useEffect(() => {
                             <Shield className="w-5 h-5 text-gray-400" />
                             <div>
                               <p className="text-sm text-gray-500">License</p>
-                              <p className="font-medium">{selectedCounselor.license}</p>
+                              <p className="font-medium">{selectedCounselor.licenseNo}</p>
                             </div>
                           </div>
                         </div>
