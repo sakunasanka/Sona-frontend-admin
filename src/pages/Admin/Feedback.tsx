@@ -50,7 +50,8 @@ interface ApiComplaint {
   counselorRole: 'Counselor' | 'Psychiatrist';
   sessionDate: string;
   timeSlot: string;
-  rejectedReason: string | null;
+  rejectedReason: string | null; // Legacy field - keeping for backward compatibility
+  resolutionReason: string | null; // New field for both resolved and rejected reasons
 }
 
 interface Feedback {
@@ -88,6 +89,7 @@ interface FeedbackFilters {
   category: string;
   status: string;
   search: string;
+  role: string;
 }
 
 type SortField = 'createdAt' | 'updatedAt' | 'status' | 'rating';
@@ -98,7 +100,7 @@ const transformApiFeedback = (apiFeedback: ApiFeedback): Feedback => ({
   id: apiFeedback.review_id.toString(),
   type: 'session', // All API data is session feedback
   category: 'individual', // Default category
-  title: `${apiFeedback.counselorRole} session feedback - Rating: ${apiFeedback.rating}/5`,
+  title: `${apiFeedback.counselorRole} session feedback`,
   description: apiFeedback.comment,
   author: apiFeedback.clientName,
   nickname: apiFeedback.clientName.split(' ').map(n => n[0]).join('') + apiFeedback.review_id,
@@ -134,13 +136,103 @@ const transformApiComplaint = (apiComplaint: ApiComplaint): Feedback => ({
   sessionDate: apiComplaint.sessionDate,
   timeSlot: apiComplaint.timeSlot,
   status: apiComplaint.status,
-  resolutionReason: apiComplaint.rejectedReason || undefined,
+  resolutionReason: apiComplaint.resolutionReason || apiComplaint.rejectedReason || undefined,
   proof: apiComplaint.proof ? {
     type: 'image' as const,
     url: apiComplaint.proof,
     name: `complaint_proof_${apiComplaint.complaintId}.jpg`
   } : undefined
 });
+
+// FilterComponent - moved outside to prevent recreation on re-renders
+const FilterComponent: React.FC<{
+  filters: FeedbackFilters;
+  onFiltersChange: (filters: FeedbackFilters) => void;
+  showTypeFilter?: boolean;
+  showStatusFilter?: boolean;
+}> = ({ filters, onFiltersChange, showTypeFilter = true, showStatusFilter = true }) => {
+  const handleFilterChange = (key: keyof FeedbackFilters, value: string) => {
+    onFiltersChange({
+      ...filters,
+      [key]: value
+    });
+  };
+
+  const filterCount = 1 + (showTypeFilter ? 1 : 0) + (showStatusFilter ? 1 : 0) + 1; // search + role always shown + conditional filters
+  const gridCols = filterCount === 2 ? 'lg:grid-cols-2' : filterCount === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4';
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Filter className="w-5 h-5 text-gray-600" />
+        <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Filters</h2>
+      </div>
+      
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${gridCols} gap-4`}>
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="Search feedback..."
+            value={filters.search}
+            onChange={(e) => handleFilterChange('search', e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+          />
+        </div>
+
+        {/* Role Filter */}
+        <div>
+          <select
+            value={filters.role}
+            onChange={(e) => handleFilterChange('role', e.target.value)}
+            className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+          >
+            <option value="">All Providers</option>
+            <option value="Counselor">Counselor</option>
+            <option value="Psychiatrist">Psychiatrist</option>
+          </select>
+        </div>
+
+        {/* Type Filter - Only show if enabled */}
+        {showTypeFilter && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+            <select
+              value={filters.type}
+              onChange={(e) => handleFilterChange('type', e.target.value)}
+              className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+            >
+              <option value="">All Types</option>
+              <option value="complaint">Complaints</option>
+              <option value="session">Session Feedback</option>
+              <option value="suggestion">Suggestions</option>
+              <option value="emergency">Emergency</option>
+              <option value="testimonial">Testimonials</option>
+              <option value="general">General</option>
+            </select>
+          </div>
+        )}
+
+        {/* Status Filter - Only show if enabled */}
+        {showStatusFilter && (
+          <div>
+            <select
+              value={filters.status}
+              onChange={(e) => handleFilterChange('status', e.target.value)}
+              className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+            >
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="resolved">Resolved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const FeedbackManagement: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -164,17 +256,19 @@ const FeedbackManagement: React.FC = () => {
     hasNext: false,
     hasPrev: false
   });
-  const [sessionFilters] = useState<FeedbackFilters>({
+  const [sessionFilters, setSessionFilters] = useState<FeedbackFilters>({
     type: 'session',
     category: '',
     status: '',
-    search: ''
+    search: '',
+    role: ''
   });
   const [complaintFilters, setComplaintFilters] = useState<FeedbackFilters>({
     type: 'complaint',
     category: '',
     status: '',
-    search: ''
+    search: '',
+    role: ''
   });
   const [sessionSortField, setSessionSortField] = useState<SortField>('createdAt');
   const [sessionSortDirection, setSessionSortDirection] = useState<SortDirection>('desc');
@@ -183,6 +277,7 @@ const FeedbackManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'sessions' | 'complaints'>('overview');
   const [resolutionReason, setResolutionReason] = useState<{ [key: string]: string }>({});
   const [selectedProof, setSelectedProof] = useState<{ url: string; name: string; type: 'pdf' | 'image' } | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState<{ [key: string]: boolean }>({});
 
   // Fetch feedbacks from API
   const fetchFeedbacks = async (page: number = 1) => {
@@ -237,22 +332,43 @@ const FeedbackManagement: React.FC = () => {
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const closeSidebar = () => setSidebarOpen(false);
 
-  const handleStatusChange = (id: string, status: 'pending' | 'resolved' | 'rejected') => {
-    setComplaints(prev => 
-      prev.map(item => 
-        item.id === id 
-          ? { 
-              ...item, 
-              status, 
-              updatedAt: new Date(),
-              ...(status === 'resolved' || status === 'rejected' ? { resolutionReason: resolutionReason[id] || '' } : {})
-            }
-          : item
-      )
-    );
-    // Clear the resolution reason after applying
-    if (status === 'resolved' || status === 'rejected') {
-      setResolutionReason(prev => ({ ...prev, [id]: '' }));
+  const handleStatusChange = async (id: string, status: 'pending' | 'resolved' | 'rejected') => {
+    const reason = resolutionReason[id] || '';
+    
+    try {
+      // Set loading state
+      setUpdatingStatus(prev => ({ ...prev, [id]: true }));
+      
+      // Only make API call for resolved or rejected status
+      if (status === 'resolved' || status === 'rejected') {
+        await feedbackAPI.updateComplaintStatus(id, status, reason);
+      }
+      
+      // Update local state after successful API call
+      setComplaints(prev => 
+        prev.map(item => 
+          item.id === id 
+            ? { 
+                ...item, 
+                status, 
+                updatedAt: new Date(),
+                ...(status === 'resolved' || status === 'rejected' ? { resolutionReason: reason } : {})
+              }
+            : item
+        )
+      );
+      
+      // Clear the resolution reason after applying
+      if (status === 'resolved' || status === 'rejected') {
+        setResolutionReason(prev => ({ ...prev, [id]: '' }));
+      }
+    } catch (error) {
+      console.error('Error updating complaint status:', error);
+      // You could add a toast notification here for better UX
+      alert('Failed to update complaint status. Please try again.');
+    } finally {
+      // Clear loading state
+      setUpdatingStatus(prev => ({ ...prev, [id]: false }));
     }
   };
 
@@ -283,13 +399,14 @@ const FeedbackManagement: React.FC = () => {
       const matchesType = !filters.type || item.type === filters.type;
       const matchesCategory = !filters.category || item.category === filters.category;
       const matchesStatus = !filters.status || (item.status && item.status === filters.status);
+      const matchesRole = !filters.role || item.providerRole === filters.role;
       const matchesSearch = !filters.search || 
         item.title.toLowerCase().includes(filters.search.toLowerCase()) ||
         item.description.toLowerCase().includes(filters.search.toLowerCase()) ||
         item.author.toLowerCase().includes(filters.search.toLowerCase()) ||
         item.providerName.toLowerCase().includes(filters.search.toLowerCase());
       
-      return matchesType && matchesCategory && matchesStatus && matchesSearch;
+      return matchesType && matchesCategory && matchesStatus && matchesRole && matchesSearch;
     });
 
     filtered.sort((a, b) => {
@@ -333,13 +450,14 @@ const FeedbackManagement: React.FC = () => {
       const matchesType = !complaintFilters.type || item.type === complaintFilters.type;
       const matchesCategory = !complaintFilters.category || item.category === complaintFilters.category;
       const matchesStatus = !complaintFilters.status || (item.status && item.status === complaintFilters.status);
+      const matchesRole = !complaintFilters.role || item.providerRole === complaintFilters.role;
       const matchesSearch = !complaintFilters.search || 
         item.title.toLowerCase().includes(complaintFilters.search.toLowerCase()) ||
         item.description.toLowerCase().includes(complaintFilters.search.toLowerCase()) ||
         item.author.toLowerCase().includes(complaintFilters.search.toLowerCase()) ||
         item.providerName.toLowerCase().includes(complaintFilters.search.toLowerCase());
       
-      return matchesType && matchesCategory && matchesStatus && matchesSearch;
+      return matchesType && matchesCategory && matchesStatus && matchesRole && matchesSearch;
     });
     return filtered;
   })();
@@ -366,14 +484,11 @@ const FeedbackManagement: React.FC = () => {
   const getStatusColor = (status?: 'pending' | 'resolved' | 'rejected') => {
     switch (status) {
       case 'pending':
-        return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'resolved':
-        return 'bg-green-100 text-green-700 border-green-200';
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       case 'resolved':
         return 'bg-green-100 text-green-700 border-green-200';
       case 'rejected':
         return 'bg-red-100 text-red-700 border-red-200';
-        return 'bg-purple-100 text-purple-700 border-purple-200';
       default:
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
@@ -469,76 +584,6 @@ const FeedbackManagement: React.FC = () => {
       {children}
     </button>
   );
-
-  const FilterComponent: React.FC<{
-    filters: FeedbackFilters;
-    onFiltersChange: (filters: FeedbackFilters) => void;
-    showTypeFilter?: boolean;
-  }> = ({ filters, onFiltersChange, showTypeFilter = true }) => {
-    const handleFilterChange = (key: keyof FeedbackFilters, value: string) => {
-      onFiltersChange({
-        ...filters,
-        [key]: value
-      });
-    };
-
-    return (
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter className="w-5 h-5 text-gray-600" />
-          <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Filters</h2>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search feedback..."
-              value={filters.search}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-            />
-          </div>
-
-          {/* Type Filter - Only show if enabled */}
-          {showTypeFilter && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
-              <select
-                value={filters.type}
-                onChange={(e) => handleFilterChange('type', e.target.value)}
-                className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-              >
-                <option value="">All Types</option>
-                <option value="complaint">Complaints</option>
-                <option value="session">Session Feedback</option>
-                <option value="suggestion">Suggestions</option>
-                <option value="emergency">Emergency</option>
-                <option value="testimonial">Testimonials</option>
-                <option value="general">General</option>
-              </select>
-            </div>
-          )}
-
-          {/* Status Filter */}
-          <div>
-            <select
-              value={filters.status}
-              onChange={(e) => handleFilterChange('status', e.target.value)}
-              className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-            >
-              <option value="">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="resolved">Resolved</option>
-              <option value="rejected">Rejected</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="flex flex-col h-screen">
@@ -734,7 +779,7 @@ const FeedbackManagement: React.FC = () => {
                           </div>
                           <div className="flex-1">
                             <p className="font-medium text-gray-900 text-sm">{item.title}</p>
-                            <p className="text-xs text-gray-600">{item.nickname} • {item.rating}/5 stars</p>
+                            <p className="text-xs text-gray-600">{item.author} • {item.rating}/5 stars</p>
                           </div>
                         </div>
                       ))}
@@ -767,7 +812,7 @@ const FeedbackManagement: React.FC = () => {
                             </div>
                             <div className="flex-1">
                               <p className="font-medium text-gray-900 text-sm">{item.title}</p>
-                              <p className="text-xs text-gray-600">{item.nickname}</p>
+                              <p className="text-xs text-gray-600">{item.author}</p>
                             </div>
                             {item.status && (
                               <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(item.status)}`}>
@@ -786,11 +831,12 @@ const FeedbackManagement: React.FC = () => {
             {/* Session Reviews Tab */}
             {activeTab === 'sessions' && (
               <>
-                {/* <FilterComponent 
+                <FilterComponent 
                   filters={sessionFilters} 
                   onFiltersChange={setSessionFilters}
                   showTypeFilter={false}
-                /> */}
+                  showStatusFilter={false}
+                />
                 
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6">
                   <div className="p-4 lg:p-6 border-b border-gray-200">
@@ -824,7 +870,7 @@ const FeedbackManagement: React.FC = () => {
                                 <div>
                                   <h3 className="font-semibold text-gray-900 text-lg">{item.title}</h3>
                                   <p className="text-sm text-gray-600">
-                                    {item.isAnonymous ? 'Anonymous Client' : `${item.author} (${item.nickname})`}
+                                    {item.isAnonymous ? 'Anonymous Client' : `${item.author}`}
                                   </p>
                                 </div>
                               </div>
@@ -835,11 +881,7 @@ const FeedbackManagement: React.FC = () => {
 
                             <p className="text-gray-700 mb-4 leading-relaxed">{item.description}</p>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
-                              <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <Calendar className="w-4 h-4" />
-                                <span>Feedback: {formatDate(item.createdAt)}</span>
-                              </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                               {item.sessionDate && (
                                 <div className="flex items-center gap-2 text-sm text-gray-600">
                                   <Calendar className="w-4 h-4" />
@@ -929,19 +971,13 @@ const FeedbackManagement: React.FC = () => {
                                 <div>
                                   <h3 className="font-semibold text-gray-900 text-lg">{item.title}</h3>
                                   <p className="text-sm text-gray-600">
-                                    {item.isAnonymous ? 'Anonymous' : `${item.author} (${item.nickname})`}
+                                    {item.isAnonymous ? 'Anonymous' : `${item.author}`}
                                   </p>
                                 </div>
                               </div>
-                              <select
-                                value={item.status || 'pending'}
-                                onChange={(e) => handleStatusChange(item.id, e.target.value as 'pending' | 'resolved' | 'rejected')}
-                                className={`px-3 py-2 rounded-xl text-xs font-medium border cursor-pointer transition-colors ${getStatusColor(item.status || 'pending')}`}
-                              >
-                                <option value="pending">Pending</option>
-                                <option value="resolved">Resolved</option>
-                                <option value="rejected">Rejected</option>
-                              </select>
+                              <span className={`px-3 py-2 rounded-xl text-xs font-medium border ${getStatusColor(item.status || 'pending')}`}>
+                                {(item.status || 'pending').charAt(0).toUpperCase() + (item.status || 'pending').slice(1)}
+                              </span>
                             </div>
 
                             <p className="text-gray-700 mb-4 leading-relaxed">{item.description}</p>
@@ -1001,18 +1037,40 @@ const FeedbackManagement: React.FC = () => {
                                   <span className="text-xs text-gray-500">
                                     This message will be sent to the client
                                   </span>
-                                  <button
-                                    onClick={() => {
-                                      if (resolutionReason[item.id]) {
-                                        handleStatusChange(item.id, 'resolved');
-                                      }
-                                    }}
-                                    disabled={!resolutionReason[item.id]}
-                                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                  >
-                                    <CheckCircle className="w-4 h-4" />
-                                    Mark Resolved
-                                  </button>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => {
+                                        if (resolutionReason[item.id] && !updatingStatus[item.id]) {
+                                          handleStatusChange(item.id, 'resolved');
+                                        }
+                                      }}
+                                      disabled={!resolutionReason[item.id] || updatingStatus[item.id]}
+                                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                      {updatingStatus[item.id] ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                      ) : (
+                                        <CheckCircle className="w-4 h-4" />
+                                      )}
+                                      {updatingStatus[item.id] ? 'Resolving...' : 'Mark Resolved'}
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        if (resolutionReason[item.id] && !updatingStatus[item.id]) {
+                                          handleStatusChange(item.id, 'rejected');
+                                        }
+                                      }}
+                                      disabled={!resolutionReason[item.id] || updatingStatus[item.id]}
+                                      className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                      {updatingStatus[item.id] ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                      ) : (
+                                        <AlertTriangle className="w-4 h-4" />
+                                      )}
+                                      {updatingStatus[item.id] ? 'Rejecting...' : 'Mark Rejected'}
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                             )}
