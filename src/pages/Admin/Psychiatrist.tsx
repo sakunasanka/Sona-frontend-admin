@@ -337,8 +337,7 @@ const Psychiatrist: React.FC = () => {
                 </div>
 
                 {/* Status Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
+                <div> 
                   <select
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
