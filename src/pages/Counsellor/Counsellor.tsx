@@ -1,28 +1,99 @@
 import React, { useState, useEffect } from 'react';
 import { NavBar, Sidebar } from '../../components/layout';
-import { Search, Filter, Eye, Check, X, Mail, AlertCircle, CheckCircle, XCircle, User, Phone, Calendar, GraduationCap, Clock, Shield } from 'lucide-react';
+import { 
+  Search, 
+  Filter, 
+  Eye, 
+  Check, 
+  X, 
+  Mail, 
+  AlertCircle, 
+  CheckCircle, 
+  XCircle, 
+  User, 
+  Phone, 
+  Calendar, 
+  MapPin, 
+  GraduationCap, 
+  Clock, 
+  Shield,
+  FileText,
+  Download,
+  ExternalLink,
+  BookOpen,
+  Briefcase
+} from 'lucide-react';
 import API from '../../api/api';
 
-interface Counselor {
+interface EducationQualification {
+  id: number;
+  institution: string;
+  degree?: string;
+  field?: string;
+  startDate?: string;
+  endDate?: string;
+  grade?: string;
+  document?: string;
+  title?: string;
+  year?: number;
+  status: 'pending' | 'approved' | 'rejected';
+  proof?: string;
+  approvedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Experience {
+  id: number;
   userId: number;
+  position: string;
+  company: string;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  status: 'pending' | 'approved' | 'rejected';
+  proof?: string;
+  document?: string;
+  approvedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Counselor {
+  id: number;
+  firebaseId?: string;
   name: string;
   email: string;
-  contact_no: string;
-  registeredDate: string;
-  specialization: string[];
-  experience: string;
-  education: string;
-  licenseNo: string;
-  address: string;
-  bio: string;
-  status: 'pending' | 'approved' | 'rejected' | 'unset';
   avatar?: string;
+  role: string;
+  title?: string;
+  specialities: string[];
+  address: string;
+  contact_no: string;
+  license_no: string;
+  idCard: string;
+  isVolunteer?: boolean;
+  isAvailable?: boolean;
+  description?: string;
+  rating?: number;
+  sessionFee?: number;
+  status: 'pending' | 'approved' | 'rejected';
+  coverImage?: string;
+  instagram?: string;
+  linkedin?: string;
+  x?: string;
+  website?: string;
+  languages?: string[];
+  eduQualifications: EducationQualification[];
+  experiences: Experience[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 const Counselor: React.FC = () => {
   const [counselors, setCounselors] = useState<Counselor[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory] = useState('All Categories');
   const [selectedStatus, setSelectedStatus] = useState('All Status');
   const [selectedCounselor, setSelectedCounselor] = useState<Counselor | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -36,82 +107,34 @@ const Counselor: React.FC = () => {
   const [statusCounts, setStatusCounts] = useState({
     pending: 0,
     approved: 0,
-    rejected: 0
+    rejected: 0,
+    total: 0
   });
+  const [activeTab, setActiveTab] = useState<'profile' | 'education' | 'experiences'>('profile');
+  const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
 
-// Fetch counselors and counts on component mount
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      console.log('Starting to fetch counselor data...');
-      
-      const [counselorsRes, countsRes] = await Promise.all([
-        API.get('/admincounsellors'),
-        API.get('/admincounsellors/stats/counts')
-      ]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [counselorsRes, countsRes] = await Promise.all([
+          API.get('/admincounsellors'),
+          API.get('/admincounsellors/stats/counts')
+        ]);
+        
+        setCounselors(counselorsRes.data);
+        setStatusCounts(countsRes.data);
+      } catch (error: any) {
+        console.error('Error fetching data:', error);
+        showNotification('error', 'Failed to fetch counselors data');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      console.log('API responses:', {
-        counselorsResponse: counselorsRes,
-        countsResponse: countsRes
-      });
-      
-      // Transform data to match your UI structure
-      const transformedCounselors = counselorsRes.data.map((c: any) => ({
-        userId: c.userId,
-        name: c.user?.name,
-        email: c.user?.email,
-        contact_no: c.contact_no,
-        registeredDate: c.createdAt.split(' ')[0],
-        status: c.status.toLowerCase() as 'pending' | 'approved' | 'rejected',
-        specialization: c.specialities || [],
-        experience: c.experience,
-        education: c.education,
-        licenseNo: c.licenseNo,
-        address: c.address,
-        bio: c.description
-      }));
-
-      console.log('Transformed counselors data:', transformedCounselors);
-      
-      setCounselors(transformedCounselors);
-      
-      // Transform counts to match your UI
-      const countsData = {
-        pending: countsRes.data.pending || 0,
-        approved: countsRes.data.approved || 0,
-        rejected: countsRes.data.rejected || 0
-      };
-
-      console.log('Counts data:', countsData);
-      setStatusCounts(countsData);
-
-    } catch (error: any) {
-      console.error('Error fetching counselor data:', {
-        error: error,
-        message: error.message,
-        response: error.response ? {
-          status: error.response.status,
-          data: error.response.data,
-          headers: error.response.headers
-        } : 'No response',
-        request: error.request,
-        config: {
-          url: error.config?.url,
-          method: error.config?.method,
-          headers: error.config?.headers
-        }
-      });
-
-      showNotification('error', 'Failed to fetch counselors. Check console for details.');
-    } finally {
-      setLoading(false);
-      console.log('Finished loading counselor data');
-    }
-  };
-
-  fetchData();
-}, []);
+    fetchData();
+  }, []);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -140,31 +163,21 @@ useEffect(() => {
     return badges[status as keyof typeof badges] || badges.pending;
   };
 
-  const getCategoryBadge = (category: string) => {
-    const badges = {
-      'Clinical': 'bg-purple-100 text-purple-800',
-      'Family': 'bg-blue-100 text-blue-800',
-      'Career': 'bg-green-100 text-green-800',
-      'Addiction': 'bg-red-100 text-red-800',
-      'Trauma': 'bg-orange-100 text-orange-800'
-    };
-    return badges[category as keyof typeof badges] || 'bg-gray-100 text-gray-800';
-  };
-
   const filteredCounselors = counselors.filter(counselor => {
     const name = counselor?.name || '';
     const email = counselor?.email || '';
-    const specialization = counselor?.specialization || [];
+    const specialities = counselor?.specialities?.join(' ') || '';
+    const title = counselor?.title || '';
     const status = counselor?.status || '';
     
     const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         specialization.some(spec => spec.toLowerCase().includes(searchTerm.toLowerCase()));
+                         specialities.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         title.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesCategory = selectedCategory === 'All Categories';
     const matchesStatus = selectedStatus === 'All Status' || status === selectedStatus;
     
-    return matchesSearch && matchesCategory && matchesStatus;
+    return matchesSearch && matchesStatus;
   });
 
   const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
@@ -175,12 +188,14 @@ useEffect(() => {
   const handleViewProfile = (counselor: Counselor) => {
     setSelectedCounselor(counselor);
     setShowProfileModal(true);
+    setActiveTab('profile');
   };
 
   const handleAction = (type: 'approve' | 'reject') => {
     if (!selectedCounselor) return;
     
     setActionType(type);
+    setRejectionReason('');
     setShowActionModal(true);
   };
 
@@ -203,22 +218,19 @@ useEffect(() => {
     try {
       const newStatus = actionType === 'approve' ? 'approved' : 'rejected';
       
-      const requestData = actionType === 'approve' 
-        ? { status: newStatus }
-        : { 
-            status: newStatus,
-            rejectionReason: rejectionReason || "No reason provided"
-          };
+      const requestData: any = { status: newStatus };
+      if (actionType === 'reject') {
+        requestData.rejectionReason = rejectionReason;
+      }
 
       await API.put(
-        `/admincounsellors/${selectedCounselor.userId}/status`,
+        `/admincounsellors/${selectedCounselor.id}/status`,
         requestData
       );
 
-      // Update local state
       setCounselors(prev => 
         prev.map(c => 
-          c.userId === selectedCounselor.userId
+          c.id === selectedCounselor.id
             ? { 
                 ...c, 
                 status: newStatus as 'pending' | 'approved' | 'rejected',
@@ -227,25 +239,24 @@ useEffect(() => {
         )
       );
 
-      // Update counts
       const newCounts = { ...statusCounts };
-      if (selectedCounselor.status === 'pending') newCounts.pending--;
-      if (selectedCounselor.status === 'approved') newCounts.approved--;
-      if (selectedCounselor.status === 'rejected') newCounts.rejected--;
+      const oldStatus = selectedCounselor.status;
+      
+      if (oldStatus === 'pending') newCounts.pending--;
+      if (oldStatus === 'approved') newCounts.approved--;
+      if (oldStatus === 'rejected') newCounts.rejected--;
       
       newCounts[newStatus]++;
       setStatusCounts(newCounts);
 
       showNotification('success', `Counselor ${actionType}d successfully!`);
       
-      setShowProfileModal(false);
-      setShowActionModal(false);
-      setShowConfirmation(false);
-      setSelectedCounselor(null);
-      setRejectionReason('');
+      closeModals();
       
     } catch (error: any) {
+      console.error('Error updating counselor status:', error);
       const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.errors?.[0]?.msg ||
                           'Failed to update status. Please try again.';
       showNotification('error', errorMessage);
     } finally {
@@ -253,12 +264,99 @@ useEffect(() => {
     }
   };
 
+  const getDocumentUrl = (item: EducationQualification | Experience): string | null => {
+    if ('institution' in item) {
+      return item.document || item.proof || null;
+    }
+    return item.document || item.proof || null;
+  };
+
+  const handleViewDocument = (documentUrl: string) => {
+    if (!documentUrl) {
+      showNotification('error', 'No document available to view.');
+      return;
+    }
+    setSelectedDocument(documentUrl);
+    setShowDocumentModal(true);
+  };
+
+  const handleDownloadDocument = (documentUrl: string, fileName: string) => {
+    if (!documentUrl) {
+      showNotification('error', 'No document available to download.');
+      return;
+    }
+    
+    try {
+      const link = document.createElement('a');
+      link.href = documentUrl;
+      link.download = fileName || 'document';
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showNotification('success', 'Document download started');
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      showNotification('error', 'Failed to download document');
+    }
+  };
+
+  const getDocumentFileName = (url: string) => {
+    if (!url) return 'document';
+    return url.split('/').pop() || 'document';
+  };
+
+  const isImageFile = (url: string) => {
+    if (!url) return false;
+    return /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(url);
+  };
+
+  const isPDFFile = (url: string) => {
+    if (!url) return false;
+    return /\.pdf$/i.test(url);
+  };
+
+  const formatEducationDate = (dateString: string) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short'
+    });
+  };
+
+  const getEducationDuration = (startDate?: string, endDate?: string) => {
+    if (!startDate) return '';
+    
+    const start = formatEducationDate(startDate);
+    const end = endDate ? formatEducationDate(endDate) : 'Present';
+    
+    return `${start} - ${end}`;
+  };
+
   const closeModals = () => {
     setShowProfileModal(false);
     setShowActionModal(false);
     setShowConfirmation(false);
+    setShowDocumentModal(false);
     setSelectedCounselor(null);
     setRejectionReason('');
+    setSelectedDocument(null);
+    setActiveTab('profile');
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const truncateText = (text: string, maxLength: number) => {
+    if (!text) return '';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   };
 
   return (
@@ -312,7 +410,7 @@ useEffect(() => {
                     <User className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{counselors.length}</p>
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{statusCounts.total}</p>
                     <p className="text-gray-600 text-xs lg:text-sm leading-tight">Total Counselors</p>
                   </div>
                 </div>
@@ -371,29 +469,12 @@ useEffect(() => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
-                    placeholder="Search counselors..."
+                    placeholder="Search by name, email, or specialities..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                   />
                 </div>
-
-                {/* Category Filter */}
-                {/* <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-                  >
-                    <option value="All Categories">All Categories</option>
-                    <option value="Clinical">Clinical</option>
-                    <option value="Family">Family</option>
-                    <option value="Career">Career</option>
-                    <option value="Addiction">Addiction</option>
-                    <option value="Trauma">Trauma</option>
-                  </select>
-                </div> */}
 
                 {/* Status Filter */}
                 <div> 
@@ -412,71 +493,107 @@ useEffect(() => {
             </div>
 
             {/* Counselors Table */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6 overflow-x-auto">
               {/* Table Header */}
-              <div className="px-6 py-4 bg-gray-50 grid grid-cols-10 gap-4 text-sm font-medium text-gray-500 uppercase tracking-wider">
+              <div className="px-4 py-4 bg-gray-50 grid grid-cols-12 gap-2 text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[1000px]">
                 <div className="col-span-3 flex items-center gap-2">
-                  <User className="w-4 h-4" />
+                  <User className="w-3 h-3" />
                   <span>Counselor</span>
                 </div>
-                <div className="col-span-3 flex items-center gap-2">
-                  <Mail className="w-4 h-4" />
+                <div className="col-span-2 flex items-center gap-2">
+                  <Mail className="w-3 h-3" />
                   <span>Contact</span>
                 </div>
                 <div className="col-span-2 flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  <span>Registered Date</span>
+                  <Calendar className="w-3 h-3" />
+                  <span>Registered</span>
                 </div>
-                <div className="col-span-1">Status</div>
-                <div className="col-span-1">Action</div>
+                <div className="col-span-2">Specialities</div>
+                <div className="col-span-2 text-center">Status</div>
+                <div className="col-span-1 text-center">Action</div>
               </div>
 
               {/* Table Body */}
-              <div className="divide-y divide-gray-200">
-                {filteredCounselors.map((counselor) => (
-                  <div key={counselor.userId} className="px-6 py-4 grid grid-cols-10 gap-4 items-center hover:bg-gray-50 transition-colors">
-                    <div className="col-span-3 flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
-                        counselor.status === 'approved' ? 'bg-green-500' :
-                        counselor.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
-                      }`}>
-                        {getInitials(counselor.name)}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">{counselor.name}</p>
-                        <p className="text-sm text-gray-500">{counselor.specialization.join(', ')}</p>
-                      </div>
-                    </div>
-                    <div className="col-span-3">
-                      <p className="text-gray-900 text-sm">{counselor.email}</p>
-                      <p className="text-sm text-gray-500">{counselor.contact_no}</p>
-                    </div>
-                    <div className="col-span-2 text-gray-900">
-                      {new Date(counselor.registeredDate).toLocaleDateString()}
-                    </div>
-                    <div className="col-span-1">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusBadge(counselor.status)}`}>
-                        {counselor.status.charAt(0).toUpperCase() + counselor.status.slice(1)}
-                      </span>
-                    </div>
-                    <div className="col-span-1">
-                      <button
-                        onClick={() => handleViewProfile(counselor)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg transition-colors flex items-center gap-1 text-sm"
-                      >
-                        <Eye className="w-3 h-3" />
-                        <span>View</span>
-                      </button>
-                    </div>
+              <div className="divide-y divide-gray-200 min-w-[1000px]">
+                {loading ? (
+                  <div className="px-6 py-8 text-center">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <p className="mt-2 text-gray-600">Loading counselors...</p>
                   </div>
-                ))}
+                ) : filteredCounselors.length === 0 ? (
+                  <div className="px-6 py-8 text-center text-gray-500">
+                    No counselors found matching your criteria.
+                  </div>
+                ) : (
+                  filteredCounselors.map((counselor) => {
+                    const status = counselor?.status || 'pending';
+                    const name = counselor?.name || 'Unknown';
+                    const title = counselor?.title || '';
+                    const email = counselor?.email || '';
+                    const contact_no = counselor?.contact_no || '';
+                    const specialities = counselor?.specialities || [];
+                    const createdAt = counselor?.createdAt || new Date().toISOString();
+
+                    return (
+                      <div key={counselor.id} className="px-4 py-4 grid grid-cols-12 gap-2 items-center hover:bg-gray-50 transition-colors">
+                        <div className="col-span-3 flex items-center gap-2">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold ${
+                            status === 'approved' ? 'bg-green-500' :
+                            status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+                          }`}>
+                            {getInitials(name)}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-gray-900 text-sm truncate">{name}</p>
+                            <p className="text-xs text-gray-500 truncate">{title}</p>
+                          </div>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-gray-900 text-xs truncate">{email}</p>
+                          <p className="text-xs text-gray-500 truncate">{contact_no}</p>
+                        </div>
+                        <div className="col-span-2 text-gray-900 text-xs">
+                          {formatDate(createdAt)}
+                        </div>
+                        <div className="col-span-2">
+                          <div className="flex flex-wrap gap-1">
+                            {specialities.slice(0, 1).map((speciality, index) => (
+                              <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded truncate max-w-[120px]">
+                                {speciality}
+                              </span>
+                            ))}
+                            {specialities.length > 1 && (
+                              <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                                +{specialities.length - 1} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="col-span-2 text-center">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadge(status)}`}>
+                            {status.charAt(0).toUpperCase() + status.slice(1)}
+                          </span>
+                        </div>
+                        <div className="col-span-1 text-center">
+                          <button
+                            onClick={() => handleViewProfile(counselor)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs transition-colors flex items-center gap-1 mx-auto"
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span>View</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
 
             {/* Profile Modal */}
             {showProfileModal && selectedCounselor && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
                   <div className="p-6 border-b border-gray-200">
                     <div className="flex items-center justify-between">
                       <h2 className="text-2xl font-bold text-gray-900">Counselor Profile</h2>
@@ -487,117 +604,486 @@ useEffect(() => {
                         <X className="w-6 h-6" />
                       </button>
                     </div>
+                    
+                    {/* Tab Navigation */}
+                    <div className="mt-4 border-b border-gray-200">
+                      <nav className="-mb-px flex space-x-8">
+                        <button
+                          onClick={() => setActiveTab('profile')}
+                          className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                            activeTab === 'profile'
+                              ? 'border-blue-500 text-blue-600'
+                              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                          }`}
+                        >
+                          Profile Information
+                        </button>
+                        <button
+                          onClick={() => setActiveTab('education')}
+                          className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                            activeTab === 'education'
+                              ? 'border-blue-500 text-blue-600'
+                              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                          }`}
+                        >
+                          Education Qualifications
+                          {selectedCounselor.eduQualifications && (
+                            <span className="ml-2 bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs">
+                              {selectedCounselor.eduQualifications.length}
+                            </span>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setActiveTab('experiences')}
+                          className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                            activeTab === 'experiences'
+                              ? 'border-blue-500 text-blue-600'
+                              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                          }`}
+                        >
+                          Experiences
+                          {selectedCounselor.experiences && (
+                            <span className="ml-2 bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs">
+                              {selectedCounselor.experiences.length}
+                            </span>
+                          )}
+                        </button>
+                      </nav>
+                    </div>
                   </div>
 
                   <div className="p-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                      {/* Profile Info */}
-                      <div className="lg:col-span-1">
-                        <div className="text-center">
-                          <div className={`w-24 h-24 rounded-full mx-auto flex items-center justify-center text-white text-2xl font-bold ${
-                            selectedCounselor.status === 'approved' ? 'bg-green-500' :
-                            selectedCounselor.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
-                          }`}>
-                            {getInitials(selectedCounselor.name)}
+                    {activeTab === 'profile' ? (
+                      /* Profile Information Tab */
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Profile Info */}
+                        <div className="lg:col-span-1">
+                          <div className="text-center">
+                            <div className={`w-24 h-24 rounded-full mx-auto flex items-center justify-center text-white text-2xl font-bold ${
+                              (selectedCounselor.status || 'pending') === 'approved' ? 'bg-green-500' :
+                              (selectedCounselor.status || 'pending') === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+                            }`}>
+                              {getInitials(selectedCounselor.name)}
+                            </div>
+                            <h3 className="mt-4 text-xl font-bold text-gray-900">{selectedCounselor.name}</h3>
+                            <p className="text-gray-600">{selectedCounselor.title}</p>
+                            <div className="mt-4">
+                              <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusBadge(selectedCounselor.status || 'pending')}`}>
+                                {(selectedCounselor.status || 'pending').charAt(0).toUpperCase() + (selectedCounselor.status || 'pending').slice(1)}
+                              </span>
+                            </div>
                           </div>
-                          <h3 className="mt-4 text-xl font-bold text-gray-900">{selectedCounselor.name}</h3>
-                          <p className="text-gray-600">{selectedCounselor.specialization.join(', ')}</p>
-                          <div className="mt-4">
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusBadge(selectedCounselor.status)}`}>
-                              {selectedCounselor.status.charAt(0).toUpperCase() + selectedCounselor.status.slice(1)}
-                            </span>
+                        </div>
+
+                        {/* Details */}
+                        <div className="lg:col-span-2 space-y-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="flex items-center gap-3">
+                              <Mail className="w-5 h-5 text-gray-400" />
+                              <div>
+                                <p className="text-sm text-gray-500">Email</p>
+                                <p className="font-medium">{selectedCounselor.email}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <Phone className="w-5 h-5 text-gray-400" />
+                              <div>
+                                <p className="text-sm text-gray-500">Phone</p>
+                                <p className="font-medium">{selectedCounselor.contact_no}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <MapPin className="w-5 h-5 text-gray-400" />
+                              <div>
+                                <p className="text-sm text-gray-500">Address</p>
+                                <p className="font-medium">{selectedCounselor.address}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <Calendar className="w-5 h-5 text-gray-400" />
+                              <div>
+                                <p className="text-sm text-gray-500">Registered Date</p>
+                                <p className="font-medium">{formatDate(selectedCounselor.createdAt)}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <Shield className="w-5 h-5 text-gray-400" />
+                              <div>
+                                <p className="text-sm text-gray-500">License</p>
+                                <p className="font-medium">{selectedCounselor.license_no}</p>
+                              </div>
+                            </div>
+                            {selectedCounselor.rating && (
+                              <div className="flex items-center gap-3">
+                                <div className="w-5 h-5 text-gray-400">⭐</div>
+                                <div>
+                                  <p className="text-sm text-gray-500">Rating</p>
+                                  <p className="font-medium">{selectedCounselor.rating}/5</p>
+                                </div>
+                              </div>
+                            )}
                           </div>
+
+                          <div>
+                            <div className="flex items-center gap-3 mb-3">
+                              <GraduationCap className="w-5 h-5 text-gray-400" />
+                              <p className="text-sm text-gray-500">Specialities</p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedCounselor.specialities?.map((speciality, index) => (
+                                <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                                  {speciality}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          {selectedCounselor.description && (
+                            <div>
+                              <h4 className="font-semibold text-gray-900 mb-2">Bio</h4>
+                              <p className="text-gray-600">{selectedCounselor.description}</p>
+                            </div>
+                          )}
                         </div>
                       </div>
-
-                      {/* Details */}
-                      <div className="lg:col-span-2 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="flex items-center gap-3">
-                            <Mail className="w-5 h-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm text-gray-500">Email</p>
-                              <p className="font-medium">{selectedCounselor.email}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Phone className="w-5 h-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm text-gray-500">Phone</p>
-                              <p className="font-medium">{selectedCounselor.contact_no}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Calendar className="w-5 h-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm text-gray-500">Registered Date</p>
-                              <p className="font-medium">{new Date(selectedCounselor.registeredDate).toLocaleDateString()}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Clock className="w-5 h-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm text-gray-500">Experience</p>
-                              <p className="font-medium">{selectedCounselor.experience}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Shield className="w-5 h-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm text-gray-500">License</p>
-                              <p className="font-medium">{selectedCounselor.licenseNo}</p>
-                            </div>
-                          </div>
+                    ) : activeTab === 'education' ? (
+                      /* Education Qualifications Tab - Table Structure */
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3 mb-6">
+                          <BookOpen className="w-6 h-6 text-blue-600" />
+                          <h3 className="text-xl font-bold text-gray-900">Education Qualifications</h3>
                         </div>
 
-                        <div>
-                          <div className="flex items-center gap-3 mb-3">
-                            <GraduationCap className="w-5 h-5 text-gray-400" />
-                            <p className="text-sm text-gray-500">Education</p>
+                        {!selectedCounselor.eduQualifications || selectedCounselor.eduQualifications.length === 0 ? (
+                          <div className="text-center py-12">
+                            <GraduationCap className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                            <p className="text-gray-500 text-lg">No education qualifications found</p>
+                            <p className="text-gray-400 text-sm mt-2">
+                              This counselor hasn't added any education qualifications yet.
+                            </p>
                           </div>
-                          <p className="font-medium">{selectedCounselor.education}</p>
-                        </div>
-
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Bio</h4>
-                          <p className="text-gray-600">{selectedCounselor.bio}</p>
-                        </div>
+                        ) : (
+                          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                            <div className="overflow-x-auto">
+                              <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                  <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Institution & Degree
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Field & Grade
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Duration
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Document
+                                    </th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Actions
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                  {selectedCounselor.eduQualifications.map((edu, index) => {
+                                    const documentUrl = getDocumentUrl(edu);
+                                    return (
+                                      <tr key={edu.id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                          <div>
+                                            <div className="text-sm font-medium text-gray-900">
+                                              {edu.institution}
+                                            </div>
+                                            <div className="text-sm text-gray-500">
+                                              {edu.degree || edu.title || 'No degree specified'}
+                                            </div>
+                                          </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                          <div className="text-sm text-gray-900">
+                                            {edu.field || 'N/A'}
+                                          </div>
+                                          <div className="text-sm text-gray-500">
+                                            {edu.grade || 'No grade specified'}
+                                          </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                          {edu.startDate && edu.endDate 
+                                            ? getEducationDuration(edu.startDate, edu.endDate)
+                                            : edu.year 
+                                            ? `Graduated: ${edu.year}`
+                                            : 'Date not specified'
+                                          }
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                          {documentUrl ? (
+                                            <div className="flex items-center">
+                                              <FileText className="w-4 h-4 text-gray-400 mr-2" />
+                                              <span className="text-sm text-gray-600">
+                                                {isImageFile(documentUrl) ? 'Image' : 
+                                                 isPDFFile(documentUrl) ? 'PDF' : 'Document'}
+                                              </span>
+                                            </div>
+                                          ) : (
+                                            <span className="text-sm text-gray-400">No document</span>
+                                          )}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                          {documentUrl ? (
+                                            <div className="flex justify-end space-x-2">
+                                              <button
+                                                onClick={() => handleViewDocument(documentUrl)}
+                                                className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded text-xs transition-colors flex items-center gap-1"
+                                              >
+                                                <Eye className="w-3 h-3" />
+                                                View
+                                              </button>
+                                              <button
+                                                onClick={() => handleDownloadDocument(documentUrl, getDocumentFileName(documentUrl))}
+                                                className="text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 px-3 py-1 rounded text-xs transition-colors flex items-center gap-1"
+                                              >
+                                                <Download className="w-3 h-3" />
+                                                Download
+                                              </button>
+                                            </div>
+                                          ) : (
+                                            <span className="text-gray-400 text-xs">No actions</span>
+                                          )}
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
+                    ) : (
+                      /* Experiences Tab - Table Structure */
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3 mb-6">
+                          <Briefcase className="w-6 h-6 text-blue-600" />
+                          <h3 className="text-xl font-bold text-gray-900">Professional Experiences</h3>
+                        </div>
 
-                    {/* Action Buttons */}
-                    <div className="mt-8 flex flex-col sm:flex-row justify-end gap-3">
-                      {selectedCounselor.status === 'pending' && (
-                        <>
-                          <button
-                            onClick={() => handleAction('reject')}
-                            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
-                          >
+                        {!selectedCounselor.experiences || selectedCounselor.experiences.length === 0 ? (
+                          <div className="text-center py-12">
+                            <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                            <p className="text-gray-500 text-lg">No experiences found</p>
+                            <p className="text-gray-400 text-sm mt-2">
+                              This counselor hasn't added any professional experiences yet.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                            <div className="overflow-x-auto">
+                              <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                  <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Position & Company
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Description
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Duration
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Document
+                                    </th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Actions
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                  {selectedCounselor.experiences.map((exp, index) => {
+                                    const documentUrl = getDocumentUrl(exp);
+                                    return (
+                                      <tr key={exp.id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                          <div>
+                                            <div className="text-sm font-medium text-gray-900">
+                                              {exp.position}
+                                            </div>
+                                            <div className="text-sm text-gray-500">
+                                              {exp.company}
+                                            </div>
+                                          </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                          <div className="text-sm text-gray-600 max-w-xs">
+                                            {truncateText(exp.description, 100)}
+                                          </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                          {formatEducationDate(exp.startDate)} - {exp.endDate ? formatEducationDate(exp.endDate) : 'Present'}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                          {documentUrl ? (
+                                            <div className="flex items-center">
+                                              <FileText className="w-4 h-4 text-gray-400 mr-2" />
+                                              <span className="text-sm text-gray-600">
+                                                {isImageFile(documentUrl) ? 'Image' : 
+                                                 isPDFFile(documentUrl) ? 'PDF' : 'Document'}
+                                              </span>
+                                            </div>
+                                          ) : (
+                                            <span className="text-sm text-gray-400">No document</span>
+                                          )}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                          {documentUrl ? (
+                                            <div className="flex justify-end space-x-2">
+                                              <button
+                                                onClick={() => handleViewDocument(documentUrl)}
+                                                className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded text-xs transition-colors flex items-center gap-1"
+                                              >
+                                                <Eye className="w-3 h-3" />
+                                                View
+                                              </button>
+                                              <button
+                                                onClick={() => handleDownloadDocument(documentUrl, getDocumentFileName(documentUrl))}
+                                                className="text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 px-3 py-1 rounded text-xs transition-colors flex items-center gap-1"
+                                              >
+                                                <Download className="w-3 h-3" />
+                                                Download
+                                              </button>
+                                            </div>
+                                          ) : (
+                                            <span className="text-gray-400 text-xs">No actions</span>
+                                          )}
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Action Buttons - Only show on profile tab */}
+                    {activeTab === 'profile' && (
+                      <div className="mt-8 flex flex-col sm:flex-row justify-end gap-3">
+                        {(selectedCounselor.status || 'pending') === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => handleAction('reject')}
+                              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                            >
+                              <X className="w-4 h-4" />
+                              <span>Reject</span>
+                            </button>
+                            <button
+                              onClick={() => handleAction('approve')}
+                              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                            >
+                              <Check className="w-4 h-4" />
+                              <span>Approve</span>
+                            </button>
+                          </>
+                        )}
+                        {(selectedCounselor.status || 'pending') === 'rejected' && (
+                          <div className="bg-red-100 text-red-800 px-6 py-2 rounded-lg flex items-center justify-center gap-2">
                             <X className="w-4 h-4" />
-                            <span>Reject</span>
-                          </button>
-                          <button
-                            onClick={() => handleAction('approve')}
-                            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
-                          >
+                            <span>Rejected</span>
+                          </div>
+                        )}
+                        {(selectedCounselor.status || 'pending') === 'approved' && (
+                          <div className="bg-green-100 text-green-800 px-6 py-2 rounded-lg flex items-center justify-center gap-2">
                             <Check className="w-4 h-4" />
-                            <span>Approve</span>
-                          </button>
-                        </>
-                      )}
-                      {selectedCounselor.status === 'rejected' && (
-                        <div className="bg-red-200 text-gray-800 px-6 py-2 rounded-lg flex items-center justify-center gap-2">
-                          <X className="w-4 h-4 text-red-600" />
-                          <span>Rejected</span>
-                        </div>
-                      )}
-                      {selectedCounselor.status === 'approved' && (
-                        <div className="bg-green-200 text-gray-800 px-6 py-2 rounded-lg flex items-center justify-center gap-2">
-                          <Check className="w-4 h-4 text-green-600" />
-                          <span>Approved</span>
-                        </div>
-                      )}
+                            <span>Approved</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Document Preview Modal */}
+            {showDocumentModal && selectedDocument && (
+              <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] p-4">
+                <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+                  <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Document Preview - {getDocumentFileName(selectedDocument)}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleDownloadDocument(selectedDocument, getDocumentFileName(selectedDocument))}
+                        className="p-2 text-gray-600 hover:text-gray-800 transition-colors"
+                        title="Download"
+                      >
+                        <Download className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => setShowDocumentModal(false)}
+                        className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <X className="w-6 h-6" />
+                      </button>
                     </div>
+                  </div>
+                  
+                  <div className="p-4 max-h-[calc(90vh-80px)] overflow-auto">
+                    {isImageFile(selectedDocument) ? (
+                      <div className="flex justify-center">
+                        <img 
+                          src={selectedDocument} 
+                          alt="Document preview"
+                          className="max-w-full max-h-full object-contain rounded"
+                          onError={(e) => {
+                            console.error('Error loading image:', selectedDocument);
+                            showNotification('error', 'Failed to load image');
+                          }}
+                        />
+                      </div>
+                    ) : isPDFFile(selectedDocument) ? (
+                      <div className="flex flex-col items-center justify-center h-96">
+                        <FileText className="w-16 h-16 text-red-500 mb-4" />
+                        <p className="text-lg font-medium text-gray-700 mb-2">PDF Document</p>
+                        <p className="text-gray-600 mb-4">{getDocumentFileName(selectedDocument)}</p>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => handleDownloadDocument(selectedDocument, getDocumentFileName(selectedDocument))}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                          >
+                            <Download className="w-4 h-4" />
+                            Download PDF
+                          </button>
+                          <a
+                            href={selectedDocument}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                            Open in New Tab
+                          </a>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-96">
+                        <FileText className="w-16 h-16 text-gray-500 mb-4" />
+                        <p className="text-lg font-medium text-gray-700 mb-2">Document</p>
+                        <p className="text-gray-600 mb-4">{getDocumentFileName(selectedDocument)}</p>
+                        <button
+                          onClick={() => handleDownloadDocument(selectedDocument, getDocumentFileName(selectedDocument))}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                        >
+                          <Download className="w-4 h-4" />
+                          Download Document
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -637,7 +1123,7 @@ useEffect(() => {
                             value={rejectionReason}
                             onChange={(e) => setRejectionReason(e.target.value)}
                             placeholder="Provide a reason for rejection..."
-                            className="w-full border border-gray-300 rounded-lg p-3"
+                            className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                             rows={4}
                           />
                         </div>
