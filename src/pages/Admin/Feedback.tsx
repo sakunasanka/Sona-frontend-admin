@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavBar, Sidebar } from '../../components/layout';
+import { feedbackAPI } from '../../api/feedbackAPI';
 import { 
   MessageSquare, 
   Clock, 
@@ -16,10 +17,43 @@ import {
   ArrowRight,
   FileText,
   Image,
-  Eye
+  Eye,
+  Loader2
 } from 'lucide-react';
 
 // Types
+interface ApiFeedback {
+  review_id: number;
+  sessionId: number;
+  rating: number;
+  comment: string;
+  createdDate: string;
+  sessionDate: string;
+  timeSlot: string;
+  clientName: string;
+  counselorName: string;
+  counselorRole: 'Counselor' | 'Psychiatrist';
+  sessionStatus: string;
+}
+
+interface ApiComplaint {
+  complaintId: number;
+  sessionId: number;
+  description: string;
+  proof: string | null;
+  status: 'pending' | 'resolved' | 'rejected';
+  reason: string;
+  createdDate: string;
+  updatedDate: string;
+  clientName: string;
+  counselorName: string;
+  counselorRole: 'Counselor' | 'Psychiatrist';
+  sessionDate: string;
+  timeSlot: string;
+  rejectedReason: string | null; // Legacy field - keeping for backward compatibility
+  resolutionReason: string | null; // New field for both resolved and rejected reasons
+}
+
 interface Feedback {
   id: string;
   type: 'complaint' | 'session' | 'suggestion' | 'emergency' | 'general' | 'testimonial';
@@ -28,10 +62,10 @@ interface Feedback {
   description: string;
   author: string;
   nickname: string;
-  counsellorName: string;
+  providerName: string; // Generic name for counselor/psychiatrist
+  providerRole: 'Counselor' | 'Psychiatrist'; // Role of the provider
   createdAt: Date;
   updatedAt: Date;
-  status: 'pending' | 'in-progress' | 'resolved' | 'rejected' | 'urgent';
   additionalDetails?: string;
   proof?: {
     type: 'pdf' | 'image';
@@ -42,6 +76,12 @@ interface Feedback {
   tags: string[];
   rating?: number;
   isAnonymous: boolean;
+  // Additional session info from API
+  sessionDate?: string;
+  timeSlot?: string;
+  sessionStatus?: string;
+  // Status only for complaints, not for session feedback
+  status?: 'pending' | 'resolved' | 'rejected';
 }
 
 interface FeedbackFilters {
@@ -49,137 +89,186 @@ interface FeedbackFilters {
   category: string;
   status: string;
   search: string;
+  role: string;
 }
 
 type SortField = 'createdAt' | 'updatedAt' | 'status' | 'rating';
 type SortDirection = 'asc' | 'desc';
 
-// Mock Data
-const mockFeedback: Feedback[] = [
-  {
-    id: '1',
-    type: 'complaint',
-    category: 'individual',
-    title: 'Counsellor was late for online session',
-    description: 'My scheduled video counselling session at 2:00 PM was delayed by 30 minutes without prior notice.',
-    author: 'Nimal Perera',
-    nickname: 'NP123',
-    counsellorName: 'Dr. Kamani Silva',
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-01-15'),
-    status: 'pending',
-    additionalDetails: 'This caused inconvenience as I had to reschedule my work commitments. The counsellor did not provide any explanation for the delay.',
-    proof: {
-      type: 'image',
-      url: '/proofs/session-delay-1.jpg',
-      name: 'session_schedule.jpg'
-    },
-    tags: ['punctuality', 'scheduling', 'individual-therapy'],
-    isAnonymous: false
-  },
-  {
-    id: '2',
-    type: 'session',
-    category: 'family',
-    title: 'Family counselling session feedback',
-    description: 'The family counselling session via video call was very helpful. Dr. Mendis provided excellent guidance for our communication issues.',
-    author: 'Priya Jayawardena',
-    nickname: 'PJ456',
-    counsellorName: 'Dr. Sunil Mendis',
-    createdAt: new Date('2024-01-14'),
-    updatedAt: new Date('2024-01-16'),
-    status: 'resolved',
-    tags: ['family-therapy', 'communication', 'cultural-sensitivity'],
-    rating: 5,
-    isAnonymous: false
-  },
-  {
-    id: '3',
-    type: 'complaint',
-    category: 'individual',
-    title: 'Poor audio quality during session',
-    description: 'The audio quality was very poor throughout the entire session, making it difficult to communicate effectively.',
-    author: 'Saman Kumara',
-    nickname: 'SK789',
-    counsellorName: 'Dr. Sandun Perera',
-    createdAt: new Date('2024-01-13'),
-    updatedAt: new Date('2024-01-17'),
-    status: 'in-progress',
-    additionalDetails: 'I tried switching between devices but the issue persisted. This affected the quality of the therapy session.',
-    proof: {
-      type: 'pdf',
-      url: '/proofs/audio-issue-report.pdf',
-      name: 'audio_quality_report.pdf'
-    },
-    tags: ['technical-issues', 'audio-quality'],
-    isAnonymous: false
-  },
-  {
-    id: '4',
-    type: 'complaint',
-    category: 'online',
-    title: 'Unprofessional behavior',
-    description: 'The counsellor displayed unprofessional behavior during our session.',
-    author: 'Tharaka Silva',
-    nickname: 'TS321',
-    counsellorName: 'Dr. Anura Wickramasinghe',
-    createdAt: new Date('2024-01-12'),
-    updatedAt: new Date('2024-01-18'),
-    status: 'rejected',
-    additionalDetails: 'The counsellor was frequently distracted and checking their phone during the session.',
-    resolutionReason: 'After reviewing the session recording and discussing with the counsellor, we found no evidence of unprofessional behavior. The counsellor was referring to case notes on their device.',
-    tags: ['professionalism', 'behavior'],
-    isAnonymous: false
-  },
-  {
-    id: '5',
-    type: 'session',
-    category: 'group',
-    title: 'Group therapy session feedback',
-    description: 'The group therapy session via messaging was very beneficial.',
-    author: 'Malini Fernando',
-    nickname: 'MF654',
-    counsellorName: 'Dr. Nayomi Gunasekara',
-    createdAt: new Date('2024-01-11'),
-    updatedAt: new Date('2024-01-19'),
-    status: 'resolved',
-    tags: ['group-therapy', 'peer-support', 'messaging'],
-    rating: 5,
-    isAnonymous: false
-  },
-  {
-    id: '6',
-    type: 'complaint',
-    category: 'crisis',
-    title: 'Delayed response to crisis call',
-    description: 'Called the crisis helpline during an emergency but had to wait 15 minutes before getting connected.',
-    author: 'Anonymous',
-    nickname: 'ANON001',
-    counsellorName: 'Crisis Team',
-    createdAt: new Date('2024-01-10'),
-    updatedAt: new Date('2024-01-10'),
-    status: 'resolved',
-    additionalDetails: 'This delay could be critical in emergency situations where immediate support is needed.',
-    resolutionReason: 'We have increased our crisis team staffing during peak hours and implemented a callback system to ensure no calls are missed.',
-    tags: ['crisis-intervention', 'emergency', 'response-time'],
-    isAnonymous: true
-  }
-];
+// Helper function to transform API data to component format
+const transformApiFeedback = (apiFeedback: ApiFeedback): Feedback => ({
+  id: apiFeedback.review_id.toString(),
+  type: 'session', // All API data is session feedback
+  category: 'individual', // Default category
+  title: `${apiFeedback.counselorRole} session feedback`,
+  description: apiFeedback.comment,
+  author: apiFeedback.clientName,
+  nickname: apiFeedback.clientName.split(' ').map(n => n[0]).join('') + apiFeedback.review_id,
+  providerName: apiFeedback.counselorName,
+  providerRole: apiFeedback.counselorRole,
+  createdAt: new Date(apiFeedback.createdDate),
+  updatedAt: new Date(apiFeedback.createdDate),
+  tags: [`session-${apiFeedback.sessionId}`, 'feedback', `${apiFeedback.sessionDate}-${apiFeedback.timeSlot}`],
+  rating: apiFeedback.rating, // Keep decimal rating
+  isAnonymous: false,
+  // Store additional session info for display
+  sessionDate: apiFeedback.sessionDate,
+  timeSlot: apiFeedback.timeSlot,
+  sessionStatus: apiFeedback.sessionStatus
+  // No status field for session feedback
+});
+
+const transformApiComplaint = (apiComplaint: ApiComplaint): Feedback => ({
+  id: apiComplaint.complaintId.toString(),
+  type: 'complaint',
+  category: 'individual', // Default category
+  title: `Complaint: ${apiComplaint.reason.replace('_', ' ')}`,
+  description: apiComplaint.description || 'No description provided',
+  author: apiComplaint.clientName,
+  nickname: apiComplaint.clientName.split(' ').map(n => n[0]).join('') + apiComplaint.complaintId,
+  providerName: apiComplaint.counselorName,
+  providerRole: apiComplaint.counselorRole,
+  createdAt: new Date(apiComplaint.createdDate),
+  updatedAt: new Date(apiComplaint.updatedDate),
+  tags: [`complaint-${apiComplaint.complaintId}`, apiComplaint.reason],
+  isAnonymous: false,
+  // Store complaint-specific info
+  sessionDate: apiComplaint.sessionDate,
+  timeSlot: apiComplaint.timeSlot,
+  status: apiComplaint.status,
+  resolutionReason: apiComplaint.resolutionReason || apiComplaint.rejectedReason || undefined,
+  proof: apiComplaint.proof ? {
+    type: 'image' as const,
+    url: apiComplaint.proof,
+    name: `complaint_proof_${apiComplaint.complaintId}.jpg`
+  } : undefined
+});
+
+// FilterComponent - moved outside to prevent recreation on re-renders
+const FilterComponent: React.FC<{
+  filters: FeedbackFilters;
+  onFiltersChange: (filters: FeedbackFilters) => void;
+  showTypeFilter?: boolean;
+  showStatusFilter?: boolean;
+}> = ({ filters, onFiltersChange, showTypeFilter = true, showStatusFilter = true }) => {
+  const handleFilterChange = (key: keyof FeedbackFilters, value: string) => {
+    onFiltersChange({
+      ...filters,
+      [key]: value
+    });
+  };
+
+  const filterCount = 1 + (showTypeFilter ? 1 : 0) + (showStatusFilter ? 1 : 0) + 1; // search + role always shown + conditional filters
+  const gridCols = filterCount === 2 ? 'lg:grid-cols-2' : filterCount === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4';
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Filter className="w-5 h-5 text-gray-600" />
+        <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Filters</h2>
+      </div>
+      
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${gridCols} gap-4`}>
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="Search feedback..."
+            value={filters.search}
+            onChange={(e) => handleFilterChange('search', e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+          />
+        </div>
+
+        {/* Role Filter */}
+        <div>
+          <select
+            value={filters.role}
+            onChange={(e) => handleFilterChange('role', e.target.value)}
+            className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+          >
+            <option value="">All Providers</option>
+            <option value="Counselor">Counselor</option>
+            <option value="Psychiatrist">Psychiatrist</option>
+          </select>
+        </div>
+
+        {/* Type Filter - Only show if enabled */}
+        {showTypeFilter && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+            <select
+              value={filters.type}
+              onChange={(e) => handleFilterChange('type', e.target.value)}
+              className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+            >
+              <option value="">All Types</option>
+              <option value="complaint">Complaints</option>
+              <option value="session">Session Feedback</option>
+              <option value="suggestion">Suggestions</option>
+              <option value="emergency">Emergency</option>
+              <option value="testimonial">Testimonials</option>
+              <option value="general">General</option>
+            </select>
+          </div>
+        )}
+
+        {/* Status Filter - Only show if enabled */}
+        {showStatusFilter && (
+          <div>
+            <select
+              value={filters.status}
+              onChange={(e) => handleFilterChange('status', e.target.value)}
+              className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+            >
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="resolved">Resolved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const FeedbackManagement: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [feedback, setFeedback] = useState<Feedback[]>(mockFeedback);
+  const [feedback, setFeedback] = useState<Feedback[]>([]);
+  const [complaints, setComplaints] = useState<Feedback[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false
+  });
+  const [complaintsPagination, setComplaintsPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false
+  });
   const [sessionFilters, setSessionFilters] = useState<FeedbackFilters>({
     type: 'session',
     category: '',
     status: '',
-    search: ''
+    search: '',
+    role: ''
   });
   const [complaintFilters, setComplaintFilters] = useState<FeedbackFilters>({
     type: 'complaint',
     category: '',
     status: '',
-    search: ''
+    search: '',
+    role: ''
   });
   const [sessionSortField, setSessionSortField] = useState<SortField>('createdAt');
   const [sessionSortDirection, setSessionSortDirection] = useState<SortDirection>('desc');
@@ -188,26 +277,98 @@ const FeedbackManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'sessions' | 'complaints'>('overview');
   const [resolutionReason, setResolutionReason] = useState<{ [key: string]: string }>({});
   const [selectedProof, setSelectedProof] = useState<{ url: string; name: string; type: 'pdf' | 'image' } | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState<{ [key: string]: boolean }>({});
+
+  // Fetch feedbacks from API
+  const fetchFeedbacks = async (page: number = 1) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await feedbackAPI.getAllFeedbacks(page, pagination.limit);
+      
+      if (response.data.success) {
+        const transformedFeedbacks = response.data.data.feedbacks.map(transformApiFeedback);
+        setFeedback(transformedFeedbacks);
+        setPagination(response.data.data.pagination);
+      } else {
+        setError('Failed to fetch feedbacks');
+      }
+    } catch (err) {
+      setError('Error fetching feedbacks: ' + (err as Error).message);
+      console.error('Error fetching feedbacks:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch complaints from API
+  const fetchComplaints = async (page: number = 1) => {
+    try {
+      const response = await feedbackAPI.getAllComplaints(page, complaintsPagination.limit);
+      
+      if (response.data.success) {
+        const transformedComplaints = response.data.data.complaints.map(transformApiComplaint);
+        setComplaints(transformedComplaints);
+        setComplaintsPagination(response.data.data.pagination);
+      } else {
+        console.error('Failed to fetch complaints');
+      }
+    } catch (err) {
+      console.error('Error fetching complaints:', err);
+    }
+  };
+
+  // Fetch data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      await Promise.all([
+        fetchFeedbacks(1),
+        fetchComplaints(1)
+      ]);
+    };
+    fetchData();
+  }, []);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const closeSidebar = () => setSidebarOpen(false);
 
-  const handleStatusChange = (id: string, status: Feedback['status']) => {
-    setFeedback(prev => 
-      prev.map(item => 
-        item.id === id 
-          ? { 
-              ...item, 
-              status, 
-              updatedAt: new Date(),
-              ...(status === 'resolved' || status === 'rejected' ? { resolutionReason: resolutionReason[id] || '' } : {})
-            }
-          : item
-      )
-    );
-    // Clear the resolution reason after applying
-    if (status === 'resolved' || status === 'rejected') {
-      setResolutionReason(prev => ({ ...prev, [id]: '' }));
+  const handleStatusChange = async (id: string, status: 'pending' | 'resolved' | 'rejected') => {
+    const reason = resolutionReason[id] || '';
+    
+    try {
+      // Set loading state
+      setUpdatingStatus(prev => ({ ...prev, [id]: true }));
+      
+      // Only make API call for resolved or rejected status
+      if (status === 'resolved' || status === 'rejected') {
+        await feedbackAPI.updateComplaintStatus(id, status, reason);
+      }
+      
+      // Update local state after successful API call
+      setComplaints(prev => 
+        prev.map(item => 
+          item.id === id 
+            ? { 
+                ...item, 
+                status, 
+                updatedAt: new Date(),
+                ...(status === 'resolved' || status === 'rejected' ? { resolutionReason: reason } : {})
+              }
+            : item
+        )
+      );
+      
+      // Clear the resolution reason after applying
+      if (status === 'resolved' || status === 'rejected') {
+        setResolutionReason(prev => ({ ...prev, [id]: '' }));
+      }
+    } catch (error) {
+      console.error('Error updating complaint status:', error);
+      // You could add a toast notification here for better UX
+      alert('Failed to update complaint status. Please try again.');
+    } finally {
+      // Clear loading state
+      setUpdatingStatus(prev => ({ ...prev, [id]: false }));
     }
   };
 
@@ -237,14 +398,15 @@ const FeedbackManagement: React.FC = () => {
     let filtered = feedback.filter(item => {
       const matchesType = !filters.type || item.type === filters.type;
       const matchesCategory = !filters.category || item.category === filters.category;
-      const matchesStatus = !filters.status || item.status === filters.status;
+      const matchesStatus = !filters.status || (item.status && item.status === filters.status);
+      const matchesRole = !filters.role || item.providerRole === filters.role;
       const matchesSearch = !filters.search || 
         item.title.toLowerCase().includes(filters.search.toLowerCase()) ||
         item.description.toLowerCase().includes(filters.search.toLowerCase()) ||
         item.author.toLowerCase().includes(filters.search.toLowerCase()) ||
-        item.counsellorName.toLowerCase().includes(filters.search.toLowerCase());
+        item.providerName.toLowerCase().includes(filters.search.toLowerCase());
       
-      return matchesType && matchesCategory && matchesStatus && matchesSearch;
+      return matchesType && matchesCategory && matchesStatus && matchesRole && matchesSearch;
     });
 
     filtered.sort((a, b) => {
@@ -258,9 +420,9 @@ const FeedbackManagement: React.FC = () => {
           bValue = new Date(b[sortField]).getTime();
           break;
         case 'status':
-          const statusOrder = { pending: 1, 'in-progress': 2, resolved: 3, rejected: 4, urgent: 5 };
-          aValue = statusOrder[a.status];
-          bValue = statusOrder[b.status];
+          const statusOrder = { pending: 1, resolved: 2, rejected: 3 };
+          aValue = a.status ? statusOrder[a.status] : 999; // Put items without status at end
+          bValue = b.status ? statusOrder[b.status] : 999;
           break;
         case 'rating':
           aValue = a.rating || 0;
@@ -281,14 +443,30 @@ const FeedbackManagement: React.FC = () => {
     return filtered;
   };
 
+  // Use different data sources for sessions vs complaints
   const sessionFeedback = getFilteredAndSorted(sessionFilters, sessionSortField, sessionSortDirection);
-  const complaintFeedback = getFilteredAndSorted(complaintFilters, complaintSortField, complaintSortDirection);
+  const complaintFeedback = (() => {
+    let filtered = complaints.filter(item => {
+      const matchesType = !complaintFilters.type || item.type === complaintFilters.type;
+      const matchesCategory = !complaintFilters.category || item.category === complaintFilters.category;
+      const matchesStatus = !complaintFilters.status || (item.status && item.status === complaintFilters.status);
+      const matchesRole = !complaintFilters.role || item.providerRole === complaintFilters.role;
+      const matchesSearch = !complaintFilters.search || 
+        item.title.toLowerCase().includes(complaintFilters.search.toLowerCase()) ||
+        item.description.toLowerCase().includes(complaintFilters.search.toLowerCase()) ||
+        item.author.toLowerCase().includes(complaintFilters.search.toLowerCase()) ||
+        item.providerName.toLowerCase().includes(complaintFilters.search.toLowerCase());
+      
+      return matchesType && matchesCategory && matchesStatus && matchesRole && matchesSearch;
+    });
+    return filtered;
+  })();
 
   // Stats calculation
-  const totalFeedback = feedback.length;
-  const pendingCount = feedback.filter(f => f.status === 'pending').length;
-  const sessionFeedbackCount = feedback.filter(f => f.type === 'session').length;
-  const complaintsCount = feedback.filter(f => f.type === 'complaint').length;
+  const totalFeedback = pagination.total; // Use API pagination total
+  const pendingCount = complaints.filter(f => f.status === 'pending').length; // Only for complaints
+  const sessionFeedbackCount = feedback.length;
+  const complaintsCount = complaints.length;
   const averageRating = feedback.filter(f => f.rating).length > 0 
     ? feedback.filter(f => f.rating).reduce((acc, f) => acc + (f.rating || 0), 0) / feedback.filter(f => f.rating).length
     : 0;
@@ -303,18 +481,14 @@ const FeedbackManagement: React.FC = () => {
     });
   };
 
-  const getStatusColor = (status: Feedback['status']) => {
+  const getStatusColor = (status?: 'pending' | 'resolved' | 'rejected') => {
     switch (status) {
       case 'pending':
-        return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'in-progress':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       case 'resolved':
         return 'bg-green-100 text-green-700 border-green-200';
       case 'rejected':
         return 'bg-red-100 text-red-700 border-red-200';
-      case 'urgent':
-        return 'bg-purple-100 text-purple-700 border-purple-200';
       default:
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
@@ -324,13 +498,21 @@ const FeedbackManagement: React.FC = () => {
     if (!rating) return null;
     return (
       <div className="flex items-center gap-1">
-        {[...Array(5)].map((_, i) => (
-          <Star 
-            key={i} 
-            className={`w-4 h-4 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
-          />
-        ))}
-        <span className="ml-1 text-sm text-gray-600">({rating}/5)</span>
+        {[...Array(5)].map((_, i) => {
+          const filled = i < Math.floor(rating);
+          const halfFilled = i === Math.floor(rating) && rating % 1 >= 0.5;
+          return (
+            <Star 
+              key={i} 
+              className={`w-4 h-4 ${
+                filled ? 'text-yellow-400 fill-current' : 
+                halfFilled ? 'text-yellow-400 fill-current opacity-50' : 
+                'text-gray-300'
+              }`} 
+            />
+          );
+        })}
+        <span className="ml-1 text-sm text-gray-600">({rating.toFixed(1)}/5)</span>
       </div>
     );
   };
@@ -403,79 +585,6 @@ const FeedbackManagement: React.FC = () => {
     </button>
   );
 
-  const FilterComponent: React.FC<{
-    filters: FeedbackFilters;
-    onFiltersChange: (filters: FeedbackFilters) => void;
-    showTypeFilter?: boolean;
-  }> = ({ filters, onFiltersChange, showTypeFilter = true }) => {
-    const handleFilterChange = (key: keyof FeedbackFilters, value: string) => {
-      onFiltersChange({
-        ...filters,
-        [key]: value
-      });
-    };
-
-    return (
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter className="w-5 h-5 text-gray-600" />
-          <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Filters</h2>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search feedback..."
-              value={filters.search}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-            />
-          </div>
-
-          {/* Type Filter - Only show if enabled */}
-          {showTypeFilter && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
-              <select
-                value={filters.type}
-                onChange={(e) => handleFilterChange('type', e.target.value)}
-                className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-              >
-                <option value="">All Types</option>
-                <option value="complaint">Complaints</option>
-                <option value="session">Session Feedback</option>
-                <option value="suggestion">Suggestions</option>
-                <option value="emergency">Emergency</option>
-                <option value="testimonial">Testimonials</option>
-                <option value="general">General</option>
-              </select>
-            </div>
-          )}
-
-          {/* Status Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-            <select
-              value={filters.status}
-              onChange={(e) => handleFilterChange('status', e.target.value)}
-              className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-            >
-              <option value="">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="in-progress">In Progress</option>
-              <option value="resolved">Resolved</option>
-              <option value="rejected">Rejected</option>
-              <option value="urgent">Urgent</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="flex flex-col h-screen">
       {/* Proof Viewer Modal */}
@@ -524,14 +633,46 @@ const FeedbackManagement: React.FC = () => {
         {/* Main content */}
         <div className="flex-1 overflow-auto">
           <NavBar onMenuClick={toggleSidebar} />
-          <div className="p-4 lg:p-6">
-            {/* Page Header */}
-            <div className="mb-6 lg:mb-8">
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-                Feedback Management
-              </h1>
-              <p className="text-gray-600">Manage session reviews and handle client complaints efficiently.</p>
+          
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center h-64">
+              <div className="flex items-center gap-3">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                <span className="text-gray-600">Loading feedbacks...</span>
+              </div>
             </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <div className="p-4 lg:p-6">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                  <span className="text-red-800 font-medium">Error</span>
+                </div>
+                <p className="text-red-700 mt-1">{error}</p>
+                <button
+                  onClick={() => fetchFeedbacks(pagination.page)}
+                  className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Main Content - Only show if not loading and no error */}
+          {!loading && !error && (
+            <div className="p-4 lg:p-6">
+              {/* Page Header */}
+              <div className="mb-6 lg:mb-8">
+                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+                  Feedback Management
+                </h1>
+                <p className="text-gray-600">Manage session reviews and handle client complaints efficiently.</p>
+              </div>
 
             {/* Tab Navigation */}
             <div className="flex items-center gap-2 mb-6">
@@ -572,7 +713,7 @@ const FeedbackManagement: React.FC = () => {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-xl lg:text-2xl font-bold text-gray-900">{pendingCount}</p>
-                        <p className="text-gray-600 text-xs lg:text-sm leading-tight">Pending</p>
+                        <p className="text-gray-600 text-xs lg:text-sm leading-tight">Pending Complaints</p>
                       </div>
                     </div>
                   </div>
@@ -638,7 +779,7 @@ const FeedbackManagement: React.FC = () => {
                           </div>
                           <div className="flex-1">
                             <p className="font-medium text-gray-900 text-sm">{item.title}</p>
-                            <p className="text-xs text-gray-600">{item.nickname} • {item.rating}/5 stars</p>
+                            <p className="text-xs text-gray-600">{item.author} • {item.rating}/5 stars</p>
                           </div>
                         </div>
                       ))}
@@ -658,20 +799,29 @@ const FeedbackManagement: React.FC = () => {
                       </button>
                     </div>
                     <div className="space-y-4">
-                      {feedback.filter(f => f.type === 'complaint').slice(0, 3).map((item) => (
-                        <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                          <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-                            <AlertTriangle className="w-4 h-4 text-red-600" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900 text-sm">{item.title}</p>
-                            <p className="text-xs text-gray-600">{item.nickname}</p>
-                          </div>
-                          <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(item.status)}`}>
-                            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                          </span>
+                      {complaints.length === 0 ? (
+                        <div className="text-center py-6 text-gray-500">
+                          <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                          <p className="text-sm">No complaints found</p>
                         </div>
-                      ))}
+                      ) : (
+                        complaints.slice(0, 3).map((item) => (
+                          <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                            <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                              <AlertTriangle className="w-4 h-4 text-red-600" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-900 text-sm">{item.title}</p>
+                              <p className="text-xs text-gray-600">{item.author}</p>
+                            </div>
+                            {item.status && (
+                              <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(item.status)}`}>
+                                {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                              </span>
+                            )}
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 </div>
@@ -685,6 +835,7 @@ const FeedbackManagement: React.FC = () => {
                   filters={sessionFilters} 
                   onFiltersChange={setSessionFilters}
                   showTypeFilter={false}
+                  showStatusFilter={false}
                 />
                 
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6">
@@ -697,7 +848,6 @@ const FeedbackManagement: React.FC = () => {
                         <span className="text-sm text-gray-600 mr-2">Sort by:</span>
                         <SortButton field="createdAt" type="session">Created Date</SortButton>
                         <SortButton field="rating" type="session">Rating</SortButton>
-                        <SortButton field="status" type="session">Status</SortButton>
                       </div>
                     </div>
                   </div>
@@ -720,7 +870,7 @@ const FeedbackManagement: React.FC = () => {
                                 <div>
                                   <h3 className="font-semibold text-gray-900 text-lg">{item.title}</h3>
                                   <p className="text-sm text-gray-600">
-                                    {item.isAnonymous ? 'Anonymous Client' : `${item.author} (${item.nickname})`}
+                                    {item.isAnonymous ? 'Anonymous Client' : `${item.author}`}
                                   </p>
                                 </div>
                               </div>
@@ -732,17 +882,47 @@ const FeedbackManagement: React.FC = () => {
                             <p className="text-gray-700 mb-4 leading-relaxed">{item.description}</p>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                              <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <Calendar className="w-4 h-4" />
-                                <span>{formatDate(item.createdAt)}</span>
-                              </div>
+                              {item.sessionDate && (
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <Calendar className="w-4 h-4" />
+                                  <span>Session: {item.sessionDate} at {item.timeSlot}</span>
+                                </div>
+                              )}
                               <div className="flex items-center gap-2 text-sm text-gray-600">
                                 <User className="w-4 h-4" />
-                                <span>Counsellor: {item.counsellorName}</span>
+                                <span>{item.providerRole}: {item.providerName}</span>
                               </div>
                             </div>
                           </div>
                         ))}
+                      </div>
+                    )}
+                    
+                    {/* Pagination Controls */}
+                    {sessionFeedback.length > 0 && (
+                      <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                        <div className="text-sm text-gray-600">
+                          Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} reviews
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => fetchFeedbacks(pagination.page - 1)}
+                            disabled={!pagination.hasPrev}
+                            className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Previous
+                          </button>
+                          <span className="px-3 py-2 text-sm text-gray-600">
+                            Page {pagination.page} of {pagination.totalPages}
+                          </span>
+                          <button
+                            onClick={() => fetchFeedbacks(pagination.page + 1)}
+                            disabled={!pagination.hasNext}
+                            className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Next
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -791,24 +971,28 @@ const FeedbackManagement: React.FC = () => {
                                 <div>
                                   <h3 className="font-semibold text-gray-900 text-lg">{item.title}</h3>
                                   <p className="text-sm text-gray-600">
-                                    {item.isAnonymous ? 'Anonymous' : `${item.author} (${item.nickname})`}
+                                    {item.isAnonymous ? 'Anonymous' : `${item.author}`}
                                   </p>
                                 </div>
                               </div>
-                              <select
-                                value={item.status}
-                                onChange={(e) => handleStatusChange(item.id, e.target.value as Feedback['status'])}
-                                className={`px-3 py-2 rounded-xl text-xs font-medium border cursor-pointer transition-colors ${getStatusColor(item.status)}`}
-                              >
-                                <option value="pending">Pending</option>
-                                <option value="in-progress">In Progress</option>
-                                <option value="resolved">Resolved</option>
-                                <option value="rejected">Rejected</option>
-                                <option value="urgent">Urgent</option>
-                              </select>
+                              <span className={`px-3 py-2 rounded-xl text-xs font-medium border ${getStatusColor(item.status || 'pending')}`}>
+                                {(item.status || 'pending').charAt(0).toUpperCase() + (item.status || 'pending').slice(1)}
+                              </span>
                             </div>
 
                             <p className="text-gray-700 mb-4 leading-relaxed">{item.description}</p>
+
+                            {/* Display Complaint Reason - Only for resolved/rejected complaints */}
+                            {(item.status === 'resolved' || item.status === 'rejected') && (
+                              <div className="mb-4">
+                                <h4 className="font-medium text-gray-900 mb-2">Complaint Reason</h4>
+                                <div className="bg-blue-50 rounded-lg p-3">
+                                  <span className="text-sm text-blue-800 font-medium">
+                                    {item.tags[1]?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Not specified'}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
 
                             {item.additionalDetails && (
                               <div className="mb-4">
@@ -832,12 +1016,12 @@ const FeedbackManagement: React.FC = () => {
                               </div>
                               <div className="flex items-center gap-2 text-sm text-gray-600">
                                 <User className="w-4 h-4" />
-                                <span>Counsellor: {item.counsellorName}</span>
+                                <span>{item.providerRole}: {item.providerName}</span>
                               </div>
                             </div>
 
                             {/* Resolution Reason Input */}
-                            {(item.status === 'pending' || item.status === 'in-progress') && (
+                            {(item.status === 'pending') && (
                               <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                   Resolution Reason (Required for Resolved/Rejected status)
@@ -853,18 +1037,40 @@ const FeedbackManagement: React.FC = () => {
                                   <span className="text-xs text-gray-500">
                                     This message will be sent to the client
                                   </span>
-                                  <button
-                                    onClick={() => {
-                                      if (resolutionReason[item.id]) {
-                                        handleStatusChange(item.id, 'resolved');
-                                      }
-                                    }}
-                                    disabled={!resolutionReason[item.id]}
-                                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                  >
-                                    <CheckCircle className="w-4 h-4" />
-                                    Mark Resolved
-                                  </button>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => {
+                                        if (resolutionReason[item.id] && !updatingStatus[item.id]) {
+                                          handleStatusChange(item.id, 'resolved');
+                                        }
+                                      }}
+                                      disabled={!resolutionReason[item.id] || updatingStatus[item.id]}
+                                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                      {updatingStatus[item.id] ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                      ) : (
+                                        <CheckCircle className="w-4 h-4" />
+                                      )}
+                                      {updatingStatus[item.id] ? 'Resolving...' : 'Mark Resolved'}
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        if (resolutionReason[item.id] && !updatingStatus[item.id]) {
+                                          handleStatusChange(item.id, 'rejected');
+                                        }
+                                      }}
+                                      disabled={!resolutionReason[item.id] || updatingStatus[item.id]}
+                                      className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                      {updatingStatus[item.id] ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                      ) : (
+                                        <AlertTriangle className="w-4 h-4" />
+                                      )}
+                                      {updatingStatus[item.id] ? 'Rejecting...' : 'Mark Rejected'}
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                             )}
@@ -887,11 +1093,40 @@ const FeedbackManagement: React.FC = () => {
                         ))}
                       </div>
                     )}
+                    
+                    {/* Pagination Controls for Complaints */}
+                    {complaintFeedback.length > 0 && (
+                      <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                        <div className="text-sm text-gray-600">
+                          Showing {((complaintsPagination.page - 1) * complaintsPagination.limit) + 1} to {Math.min(complaintsPagination.page * complaintsPagination.limit, complaintsPagination.total)} of {complaintsPagination.total} complaints
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => fetchComplaints(complaintsPagination.page - 1)}
+                            disabled={!complaintsPagination.hasPrev}
+                            className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Previous
+                          </button>
+                          <span className="px-3 py-2 text-sm text-gray-600">
+                            Page {complaintsPagination.page} of {complaintsPagination.totalPages}
+                          </span>
+                          <button
+                            onClick={() => fetchComplaints(complaintsPagination.page + 1)}
+                            disabled={!complaintsPagination.hasNext}
+                            className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </>
             )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

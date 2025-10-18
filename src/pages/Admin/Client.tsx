@@ -11,7 +11,6 @@ import {
   CheckCircle, 
   XCircle, 
   User, 
-  Phone, 
   Calendar, 
   MapPin, 
   GraduationCap, 
@@ -81,7 +80,7 @@ const validateClient = (client: any): Client | null => {
     firebaseId: client.firebaseId,
     name: client.name || 'Unknown',
     email: client.email || '',
-    phone: client.phone || 'N/A',
+    phone: client.phone || '',
     registeredDate: client.registeredDate || new Date().toISOString(),
     age: typeof client.age === 'number' ? client.age : 0,
     location: client.location || 'Unknown',
@@ -472,38 +471,79 @@ const Client: React.FC = () => {
             )}
 
             {/* Stats Cards */}
-            <div className="flex flex-wrap gap-4 mb-8">
+            <div className="flex flex-wrap gap-4 mb-4">
               {/* Total Clients */}
-              <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex items-center justify-between w-[23%] h-[80px]">
+              {/* <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex items-center justify-between w-[23%] h-[80px]">
                 <div className="flex items-center gap-2">
                   <User className="w-5 h-5 text-blue-600" />
                   <span className="text-sm font-medium text-gray-900">Total: {stats.totalClients}</span>
                 </div>
+              </div> */}
+
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 justify-between w-[23%] h-[80px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <User className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{stats.totalClients}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Total Clients</p>
+                  </div>
+                </div>
               </div>
 
               {/* Student Clients */}
-              <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex items-center justify-between w-[23%] h-[80px]">
+              {/* <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex items-center justify-between w-[23%] h-[80px]">
                 <div className="flex items-center gap-2">
                   <GraduationCap className="w-5 h-5 text-purple-600" />
                   <span className="text-sm font-medium text-gray-900">Students: {stats.studentClients}</span>
                 </div>
-              </div>
+              </div> */}
+            
+            <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 justify-between w-[23%] h-[80px] flex items-center">
+                 <div className="flex items-center gap-3 w-full">
+                   <div className="w-10 h-10 lg:w-12 lg:h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                     <GraduationCap className="w-5 h-5 lg:w-6 lg:h-6  text-purple-600" />
+                   </div>
+                   <div className="min-w-0 flex-1">
+                     <p className="text-xl lg:text-2xl font-bold text-gray-900">{stats.studentClients}</p>
+                     <p className="text-gray-600 text-xs lg:text-sm leading-tight">Students</p>
+                   </div>
+                 </div>
+              </div> 
 
               {/* Regular Clients */}
-              <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex items-center justify-between w-[23%] h-[80px]">
+              {/* <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex items-center justify-between w-[23%] h-[80px]">
                 <div className="flex items-center gap-2">
                   <CreditCard className="w-5 h-5 text-indigo-600" />
                   <span className="text-sm font-medium text-gray-900">Regular: {stats.regularClients}</span>
                 </div>
-              </div>
+              </div> */}
+
+               <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 justify-between w-[23%] h-[80px] flex items-center">
+                 <div className="flex items-center gap-3 w-full">
+                   <div className="w-10 h-10 lg:w-12 lg:h-12 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                     <CreditCard className="w-5 h-5 lg:w-6 lg:h-6 text-indigo-600" />
+                   </div>
+                   <div className="min-w-0 flex-1">
+                     <p className="text-xl lg:text-2xl font-bold text-gray-900">{stats.regularClients}</p>
+                     <p className="text-gray-600 text-xs lg:text-sm leading-tight">Regular</p>
+                   </div>
+                 </div>
+              </div> 
 
               {/* Pending Applications */}
-              <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex items-center justify-between w-[23%] h-[80px]">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-yellow-600" />
-                  <span className="text-sm font-medium text-gray-900">Pending: {stats.pendingApplications}</span>
-                </div>
-              </div>
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 justify-between w-[23%] h-[80px] flex items-center">
+                 <div className="flex items-center gap-3 w-full">
+                   <div className="w-10 h-10 lg:w-12 lg:h-12 bg-yellow-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                     <Clock className="w-5 h-5 lg:w-6 lg:h-6 text-yellow-600" />
+                   </div>
+                   <div className="min-w-0 flex-1">
+                     <p className="text-xl lg:text-2xl font-bold text-gray-900">{stats.pendingApplications}</p>
+                     <p className="text-gray-600 text-xs lg:text-sm leading-tight">Pending</p>
+                   </div>
+                 </div>
+              </div> 
             </div>
 
             {/* Filters */}
@@ -529,7 +569,7 @@ const Client: React.FC = () => {
                 {/* Regular Clients Filter */}
                 {activeTab === 'regular' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Filter Regular Clients</label>
+                     
                     <select
                       value={selectedFilter}
                       onChange={(e) => setSelectedFilter(e.target.value as any)}
@@ -636,13 +676,14 @@ const Client: React.FC = () => {
                       </div>
                       <div className="col-span-3">
                         <p className="text-gray-900 text-sm">{client.email}</p>
-                        <p className="text-sm text-gray-500">{client.phone || 'N/A'}</p>
                       </div>
                       {activeTab === 'students' && (
                         <div className="col-span-3">
                           <div className="space-y-1">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStudentPackageStatusBadge(client.studentPackage.status)}`}>
-                              {client.studentPackage.status?.charAt(0)?.toUpperCase() + client.studentPackage.status?.slice(1) || 'Unknown'}
+                              {client.studentPackage.status
+                                ? client.studentPackage.status.charAt(0).toUpperCase() + client.studentPackage.status.slice(1)
+                                : 'Unknown'}
                             </span>
                             <p className="text-xs text-gray-500">{client.studentPackage.school}</p>
                           </div>
@@ -734,13 +775,6 @@ const Client: React.FC = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
-                            <Phone className="w-5 h-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm text-gray-500">Phone</p>
-                              <p className="font-medium">{selectedClient.phone || 'N/A'}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
                             <MapPin className="w-5 h-5 text-gray-400" />
                             <div>
                               <p className="text-sm text-gray-500">Location</p>
@@ -790,19 +824,19 @@ const Client: React.FC = () => {
                               <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
                                   <span className="text-gray-500">School:</span>
-                                  <p className="font-medium">{selectedClient.studentPackage.school || 'N/A'}</p>
+                                  <p className="font-medium">{selectedClient.studentPackage.school || ''}</p>
                                 </div>
                                 <div>
                                   <span className="text-gray-500">Student ID:</span>
-                                  <p className="font-medium">{selectedClient.studentPackage.studentId || 'N/A'}</p>
+                                  <p className="font-medium">{selectedClient.studentPackage.studentId || ''}</p>
                                 </div>
                                 <div>
                                   <span className="text-gray-500">Graduation Year:</span>
-                                  <p className="font-medium">{selectedClient.studentPackage.graduationYear || 'N/A'}</p>
+                                  <p className="font-medium">{selectedClient.studentPackage.graduationYear || ''}</p>
                                 </div>
                                 <div>
                                   <span className="text-gray-500">Applied Date:</span>
-                                  <p className="font-medium">{selectedClient.studentPackage.appliedDate ? new Date(selectedClient.studentPackage.appliedDate).toLocaleDateString() : 'N/A'}</p>
+                                  <p className="font-medium">{selectedClient.studentPackage.appliedDate ? new Date(selectedClient.studentPackage.appliedDate).toLocaleDateString() : ''}</p>
                                 </div>
                               </div>
                               

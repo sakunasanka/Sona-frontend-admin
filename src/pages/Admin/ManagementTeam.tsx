@@ -777,7 +777,7 @@ HR Management Team`);
                               className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
                             >
                               <Eye className="w-4 h-4" />
-                              View
+                        
                             </button>
                             <button
                               onClick={() => {
@@ -787,14 +787,14 @@ HR Management Team`);
                               className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
                             >
                               <Edit className="w-4 h-4" />
-                              Edit
+                              
                             </button>
                             <button
                               onClick={() => handleDeleteMember(member._id || member.id)}
                               className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
                             >
                               <Trash2 className="w-4 h-4" />
-                              Delete
+                             
                             </button>
                           </div>
                         </td>
