@@ -5,13 +5,7 @@ import {
   Users, 
   X, 
   Mail, 
-  Phone, 
-  MapPin, 
   Calendar,
-  Building,
-  Award,
-  Star,
-  FileText,
   User as UserIcon,
   Send,
   Eye,
@@ -21,8 +15,6 @@ import {
   Upload,
   Save,
   Search,
-  Filter,
-  CheckCircle,
   AlertTriangle,
   Edit,
   Trash2
@@ -35,24 +27,10 @@ interface TeamMember {
   name: string;
   position: string;
   email: string;
-  phone: string;
-  location: string;
   joinDate: string;
-  department: string;
   avatar: string;
-  experience: string;
-  skills: string[];
   bio: string;
-  education: string[];
-  certifications: string[];
-  previousRoles: Array<{
-    company: string;
-    position: string;
-    duration: string;
-  }>;
-  achievements: string[];
   salary: string;
-  //reportingTo: string;
   status?: string;
   rejectionReason?: string;
   rejectionEmailSent?: boolean;
@@ -69,12 +47,11 @@ function ManagementTeam() {
   const [viewingProfile, setViewingProfile] = useState<TeamMember | null>(null);
   const [emailSending, setEmailSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  const [sortBy, setSortBy] = useState<'name' | 'position' | 'department' | 'joinDate'>('name');
+  const [sortBy, setSortBy] = useState<'name' | 'position' | 'joinDate'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   
   // Add member modal states
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
@@ -82,28 +59,13 @@ function ManagementTeam() {
     name: '',
     position: '',
     email: '',
-    phone: '',
-    location: '',
     joinDate: new Date().toISOString().split('T')[0],
-    department: '',
     avatar: '',
-    experience: '',
-    skills: [],
     bio: '',
-    education: [],
-    certifications: [],
-    previousRoles: [],
-    achievements: [],
     salary: '',
     password: 'DefaultPassword123!', // Default password
     displayName: '',
-    //reportingTo: ''
   });
-  const [newSkill, setNewSkill] = useState('');
-  const [newEducation, setNewEducation] = useState('');
-  const [newCertification, setNewCertification] = useState('');
-  const [newAchievement, setNewAchievement] = useState('');
-  const [newRole, setNewRole] = useState({ company: '', position: '', duration: '' });
   const [formSubmitting, setFormSubmitting] = useState(false);
 
   // Edit member state
@@ -122,11 +84,6 @@ function ManagementTeam() {
         if (item.name && item.email) {
           return {
             ...item,
-            skills: item.skills || [],
-            education: item.education || [],
-            certifications: item.certifications || [],
-            achievements: item.achievements || [],
-            previousRoles: item.previousRoles || [],
           };
         }
         
@@ -137,11 +94,6 @@ function ManagementTeam() {
           email: item.user?.email || '',
           avatar: item.user?.avatar || '',
           id: item.user?.id || item.id || item._id || '',
-          skills: item.skills || [],
-          education: item.education || [],
-          certifications: item.certifications || [],
-          achievements: item.achievements || [],
-          previousRoles: item.previousRoles || [],
         };
       });
       
@@ -165,113 +117,13 @@ function ManagementTeam() {
       name: '',
       position: '',
       email: '',
-      phone: '',
-      location: '',
       joinDate: new Date().toISOString().split('T')[0],
-      department: '',
       avatar: 'https://via.placeholder.com/150', // Default placeholder,
-      experience: '',
-      skills: [],
       bio: '',
-      education: [],
-      certifications: [],
-      previousRoles: [],
-      achievements: [],
       salary: '',
       password: 'DefaultPassword123!',
       displayName: '',
-      //reportingTo: ''
     });
-    setNewSkill('');
-    setNewEducation('');
-    setNewCertification('');
-    setNewAchievement('');
-    setNewRole({ company: '', position: '', duration: '' });
-  };
-
-  const handleAddSkill = () => {
-    if (newSkill.trim()) {
-      setNewMemberForm(prev => ({
-        ...prev,
-        skills: [...prev.skills, newSkill.trim()]
-      }));
-      setNewSkill('');
-    }
-  };
-
-  const handleRemoveSkill = (index: number) => {
-    setNewMemberForm(prev => ({
-      ...prev,
-      skills: prev.skills.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleAddEducation = () => {
-    if (newEducation.trim()) {
-      setNewMemberForm(prev => ({
-        ...prev,
-        education: [...prev.education, newEducation.trim()]
-      }));
-      setNewEducation('');
-    }
-  };
-
-  const handleRemoveEducation = (index: number) => {
-    setNewMemberForm(prev => ({
-      ...prev,
-      education: prev.education.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleAddCertification = () => {
-    if (newCertification.trim()) {
-      setNewMemberForm(prev => ({
-        ...prev,
-        certifications: [...prev.certifications, newCertification.trim()]
-      }));
-      setNewCertification('');
-    }
-  };
-
-  const handleRemoveCertification = (index: number) => {
-    setNewMemberForm(prev => ({
-      ...prev,
-      certifications: prev.certifications.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleAddAchievement = () => {
-    if (newAchievement.trim()) {
-      setNewMemberForm(prev => ({
-        ...prev,
-        achievements: [...prev.achievements, newAchievement.trim()]
-      }));
-      setNewAchievement('');
-    }
-  };
-
-  const handleRemoveAchievement = (index: number) => {
-    setNewMemberForm(prev => ({
-      ...prev,
-      achievements: prev.achievements.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleAddRole = () => {
-    if (newRole.company.trim() && newRole.position.trim() && newRole.duration.trim()) {
-      setNewMemberForm(prev => ({
-        ...prev,
-        previousRoles: [...prev.previousRoles, { ...newRole }]
-      }));
-      setNewRole({ company: '', position: '', duration: '' });
-    }
-  };
-
-  const handleRemoveRole = (index: number) => {
-    setNewMemberForm(prev => ({
-      ...prev,
-      previousRoles: prev.previousRoles.filter((_, i) => i !== index)
-    }));
   };
 
   const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -314,24 +166,15 @@ function ManagementTeam() {
       return;
     }
 
-    // Transform the data to match backend expectations
+    // Transform the data to match backend expectations - only send necessary fields
     const payload = {
       email: newMemberForm.email.trim(),
       password: newMemberForm.password,
       displayName: newMemberForm.name.trim(),
       additionalData: {
         position: newMemberForm.position.trim(),
-        phone: newMemberForm.phone.trim(),
-        location: newMemberForm.location.trim(),
         joinDate: newMemberForm.joinDate,
-        department: newMemberForm.department,
-        experience: newMemberForm.experience.trim(),
-        skills: newMemberForm.skills,
         bio: newMemberForm.bio.trim(),
-        education: newMemberForm.education,
-        certifications: newMemberForm.certifications,
-        previousRoles: newMemberForm.previousRoles,
-        achievements: newMemberForm.achievements,
         salary: newMemberForm.salary.trim(),
         // Use a simple placeholder instead of base64 to avoid database limits
         avatar: newMemberForm.avatar && newMemberForm.avatar.length < 1000 
@@ -409,25 +252,13 @@ const checkEmailExists = async (email: string): Promise<boolean> => {
     
     try {
       const payload = {
-        user: {
-          name: editingMember.name,
-          email: editingMember.email,
-          avatar: editingMember.avatar
-        },
+        name: editingMember.name,
+        email: editingMember.email,
+        avatar: editingMember.avatar,
         position: editingMember.position,
-        phone: editingMember.phone,
-        location: editingMember.location,
         joinDate: editingMember.joinDate,
-        department: editingMember.department,
-        experience: editingMember.experience,
-        skills: editingMember.skills,
         bio: editingMember.bio,
-        education: editingMember.education,
-        certifications: editingMember.certifications,
-        previousRoles: editingMember.previousRoles,
-        achievements: editingMember.achievements,
         salary: editingMember.salary,
-        // reportingTo: editingMember.reportingTo
       };
 
       await API.put(`/adminmtmembers/${editingMember._id || editingMember.id}`, payload);
@@ -537,29 +368,21 @@ HR Management Team`);
     }
   };
 
-  // Get unique departments for filter
-  const departments = ['all', ...Array.from(new Set(teamMembers.map(member => member.department)))];
-
   const filteredAndSortedMembers = teamMembers
   .filter(member => {
     // Safely normalize values for search
     const name = member.name?.toLowerCase() ?? '';
     const position = member.position?.toLowerCase() ?? '';
     const email = member.email?.toLowerCase() ?? '';
-    const department = member.department?.toLowerCase() ?? '';
 
     // Search filter
     const matchesSearch =
       searchTerm === '' ||
       name.includes(searchTerm.toLowerCase()) ||
       position.includes(searchTerm.toLowerCase()) ||
-      email.includes(searchTerm.toLowerCase()) ||
-      department.includes(searchTerm.toLowerCase());
+      email.includes(searchTerm.toLowerCase());
 
-    // Department filter
-    const matchesDepartment = departmentFilter === 'all' || member.department === departmentFilter;
-
-    return matchesSearch && matchesDepartment;
+    return matchesSearch;
   })
   .sort((a, b) => {
     let aValue: string | Date;
@@ -645,28 +468,12 @@ HR Management Team`);
                   </div>
                   <input
                     type="text"
-                    placeholder="Search members by name, position, email, or department..."
+                    placeholder="Search members by name, position, or email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
-
-                {/* Department Filter */}
-                {/* <div className="flex items-center gap-2">
-                  <Filter className="h-5 w-5 text-gray-400" />
-                  <select
-                    value={departmentFilter}
-                    onChange={(e) => setDepartmentFilter(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                  >
-                    {departments.map(dept => (
-                      <option key={dept} value={dept}>
-                        {dept === 'all' ? 'All Departments' : dept}
-                      </option>
-                    ))}
-                  </select>
-                </div> */}
 
                 {/* Actions */}
                 <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
@@ -709,17 +516,6 @@ HR Management Team`);
                           )}
                         </button>
                       </th>
-                      {/* <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <button
-                          onClick={() => handleSort('department')}
-                          className="flex items-center gap-1 hover:text-gray-700 transition-colors"
-                        >
-                          Department
-                          {sortBy === 'department' && (
-                            sortOrder === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                          )}
-                        </button>
-                      </th> */}
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Contact
                       </th>
@@ -751,21 +547,14 @@ HR Management Team`);
                             />
                             <div className="ml-4">
                               <div className="text-sm font-medium text-gray-900">{member.name}</div>
-                              <div className="text-sm text-gray-500">{member.experience}</div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{member.position}</div>
-                          {/* <div className="text-sm text-gray-500">Reports to {member.reportingTo}</div> */}
                         </td>
-                        {/* <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{member.department}</div>
-                        </td> */}
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{member.email}</div>
-                          <div className="text-sm text-gray-500">{member.phone}</div>
-                          <div className="text-sm text-gray-500">{member.location}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {new Date(member.joinDate).toLocaleDateString()}
@@ -777,7 +566,6 @@ HR Management Team`);
                               className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
                             >
                               <Eye className="w-4 h-4" />
-                        
                             </button>
                             <button
                               onClick={() => {
@@ -787,14 +575,12 @@ HR Management Team`);
                               className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
                             >
                               <Edit className="w-4 h-4" />
-                              
                             </button>
                             <button
                               onClick={() => handleDeleteMember(member._id || member.id)}
                               className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
                             >
                               <Trash2 className="w-4 h-4" />
-                             
                             </button>
                           </div>
                         </td>
@@ -808,16 +594,16 @@ HR Management Team`);
                 <div className="text-center py-12">
                   <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No team members found</h3>
-                  <p className="text-gray-500">Try adjusting your filter to see more results.</p>
+                  <p className="text-gray-500">Try adjusting your search to see more results.</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Profile View Modal */}
+          {/* Profile View Modal - Simplified */}
           {viewingProfile && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-xl shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 {/* Modal Header */}
                 <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-xl">
                   <div className="flex items-center justify-between">
@@ -847,129 +633,24 @@ HR Management Team`);
                         className="w-32 h-32 rounded-full object-cover mx-auto md:mx-0"
                       />
                       <div className="flex-1 text-center md:text-left">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                          <div>
-                            <h1 className="text-3xl font-bold text-gray-900 mb-2">{viewingProfile.name}</h1>
-                            <p className="text-xl text-blue-600 font-medium mb-1">{viewingProfile.position}</p>
-                            <p className="text-gray-600">{viewingProfile.department} Department</p>
-                          </div>
+                        <div className="mb-4">
+                          <h1 className="text-3xl font-bold text-gray-900 mb-2">{viewingProfile.name}</h1>
+                          <p className="text-xl text-blue-600 font-medium mb-1">{viewingProfile.position}</p>
                         </div>
                         
                         <p className="text-gray-700 leading-relaxed mb-6">{viewingProfile.bio}</p>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                           <div className="flex items-center gap-2 text-gray-600">
                             <Mail className="w-4 h-4" />
                             <span>{viewingProfile.email}</span>
                           </div>
                           <div className="flex items-center gap-2 text-gray-600">
-                            <Phone className="w-4 h-4" />
-                            <span>{viewingProfile.phone}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <MapPin className="w-4 h-4" />
-                            <span>{viewingProfile.location}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-gray-600">
                             <Calendar className="w-4 h-4" />
                             <span>Joined {new Date(viewingProfile.joinDate).toLocaleDateString()}</span>
                           </div>
-                          {/* <div className="flex items-center gap-2 text-gray-600">
-                            <UserIcon className="w-4 h-4" />
-                            <span>Reports to {viewingProfile.reportingTo}</span>
-                          </div> */}
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <Building className="w-4 h-4" />
-                            <span>{viewingProfile.experience} experience</span>
-                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Details Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    {/* Skills */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <Star className="w-5 h-5 text-blue-600" />
-                        Skills & Expertise
-                      </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {viewingProfile.skills.map((skill, index) => (
-                          <span
-                            key={index}
-                            className="px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Education */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <Award className="w-5 h-5 text-blue-600" />
-                        Education
-                      </h3>
-                      <div className="space-y-2">
-                        {viewingProfile.education.map((edu, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                            <span className="text-gray-700">{edu}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Certifications */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-blue-600" />
-                        Certifications
-                      </h3>
-                      <div className="space-y-2">
-                        {viewingProfile.certifications.map((cert, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                            <span className="text-gray-700">{cert}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Achievements */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <CheckCircle className="w-5 h-5 text-blue-600" />
-                        Key Achievements
-                      </h3>
-                      <div className="space-y-2">
-                        {viewingProfile.achievements.map((achievement, index) => (
-                          <div key={index} className="flex items-start gap-2">
-                            <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
-                            <span className="text-gray-700">{achievement}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Work History */}
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <Building className="w-5 h-5 text-blue-600" />
-                      Work History
-                    </h3>
-                    <div className="space-y-4">
-                      {viewingProfile.previousRoles.map((role, index) => (
-                        <div key={index} className="border-l-2 border-blue-200 pl-4">
-                          <h4 className="font-medium text-gray-900">{role.position}</h4>
-                          <p className="text-blue-600">{role.company}</p>
-                          <p className="text-sm text-gray-500">{role.duration}</p>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 </div>
@@ -977,10 +658,10 @@ HR Management Team`);
             </div>
           )}
 
-          {/* Add Member Modal */}
+          {/* Add Member Modal - Simplified */}
           {showAddMemberModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 {!formSubmitting ? (
                   <>
                     {/* Modal Header */}
@@ -1005,7 +686,7 @@ HR Management Team`);
                     </div>
 
                     {/* Modal Content */}
-                    <div className="p-6 space-y-6">
+                    <div className="p-6">
                       {/* Basic Information */}
                       <div className="bg-gray-50 rounded-lg p-4">
                         <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
@@ -1067,26 +748,6 @@ HR Management Team`);
                             <p className="text-xs text-gray-500 mt-1">Default password is provided. Click "Generate" for a secure one.</p>
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                            <input
-                              type="tel"
-                              value={newMemberForm.phone}
-                              onChange={(e) => setNewMemberForm(prev => ({ ...prev, phone: e.target.value }))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="Enter phone number"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                            <input
-                              type="text"
-                              value={newMemberForm.location}
-                              onChange={(e) => setNewMemberForm(prev => ({ ...prev, location: e.target.value }))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="Enter location"
-                            />
-                          </div>
-                          <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Join Date</label>
                             <input
                               type="date"
@@ -1095,44 +756,6 @@ HR Management Team`);
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                             />
                           </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Department *</label>
-                            <select
-                              value={newMemberForm.department}
-                              onChange={(e) => setNewMemberForm(prev => ({ ...prev, department: e.target.value }))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            >
-                              <option value="">Select Department</option>
-                              <option value="Product">Product</option>
-                              <option value="Engineering">Engineering</option>
-                              <option value="Marketing">Marketing</option>
-                              <option value="Sales">Sales</option>
-                              <option value="Design">Design</option>
-                              <option value="Operations">Operations</option>
-                              <option value="Finance">Finance</option>
-                              <option value="HR">HR</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Experience</label>
-                            <input
-                              type="text"
-                              value={newMemberForm.experience}
-                              onChange={(e) => setNewMemberForm(prev => ({ ...prev, experience: e.target.value }))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="e.g., 5 years"
-                            />
-                          </div>
-                          {/* <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Reports To</label>
-                            <input
-                              type="text"
-                              value={newMemberForm.reportingTo}
-                              onChange={(e) => setNewMemberForm(prev => ({ ...prev, reportingTo: e.target.value }))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="Enter reporting manager"
-                            />
-                          </div> */}
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Salary</label>
                             <input
@@ -1180,210 +803,6 @@ HR Management Team`);
                           </div>
                         </div>
                       </div>
-
-                      {/* Skills */}
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
-                          <Star className="w-4 h-4" />
-                          Skills & Expertise
-                        </h4>
-                        <div className="flex gap-2 mb-3">
-                          <input
-                            type="text"
-                            value={newSkill}
-                            onChange={(e) => setNewSkill(e.target.value)}
-                            placeholder="Add a skill"
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            onKeyPress={(e) => e.key === 'Enter' && handleAddSkill()}
-                          />
-                          <button
-                            onClick={handleAddSkill}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            Add
-                          </button>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {newMemberForm.skills.map((skill, index) => (
-                            <span
-                              key={index}
-                              className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm flex items-center gap-1"
-                            >
-                              {skill}
-                              <button
-                                onClick={() => handleRemoveSkill(index)}
-                                className="hover:bg-blue-200 rounded-full p-0.5"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Education */}
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
-                          <Award className="w-4 h-4" />
-                          Education
-                        </h4>
-                        <div className="flex gap-2 mb-3">
-                          <input
-                            type="text"
-                            value={newEducation}
-                            onChange={(e) => setNewEducation(e.target.value)}
-                            placeholder="Add education (e.g., MBA - Harvard Business School)"
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            onKeyPress={(e) => e.key === 'Enter' && handleAddEducation()}
-                          />
-                          <button
-                            onClick={handleAddEducation}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            Add
-                          </button>
-                        </div>
-                        <div className="space-y-2">
-                          {newMemberForm.education.map((edu, index) => (
-                            <div key={index} className="flex items-center justify-between bg-white p-2 rounded">
-                              <span className="text-sm">{edu}</span>
-                              <button
-                                onClick={() => handleRemoveEducation(index)}
-                                className="text-red-600 hover:bg-red-50 rounded p-1"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Certifications */}
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
-                          <FileText className="w-4 h-4" />
-                          Certifications
-                        </h4>
-                        <div className="flex gap-2 mb-3">
-                          <input
-                            type="text"
-                            value={newCertification}
-                            onChange={(e) => setNewCertification(e.target.value)}
-                            placeholder="Add certification"
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            onKeyPress={(e) => e.key === 'Enter' && handleAddCertification()}
-                          />
-                          <button
-                            onClick={handleAddCertification}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            Add
-                          </button>
-                        </div>
-                        <div className="space-y-2">
-                          {newMemberForm.certifications.map((cert, index) => (
-                            <div key={index} className="flex items-center justify-between bg-white p-2 rounded">
-                              <span className="text-sm">{cert}</span>
-                              <button
-                                onClick={() => handleRemoveCertification(index)}
-                                className="text-red-600 hover:bg-red-50 rounded p-1"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Previous Roles */}
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
-                          <Building className="w-4 h-4" />
-                          Previous Roles
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3">
-                          <input
-                            type="text"
-                            value={newRole.company}
-                            onChange={(e) => setNewRole(prev => ({ ...prev, company: e.target.value }))}
-                            placeholder="Company"
-                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                          <input
-                            type="text"
-                            value={newRole.position}
-                            onChange={(e) => setNewRole(prev => ({ ...prev, position: e.target.value }))}
-                            placeholder="Position"
-                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                          <input
-                            type="text"
-                            value={newRole.duration}
-                            onChange={(e) => setNewRole(prev => ({ ...prev, duration: e.target.value }))}
-                            placeholder="Duration (e.g., 2020-2023)"
-                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                          <button
-                            onClick={handleAddRole}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            Add Role
-                          </button>
-                        </div>
-                        <div className="space-y-2">
-                          {newMemberForm.previousRoles.map((role, index) => (
-                            <div key={index} className="flex items-center justify-between bg-white p-3 rounded">
-                              <div>
-                                <div className="font-medium text-sm">{role.position}</div>
-                                <div className="text-xs text-gray-600">{role.company} • {role.duration}</div>
-                              </div>
-                              <button
-                                onClick={() => handleRemoveRole(index)}
-                                className="text-red-600 hover:bg-red-50 rounded p-1"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Achievements */}
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
-                          <CheckCircle className="w-4 h-4" />
-                          Key Achievements
-                        </h4>
-                        <div className="flex gap-2 mb-3">
-                          <input
-                            type="text"
-                            value={newAchievement}
-                            onChange={(e) => setNewAchievement(e.target.value)}
-                            placeholder="Add an achievement"
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            onKeyPress={(e) => e.key === 'Enter' && handleAddAchievement()}
-                          />
-                          <button
-                            onClick={handleAddAchievement}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            Add
-                          </button>
-                        </div>
-                        <div className="space-y-2">
-                          {newMemberForm.achievements.map((achievement, index) => (
-                            <div key={index} className="flex items-start justify-between bg-white p-2 rounded">
-                              <span className="text-sm flex-1">{achievement}</span>
-                              <button
-                                onClick={() => handleRemoveAchievement(index)}
-                                className="text-red-600 hover:bg-red-50 rounded p-1 ml-2"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
                     </div>
 
                     {/* Modal Footer */}
@@ -1400,7 +819,7 @@ HR Management Team`);
                         </button>
                         <button
                           onClick={handleSubmitNewMember}
-                          disabled={!newMemberForm.name || !newMemberForm.position || !newMemberForm.email || !newMemberForm.department || !newMemberForm.password || formSubmitting}
+                          disabled={!newMemberForm.name || !newMemberForm.position || !newMemberForm.email || !newMemberForm.password || formSubmitting}
                           className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
                         >
                           {formSubmitting ? (
@@ -1429,10 +848,10 @@ HR Management Team`);
             </div>
           )}
 
-          {/* Edit Member Modal */}
+          {/* Edit Member Modal - Simplified */}
           {showEditModal && editingMember && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 {!formSubmitting ? (
                   <>
                     {/* Modal Header */}
@@ -1456,7 +875,7 @@ HR Management Team`);
                       </div>
                     </div>
 
-                    {/* Modal Content - Similar to Add Member but with editingMember data */}
+                    {/* Modal Content - Simplified to only include necessary fields */}
                     <div className="p-6">
                       <div className="bg-gray-50 rounded-lg p-4 mb-6">
                         <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
@@ -1482,7 +901,42 @@ HR Management Team`);
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                             />
                           </div>
-                          {/* Add other fields similarly */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Email (Read Only) *</label>
+                            <input
+                              type="email"
+                              value={editingMember.email}
+                              onChange={(e) => setEditingMember(prev => prev ? {...prev, email: e.target.value} : null)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500" readOnly
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Join Date</label>
+                            <input
+                              type="date"
+                              value={editingMember.joinDate}
+                              onChange={(e) => setEditingMember(prev => prev ? {...prev, joinDate: e.target.value} : null)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Salary</label>
+                            <input
+                              type="text"
+                              value={editingMember.salary}
+                              onChange={(e) => setEditingMember(prev => prev ? {...prev, salary: e.target.value} : null)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+                          <textarea
+                            value={editingMember.bio}
+                            onChange={(e) => setEditingMember(prev => prev ? {...prev, bio: e.target.value} : null)}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          />
                         </div>
                       </div>
                     </div>
