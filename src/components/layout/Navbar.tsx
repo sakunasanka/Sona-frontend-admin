@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Menu, Bell, X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
+import API from '../../api/api';
 
 const initialNotifications = [
   {
@@ -38,7 +39,7 @@ const initialNotifications = [
   }
 ];
 
-const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
+const Navbar = ({ onMenuClick, profilePicture }: { onMenuClick: () => void, profilePicture?: string }) => {
   const navigate = useNavigate();
   const handleProfile = () => navigate("/admin-profile");
   
@@ -47,6 +48,7 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
   const [showOnlyUnread, setShowOnlyUnread] = useState(false);
   const [sortOption, setSortOption] = useState('Newest');
   const [activeNotification, setActiveNotification] = useState<null | typeof notifications[0]>(null);
+  const [currentProfilePicture, setCurrentProfilePicture] = useState<string>(profilePicture || "https://images.icon-icons.com/1378/PNG/512/avatardefault_92824.png");
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -66,6 +68,27 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showDropdown]);
+
+  // Fetch profile data to get the real profile picture
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          const response = await API.get('/admin-profile/profile');
+          if (response.data && response.data.data && response.data.data.profilePicture) {
+            setCurrentProfilePicture(response.data.data.profilePicture);
+          } else {
+            setCurrentProfilePicture("https://images.icon-icons.com/1378/PNG/512/avatardefault_92824.png");
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile:', error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleString(undefined, {
@@ -242,7 +265,7 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
             onClick={() => handleProfile()}
           >
             <img 
-              src="/assets/images/profiles/th.jpg" 
+              src={currentProfilePicture} 
           alt="Profile"
               className="w-full h-full object-cover"
             />
