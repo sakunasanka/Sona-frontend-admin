@@ -71,9 +71,17 @@ const PostCard = ({ post, onView }: { post: BlogPost; onView: (post: BlogPost) =
   return (
     <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 overflow-hidden">
       <div className="aspect-video overflow-hidden relative" style={{ backgroundColor: post.backgroundColor }}>
-        <div className="w-full h-full flex items-center justify-center">
-          <BookOpen className="w-16 h-16 text-gray-400" />
-        </div>
+        {post.image ? (
+          <img 
+            src={post.image} 
+            alt="Blog post" 
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <BookOpen className="w-16 h-16 text-gray-400" />
+          </div>
+        )}
       </div>
 
       <div className="p-5">
@@ -116,10 +124,6 @@ const PostCard = ({ post, onView }: { post: BlogPost; onView: (post: BlogPost) =
             <Heart className="w-3 h-3" />
             {post.likes}
           </span>
-          {/* <span className="flex items-center gap-1">
-            <MessageCircle className="w-3 h-3" />
-            {post.comments}
-          </span> */}
         </div>
 
         <button
@@ -214,9 +218,17 @@ const PostDetailsModal = ({
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-3">
               <div className="aspect-video rounded-xl overflow-hidden mb-6" style={{ backgroundColor: post.backgroundColor }}>
-                <div className="w-full h-full flex items-center justify-center">
-                  <BookOpen className="w-24 h-24 text-gray-400" />
-                </div>
+                {post.image ? (
+                  <img 
+                    src={post.image} 
+                    alt="Blog post" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <BookOpen className="w-24 h-24 text-gray-400" />
+                  </div>
+                )}
               </div>
 
               <div className="prose max-w-none mb-6">
@@ -275,13 +287,6 @@ const PostDetailsModal = ({
                     </span>
                     <span className="font-medium text-gray-900">{post.likes}</span>
                   </div>
-                  {/* <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 flex items-center gap-2">
-                      <MessageCircle className="w-4 h-4" />
-                      Comments
-                    </span>
-                    <span className="font-medium text-gray-900">{post.comments}</span>
-                  </div> */}
                 </div>
               </div>
 
