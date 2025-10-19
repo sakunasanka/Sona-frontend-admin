@@ -24,7 +24,8 @@ import {
   ArrowRight,
   RefreshCw,
   Download,
-  ExternalLink
+  ExternalLink,
+  RotateCcw // Added for revoke icon
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import API from '../../api/api';
@@ -37,11 +38,11 @@ interface StudentPackage {
   uniEmail?: string;
   graduationYear?: string;
   verificationDocument?: string;
-  studentIDCopy?: string; // Added this field
+  studentIDCopy?: string;
   rejectionReason?: string;
-  rejectedByName?: string; // Added this field
-  rejectedBy?: number; // Added this field
-  rejectedByRole?: string; // Added this field
+  rejectedByName?: string;
+  rejectedBy?: number;
+  rejectedByRole?: string;
   clientID?: number;
 }
 
@@ -100,7 +101,7 @@ const validateClient = (client: any): Client | null => {
       uniEmail: client.studentPackage?.uniEmail,
       graduationYear: client.studentPackage?.graduationYear,
       verificationDocument: client.studentPackage?.verificationDocument,
-      studentIDCopy: client.studentPackage?.studentIDCopy, // Added this line
+      studentIDCopy: client.studentPackage?.studentIDCopy,
       rejectionReason: client.studentPackage?.rejectionReason,
       rejectedByName: client.studentPackage?.rejectedByName,
       rejectedBy: client.studentPackage?.rejectedBy,
@@ -134,7 +135,7 @@ const Client: React.FC = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
-  const [actionType, setActionType] = useState<'approve' | 'reject'>('approve');
+  const [actionType, setActionType] = useState<'approve' | 'reject' | 'revoke'>('approve'); // Added 'revoke'
   const [rejectionReason, setRejectionReason] = useState('');
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
@@ -368,7 +369,7 @@ const Client: React.FC = () => {
     setShowProfileModal(true);
   };
 
-  const handleAction = (type: 'approve' | 'reject') => {
+  const handleAction = (type: 'approve' | 'reject' | 'revoke') => {
     setActionType(type);
     setRejectionReason('');
     setShowActionModal(true);
@@ -393,13 +394,21 @@ const Client: React.FC = () => {
     try {
       if (actionType === 'approve') {
         await API.post(`/adminclients/${selectedClient.id}/student-package/approve`);
-      } else {
+      } else if (actionType === 'reject') {
         await API.post(`/adminclients/${selectedClient.id}/student-package/reject`, {
           rejectionReason
         });
+      } else if (actionType === 'revoke') {
+        await API.post(`/adminclients/${selectedClient.id}/student-package/revoke`);
       }
       
-      showNotification('success', `Student package application ${actionType}d successfully!`);
+      const actionMessages = {
+        approve: 'approved',
+        reject: 'rejected',
+        revoke: 'revoked'
+      };
+      
+      showNotification('success', `Student package application ${actionMessages[actionType]} successfully!`);
       
       // Refresh data
       await fetchClients();
@@ -859,7 +868,6 @@ const Client: React.FC = () => {
                                   {/* Info for PDFs */}
                                   {isPdfFile(selectedClient.studentPackage.studentIDCopy) && (
                                     <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
-                                      {/*<FileText className="w-4 h-4" />*/}
                                       <span>PDF document - Click "View" to open in new tab or "Download" to save</span>
                                     </div>
                                   )}
@@ -878,13 +886,6 @@ const Client: React.FC = () => {
                               <p className="font-medium">{selectedClient.email}</p>
                             </div>
                           </div>
-                          {/* <div className="flex items-center gap-3">
-                            <MapPin className="w-5 h-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm text-gray-500">Location</p>
-                              <p className="font-medium">{selectedClient.location || 'Unknown'}</p>
-                            </div>
-                          </div> */}
                           <div className="flex items-center gap-3">
                             <Calendar className="w-5 h-5 text-gray-400" />
                             <div>
@@ -934,21 +935,15 @@ const Client: React.FC = () => {
                                   <span className="text-gray-500">Student Email:</span>
                                   <p className="font-medium">{selectedClient.studentPackage.uniEmail || ''}</p>
                                 </div>
-                                {/* <div>
-                                  <span className="text-gray-500">Graduation Year:</span>
-                                  <p className="font-medium">{selectedClient.studentPackage.graduationYear || ''}</p>
-                                </div> */}
                                 <div>
                                   <span className="text-gray-500">Applied Date:</span>
                                   <p className="font-medium">{selectedClient.studentPackage.appliedDate ? new Date(selectedClient.studentPackage.appliedDate).toLocaleDateString() : ''}</p>
                                 </div>
                               </div>
                               
-                              
                               {selectedClient.studentPackage.status === 'rejected' && selectedClient.studentPackage.rejectionReason && (
                                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                                   <div className="flex items-start gap-2">
-                                    {/* Display who rejected it */}
                                     <AlertCircle className="w-4 h-4 text-red-500 mt-0.5" />
                                     <div>
                                       <p className="text-sm font-medium text-red-800">Rejected By:</p>
@@ -964,8 +959,6 @@ const Client: React.FC = () => {
                                   </div>
                                 </div>
                               )}
-                              
-
                             </div>
                           ) : (
                             <p className="text-gray-500 text-sm">No student package application submitted.</p>
@@ -984,11 +977,6 @@ const Client: React.FC = () => {
                             </div>
                           </div>
                         )}
-
-                        {/* <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Bio</h4>
-                          <p className="text-gray-600">{selectedClient.bio || 'No bio available'}</p>
-                        </div> */}
                       </div>
                     </div>
 
@@ -1012,6 +1000,17 @@ const Client: React.FC = () => {
                           </button>
                         </>
                       )}
+                      {/* Revoke button for approved or rejected applications */}
+                      {selectedClient.studentPackage.applied && 
+                       (selectedClient.studentPackage.status === 'approved' || selectedClient.studentPackage.status === 'rejected') && (
+                        <button
+                          onClick={() => handleAction('revoke')}
+                          className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                          <span>Revoke Status</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1024,7 +1023,9 @@ const Client: React.FC = () => {
                 <div className="bg-white rounded-2xl max-w-md w-full">
                   <div className="p-6 border-b border-gray-200">
                     <h2 className="text-xl font-bold text-gray-900">
-                      {actionType === 'approve' ? 'Approve Student Package' : 'Reject Student Package'}
+                      {actionType === 'approve' ? 'Approve Student Package' : 
+                       actionType === 'reject' ? 'Reject Student Package' : 
+                       'Revoke Student Package Status'}
                     </h2>
                   </div>
 
@@ -1047,7 +1048,9 @@ const Client: React.FC = () => {
                     <p className="text-gray-600 mb-4">
                       {actionType === 'approve' 
                         ? `Are you sure you want to approve ${selectedClient.name}'s student package application?`
-                        : `Are you sure you want to reject ${selectedClient.name}'s student package application?`
+                        : actionType === 'reject'
+                        ? `Are you sure you want to reject ${selectedClient.name}'s student package application?`
+                        : `Are you sure you want to revoke ${selectedClient.name}'s student package status and reset it to pending?`
                       }
                     </p>
 
@@ -1063,7 +1066,9 @@ const Client: React.FC = () => {
                         className={`px-4 py-2 text-white rounded-lg flex items-center gap-2 transition-colors ${
                           actionType === 'approve' 
                             ? 'bg-green-600 hover:bg-green-700' 
-                            : 'bg-red-600 hover:bg-red-700'
+                            : actionType === 'reject'
+                            ? 'bg-red-600 hover:bg-red-700'
+                            : 'bg-orange-600 hover:bg-orange-700'
                         }`}
                       >
                         {actionType === 'approve' ? (
@@ -1071,10 +1076,15 @@ const Client: React.FC = () => {
                             <Check className="w-4 h-4" />
                             <span>Approve</span>
                           </>
-                        ) : (
+                        ) : actionType === 'reject' ? (
                           <>
                             <X className="w-4 h-4" />
                             <span>Reject</span>
+                          </>
+                        ) : (
+                          <>
+                            <RotateCcw className="w-4 h-4" />
+                            <span>Revoke</span>
                           </>
                         )}
                       </button>
@@ -1096,7 +1106,9 @@ const Client: React.FC = () => {
                     <p className="text-gray-600 mb-4">
                       {actionType === 'approve'
                         ? `You are about to approve ${selectedClient?.name}'s student package application. This action cannot be undone.`
-                        : `You are about to reject ${selectedClient?.name}'s student package application. This action cannot be undone.`
+                        : actionType === 'reject'
+                        ? `You are about to reject ${selectedClient?.name}'s student package application. This action cannot be undone.`
+                        : `You are about to revoke ${selectedClient?.name}'s student package status and reset it to pending. This action cannot be undone.`
                       }
                     </p>
 
@@ -1113,7 +1125,9 @@ const Client: React.FC = () => {
                         className={`px-4 py-2 text-white rounded-lg flex items-center gap-2 transition-colors ${
                           actionType === 'approve' 
                             ? 'bg-green-600 hover:bg-green-700' 
-                            : 'bg-red-600 hover:bg-red-700'
+                            : actionType === 'reject'
+                            ? 'bg-red-600 hover:bg-red-700'
+                            : 'bg-orange-600 hover:bg-orange-700'
                         } ${actionLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         {actionLoading ? (
