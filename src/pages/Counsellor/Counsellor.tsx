@@ -21,7 +21,8 @@ import {
   Download,
   ExternalLink,
   BookOpen,
-  Briefcase
+  Briefcase,
+  RotateCcw // Added for revoke icon
 } from 'lucide-react';
 import API from '../../api/api';
 
@@ -78,7 +79,7 @@ interface Counselor {
   description?: string;
   rating?: number;
   sessionFee?: number;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'unset';
   coverImage?: string;
   instagram?: string;
   linkedin?: string;
@@ -89,6 +90,11 @@ interface Counselor {
   experiences: Experience[];
   createdAt: string;
   updatedAt: string;
+  // Rejection information
+  rejectionReason?: string;
+  rejectedBy?: number;
+  rejectedByName?: string;
+  rejectedByRole?: string;
 }
 
 const Counselor: React.FC = () => {
@@ -98,7 +104,7 @@ const Counselor: React.FC = () => {
   const [selectedCounselor, setSelectedCounselor] = useState<Counselor | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
-  const [actionType, setActionType] = useState<'approve' | 'reject'>('approve');
+  const [actionType, setActionType] = useState<'approve' | 'reject' | 'revoke'>('approve'); // Added 'revoke'
   const [rejectionReason, setRejectionReason] = useState('');
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
@@ -108,7 +114,7 @@ const Counselor: React.FC = () => {
     pending: 0,
     approved: 0,
     rejected: 0,
-    total: 0
+    totalCounselors: 0
   });
   const [activeTab, setActiveTab] = useState<'profile' | 'education' | 'experiences'>('profile');
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
@@ -158,7 +164,8 @@ const Counselor: React.FC = () => {
     const badges = {
       pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
       approved: 'bg-green-100 text-green-800 border-green-200',
-      rejected: 'bg-red-100 text-red-800 border-red-200'
+      rejected: 'bg-red-100 text-red-800 border-red-200',
+      unset: 'bg-gray-100 text-gray-800 border-gray-200'
     };
     return badges[status as keyof typeof badges] || badges.pending;
   };
@@ -191,7 +198,7 @@ const Counselor: React.FC = () => {
     setActiveTab('profile');
   };
 
-  const handleAction = (type: 'approve' | 'reject') => {
+  const handleAction = (type: 'approve' | 'reject' | 'revoke') => {
     if (!selectedCounselor) return;
     
     setActionType(type);
@@ -216,29 +223,43 @@ const Counselor: React.FC = () => {
     setLoading(true);
     
     try {
-      const newStatus = actionType === 'approve' ? 'approved' : 'rejected';
+      let response;
       
-      const requestData: any = { status: newStatus };
-      if (actionType === 'reject') {
-        requestData.rejectionReason = rejectionReason;
+      if (actionType === 'revoke') {
+        // Use the new revoke endpoint
+        response = await API.post(`/admincounsellors/${selectedCounselor.id}/revoke`);
+      } else {
+        const newStatus = actionType === 'approve' ? 'approved' : 'rejected';
+        
+        const requestData: any = { status: newStatus };
+        if (actionType === 'reject') {
+          requestData.rejectionReason = rejectionReason;
+        }
+
+        response = await API.put(
+          `/admincounsellors/${selectedCounselor.id}/status`,
+          requestData
+        );
       }
 
-      await API.put(
-        `/admincounsellors/${selectedCounselor.id}/status`,
-        requestData
-      );
-
+      // Update the counselor with the full response data including rejection info
       setCounselors(prev => 
         prev.map(c => 
           c.id === selectedCounselor.id
             ? { 
                 ...c, 
-                status: newStatus as 'pending' | 'approved' | 'rejected',
+                status: actionType === 'revoke' ? 'pending' : 
+                       actionType === 'approve' ? 'approved' : 'rejected',
+                rejectionReason: response.data.rejectionReason,
+                rejectedBy: response.data.rejectedBy,
+                rejectedByName: response.data.rejectedByName,
+                rejectedByRole: response.data.rejectedByRole
               }
             : c
         )
       );
 
+      // Update status counts
       const newCounts = { ...statusCounts };
       const oldStatus = selectedCounselor.status;
       
@@ -246,10 +267,21 @@ const Counselor: React.FC = () => {
       if (oldStatus === 'approved') newCounts.approved--;
       if (oldStatus === 'rejected') newCounts.rejected--;
       
-      newCounts[newStatus]++;
+      if (actionType === 'revoke') {
+        newCounts.pending++;
+      } else {
+        newCounts[actionType === 'approve' ? 'approved' : 'rejected']++;
+      }
+      
       setStatusCounts(newCounts);
 
-      showNotification('success', `Counselor ${actionType}d successfully!`);
+      const actionMessages = {
+        approve: 'approved',
+        reject: 'rejected',
+        revoke: 'revoked'
+      };
+      
+      showNotification('success', `Counselor ${actionMessages[actionType]} successfully!`);
       
       closeModals();
       
@@ -410,7 +442,7 @@ const Counselor: React.FC = () => {
                     <User className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{statusCounts.total}</p>
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{statusCounts.totalCounselors}</p>
                     <p className="text-gray-600 text-xs lg:text-sm leading-tight">Total Counselors</p>
                   </div>
                 </div>
@@ -487,6 +519,7 @@ const Counselor: React.FC = () => {
                     <option value="pending">Pending</option>
                     <option value="approved">Approved</option>
                     <option value="rejected">Rejected</option>
+                    <option value="unset">Unset</option>
                   </select>
                 </div>
               </div>
@@ -672,6 +705,27 @@ const Counselor: React.FC = () => {
                                 {(selectedCounselor.status || 'pending').charAt(0).toUpperCase() + (selectedCounselor.status || 'pending').slice(1)}
                               </span>
                             </div>
+
+                            {/* Rejection Information Display */}
+                            {selectedCounselor.status === 'rejected' && selectedCounselor.rejectionReason && (
+                              <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div className="flex items-start gap-3">
+                                  <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                                  <div className="flex-1">
+                                    <h4 className="text-sm font-semibold text-red-800 mb-2">Rejection Details</h4>
+                                    <p className="text-sm text-red-700 mb-2">{selectedCounselor.rejectionReason}</p>
+                                    {selectedCounselor.rejectedByName && (
+                                      <p className="text-xs text-red-600">
+                                        Rejected by: {selectedCounselor.rejectedByName}
+                                        {selectedCounselor.rejectedByRole && ` (${selectedCounselor.rejectedByRole})`}
+                                        {selectedCounselor.rejectedBy && ` (${selectedCounselor.rejectedBy})`}
+                                      </p>
+                                    )}
+
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -989,17 +1043,16 @@ const Counselor: React.FC = () => {
                             </button>
                           </>
                         )}
-                        {(selectedCounselor.status || 'pending') === 'rejected' && (
-                          <div className="bg-red-100 text-red-800 px-6 py-2 rounded-lg flex items-center justify-center gap-2">
-                            <X className="w-4 h-4" />
-                            <span>Rejected</span>
-                          </div>
-                        )}
-                        {(selectedCounselor.status || 'pending') === 'approved' && (
-                          <div className="bg-green-100 text-green-800 px-6 py-2 rounded-lg flex items-center justify-center gap-2">
-                            <Check className="w-4 h-4" />
-                            <span>Approved</span>
-                          </div>
+                        {/* Revoke button for approved or rejected counselors */}
+                        {((selectedCounselor.status || 'pending') === 'approved' || 
+                          (selectedCounselor.status || 'pending') === 'rejected') && (
+                          <button
+                            onClick={() => handleAction('revoke')}
+                            className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                            <span>Revoke Status</span>
+                          </button>
                         )}
                       </div>
                     )}
@@ -1096,7 +1149,9 @@ const Counselor: React.FC = () => {
                   <div className="p-6 border-b border-gray-200">
                     <div className="flex items-center justify-between">
                       <h2 className="text-xl font-bold text-gray-900">
-                        {actionType === 'approve' ? 'Approve Counselor' : 'Reject Counselor'}
+                        {actionType === 'approve' ? 'Approve Counselor' : 
+                         actionType === 'reject' ? 'Reject Counselor' : 
+                         'Revoke Counselor Status'}
                       </h2>
                       <button
                         onClick={closeModals}
@@ -1112,7 +1167,9 @@ const Counselor: React.FC = () => {
                       <p className="text-gray-700">
                         {actionType === 'approve'
                           ? `Are you sure you want to approve ${selectedCounselor.name}'s application?`
-                          : `Are you sure you want to reject ${selectedCounselor.name}'s application?`}
+                          : actionType === 'reject'
+                          ? `Are you sure you want to reject ${selectedCounselor.name}'s application?`
+                          : `Are you sure you want to revoke ${selectedCounselor.name}'s status and reset it to pending?`}
                       </p>
                       {actionType === 'reject' && (
                         <div>
@@ -1143,10 +1200,13 @@ const Counselor: React.FC = () => {
                         className={`px-4 py-2 rounded-lg text-white transition-colors ${
                           actionType === 'approve'
                             ? 'bg-green-600 hover:bg-green-700 disabled:bg-green-300'
-                            : 'bg-red-600 hover:bg-red-700 disabled:bg-red-300'
+                            : actionType === 'reject'
+                            ? 'bg-red-600 hover:bg-red-700 disabled:bg-red-300'
+                            : 'bg-orange-600 hover:bg-orange-700 disabled:bg-orange-300'
                         }`}
                       >
-                        {actionType === 'approve' ? 'Approve' : 'Reject'}
+                        {actionType === 'approve' ? 'Approve' : 
+                         actionType === 'reject' ? 'Reject' : 'Revoke'}
                       </button>
                     </div>
                   </div>
@@ -1161,22 +1221,28 @@ const Counselor: React.FC = () => {
                   <div className="p-6">
                     <div className="flex items-center gap-3 mb-4">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        actionType === 'approve' ? 'bg-green-100' : 'bg-red-100'
+                        actionType === 'approve' ? 'bg-green-100' : 
+                        actionType === 'reject' ? 'bg-red-100' : 'bg-orange-100'
                       }`}>
                         {actionType === 'approve' ? (
                           <Check className="w-6 h-6 text-green-600" />
-                        ) : (
+                        ) : actionType === 'reject' ? (
                           <X className="w-6 h-6 text-red-600" />
+                        ) : (
+                          <RotateCcw className="w-6 h-6 text-orange-600" />
                         )}
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">
-                          {actionType === 'approve' ? 'Confirm Approval' : 'Confirm Rejection'}
+                          {actionType === 'approve' ? 'Confirm Approval' : 
+                           actionType === 'reject' ? 'Confirm Rejection' : 'Confirm Revocation'}
                         </h3>
                         <p className="text-gray-600">
                           {actionType === 'approve'
                             ? `This will approve ${selectedCounselor.name}'s application.`
-                            : `This will reject ${selectedCounselor.name}'s application.`}
+                            : actionType === 'reject'
+                            ? `This will reject ${selectedCounselor.name}'s application.`
+                            : `This will revoke ${selectedCounselor.name}'s status and reset it to pending.`}
                         </p>
                       </div>
                     </div>
@@ -1195,7 +1261,9 @@ const Counselor: React.FC = () => {
                         className={`flex-1 px-4 py-2 rounded-lg text-white transition-colors flex items-center justify-center gap-2 ${
                           actionType === 'approve'
                             ? 'bg-green-600 hover:bg-green-700 disabled:bg-green-300'
-                            : 'bg-red-600 hover:bg-red-700 disabled:bg-red-300'
+                            : actionType === 'reject'
+                            ? 'bg-red-600 hover:bg-red-700 disabled:bg-red-300'
+                            : 'bg-orange-600 hover:bg-orange-700 disabled:bg-orange-300'
                         }`}
                       >
                         {loading ? (
@@ -1204,7 +1272,10 @@ const Counselor: React.FC = () => {
                             <span>Processing...</span>
                           </>
                         ) : (
-                          <span>Confirm {actionType === 'approve' ? 'Approval' : 'Rejection'}</span>
+                          <span>
+                            Confirm {actionType === 'approve' ? 'Approval' : 
+                                    actionType === 'reject' ? 'Rejection' : 'Revocation'}
+                          </span>
                         )}
                       </button>
                     </div>

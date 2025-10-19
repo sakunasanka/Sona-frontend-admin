@@ -7,9 +7,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from 'recharts';
 import {
   Users,
@@ -48,8 +45,10 @@ interface SessionMetrics {
   counselorSessions: number;
   psychiatristSessions: number;
   completedSessions: number;
-  ongoingSessions: number;
+  ongoingSessions: number | null;
   scheduledSessions: number;
+  cancelledSessions?: number;
+  totalSessions?: number;
 }
 
 interface ChartData {
@@ -58,6 +57,17 @@ interface ChartData {
   month?: string;
   clients?: number;
   sessions?: number;
+  revenue?: number;
+}
+
+interface MetricCard {
+  label: string;
+  value: string | number;
+  secondaryValue?: string;
+  secondaryLabel?: string;
+  icon: any;
+  color: string;
+  textcolor: string;
 }
 
 interface TopCounselor {
@@ -80,44 +90,102 @@ interface DashboardData {
   loginMetrics: LoginMetrics;
   sessionMetrics: SessionMetrics;
   userDistributionData: ChartData[];
-  sessionStatusData: ChartData[];
   monthlyData: ChartData[];
+  monthlyRevenueData: ChartData[];
   lineData1: ChartData[];
   lineData2: ChartData[];
-  specialtyData: ChartData[];
   topCounselors: TopCounselor[];
   recentActivities: RecentActivity[];
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+const MonthlyRevenueSection = ({ monthlyRevenueData }: { monthlyRevenueData: ChartData[] }) => {
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Monthly Revenue</h2>
+          <p className="text-sm text-gray-600">Revenue trends over the past 6 months</p>
+        </div>
+        <HandCoins className="w-5 h-5 text-gray-400" />
+      </div>
+      
+      <div className="h-[300px]">
+        {monthlyRevenueData.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            <div className="text-center">
+              <HandCoins className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p>No revenue data available</p>
+            </div>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={monthlyRevenueData}>
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip 
+                formatter={(value) => [`Rs.${Number(value).toLocaleString()}`, 'Revenue']}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="revenue" 
+                stroke="#10b981" 
+                strokeWidth={3} 
+                dot={{ r: 5 }}
+                activeDot={{ r: 7 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+      
+      {/* {monthlyRevenueData.length > 0 && (
+        <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-200">
+          <div className="text-center">
+            <p className="text-sm text-gray-600">Total Revenue</p>
+            <p className="text-lg font-bold text-gray-900">Rs.{totalRevenue.toLocaleString()}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-sm text-gray-600">Average Monthly</p>
+            <p className="text-lg font-bold text-gray-900">Rs.{averageRevenue.toLocaleString()}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-sm text-gray-600">Latest Month</p>
+            <p className="text-lg font-bold text-gray-900">Rs.{latestRevenue.toLocaleString()}</p>
+          </div>
+        </div>
+      )} */}
+    </div>
+  );
+};
 
 // New component for Login Metrics
 const LoginMetricsSection = ({ loginMetrics }: { loginMetrics: LoginMetrics }) => {
   const loginMetricsArray = [
     { 
       label: 'Counselor Logins', 
-      value: loginMetrics.counselorLogins.toLocaleString(),
+      value: (loginMetrics.counselorLogins || 0).toLocaleString(),
       icon: UserCog,
       color: "bg-indigo-100",
       textcolor: "text-indigo-600"
     },
     { 
       label: 'Psychiatrist Logins', 
-      value: loginMetrics.psychiatristLogins.toLocaleString(),
+      value: (loginMetrics.psychiatristLogins || 0).toLocaleString(),
       icon: Stethoscope,
       color: "bg-purple-100",
       textcolor: "text-purple-600"
     },
     { 
       label: 'Client Logins', 
-      value: loginMetrics.clientLogins.toLocaleString(),
+      value: (loginMetrics.clientLogins || 0).toLocaleString(),
       icon: Users,
       color: "bg-cyan-100",
       textcolor: "text-cyan-600"
     },
     { 
       label: 'Management Logins', 
-      value: loginMetrics.managementLogins.toLocaleString(),
+      value: (loginMetrics.managementLogins || 0).toLocaleString(),
       icon: UserCheck,
       color: "bg-orange-100",
       textcolor: "text-orange-600"
@@ -161,39 +229,46 @@ const SessionBreakdownSection = ({ sessionMetrics }: { sessionMetrics: SessionMe
   const sessionMetricsArray = [
     { 
       label: 'Counselor Sessions', 
-      value: sessionMetrics.counselorSessions,
+      value: sessionMetrics.counselorSessions || 0,
       icon: UserCog,
       color: "bg-blue-100",
       textcolor: "text-blue-600"
     },
     { 
       label: 'Psychiatrist Sessions', 
-      value: sessionMetrics.psychiatristSessions,
+      value: sessionMetrics.psychiatristSessions || 0,
       icon: Stethoscope,
       color: "bg-purple-100",
       textcolor: "text-purple-600"
     },
     { 
       label: 'Completed Sessions', 
-      value: sessionMetrics.completedSessions,
+      value: sessionMetrics.completedSessions || 0,
       icon: Award,
       color: "bg-green-100",
       textcolor: "text-green-600"
     },
     { 
       label: 'Ongoing Sessions', 
-      value: sessionMetrics.ongoingSessions,
+      value: sessionMetrics.ongoingSessions || 0,
       icon: Clock,
       color: "bg-yellow-100",
       textcolor: "text-yellow-600"
     },
     { 
       label: 'Scheduled Sessions', 
-      value: sessionMetrics.scheduledSessions,
+      value: sessionMetrics.scheduledSessions || 0,
       icon: Calendar,
       color: "bg-orange-100",
       textcolor: "text-orange-600"
     },
+    ...(sessionMetrics.cancelledSessions !== undefined ? [{ 
+      label: 'Cancelled Sessions', 
+      value: sessionMetrics.cancelledSessions || 0,
+      icon: Clock,
+      color: "bg-red-100",
+      textcolor: "text-red-600"
+    }] : []),
   ];
 
   return (
@@ -228,375 +303,89 @@ const SessionBreakdownSection = ({ sessionMetrics }: { sessionMetrics: SessionMe
   );
 };
 
-const UserDistributionSection = ({ userDistributionData }: { userDistributionData: ChartData[] }) => {
-  const totalUsers = userDistributionData.reduce((sum, group) => sum + (group.value || 0), 0);
-  const mostActiveGroup = userDistributionData.length > 0 
-    ? userDistributionData.reduce((max, group) => 
-        (max.value || 0) > (group.value || 0) ? max : group
-      )
-    : { name: 'No data', value: 0 };
-
-  const hasData = userDistributionData.length > 0 && totalUsers > 0;
-
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-lg lg:text-xl font-semibold text-gray-900">User Demographics</h2>
-          <p className="text-sm text-gray-600">Breakdown of platform users by age groups</p>
-        </div>
-        <Users className="w-5 h-5 text-gray-400" />
-      </div>
-      
-      {!hasData ? (
-        <div className="flex items-center justify-center h-[300px] text-gray-500">
-          <div className="text-center">
-            <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>No user distribution data available</p>
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-col lg:flex-row gap-6">
-          <div className="w-full lg:w-1/2 h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={userDistributionData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label={false}
-                  labelLine={false}
-                >
-                  {userDistributionData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  formatter={(value, name) => [
-                    `${value} users`,
-                    name
-                  ]}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        
-          <div className="w-full lg:w-1/2">
-            <div className="space-y-4">
-              <h3 className="font-medium text-gray-900">Age Group Distribution</h3>
-              
-              {userDistributionData.map((group, index) => (
-                <div key={index} className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div 
-                        className="w-3 h-3 rounded-full mr-2" 
-                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                      ></div>
-                      <span className="text-sm font-medium">{group.name}</span>
-                    </div>
-                    <span className="text-sm font-semibold">{group.value || 0} users</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="h-2 rounded-full" 
-                      style={{ 
-                        width: `${((group.value || 0) / totalUsers) * 100}%`,
-                        backgroundColor: COLORS[index % COLORS.length]
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-              
-              <div className="pt-4 border-t border-gray-200 mt-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Total Users</span>
-                  <span className="text-sm font-semibold">{totalUsers}</span>
-                </div>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-sm text-gray-600">Most Active Group</span>
-                  <span className="text-sm font-semibold">{mostActiveGroup.name || 'N/A'}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const SessionStatusSection = ({ sessionStatusData }: { sessionStatusData: ChartData[] }) => {
-  const totalSessions = sessionStatusData.reduce((sum, group) => sum + (group.value || 0), 0);
-  const completionRate = sessionStatusData.length > 0 && sessionStatusData[0].value ? ((sessionStatusData[0].value / totalSessions) * 100).toFixed(0) : '0';
-  const hasData = sessionStatusData.length > 0 && totalSessions > 0;
-
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Session Status</h2>
-          <p className="text-sm text-gray-600">Overview of session completion rates</p>
-        </div>
-        <Activity className="w-5 h-5 text-gray-400" />
-      </div>
-      
-      {!hasData ? (
-        <div className="flex items-center justify-center h-[300px] text-gray-500">
-          <div className="text-center">
-            <Activity className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>No session status data available</p>
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-col lg:flex-row gap-6">
-          <div className="w-full lg:w-1/2 h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={sessionStatusData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label={false}
-                  labelLine={false}
-                >
-                  {sessionStatusData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  formatter={(value, name) => [
-                    `${value} sessions`,
-                    name
-                  ]}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        
-          <div className="w-full lg:w-1/2">
-            <div className="space-y-4">
-              <h3 className="font-medium text-gray-900">Session Statistics</h3>
-              
-              {sessionStatusData.map((group, index) => (
-                <div key={index} className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div 
-                        className="w-3 h-3 rounded-full mr-2" 
-                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                      ></div>
-                      <span className="text-sm font-medium">{group.name}</span>
-                    </div>
-                    <span className="text-sm font-semibold">{group.value || 0} sessions</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="h-2 rounded-full" 
-                      style={{ 
-                        width: `${((group.value || 0) / totalSessions) * 100}%`,
-                        backgroundColor: COLORS[index % COLORS.length]
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-              
-              <div className="pt-4 border-t border-gray-200 mt-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Total Sessions</span>
-                  <span className="text-sm font-semibold">{totalSessions}</span>
-                </div>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-sm text-gray-600">Completion Rate</span>
-                  <span className="text-sm font-semibold">{completionRate}%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const AnalyticsSection = ({ 
-  lineData1, 
-  lineData2, 
-  monthlyData, 
-  specialtyData 
-}: { 
+const AnalyticsSection = ({
+  lineData1,
+  lineData2
+}: {
   lineData1: ChartData[];
   lineData2: ChartData[];
-  monthlyData: ChartData[];
-  specialtyData: ChartData[];
 }) => {
   return (
-    <>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-8">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Monthly Users</h2>
-            <button className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-2 transition-colors">
-              View Details
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="h-[300px]">
-            {lineData1.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                <div className="text-center">
-                  <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>No monthly user data available</p>
-                </div>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={lineData1}>
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke="#64748b" 
-                    strokeWidth={2} 
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-8">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Monthly Users</h2>
+          <button className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-2 transition-colors">
+            View Details
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Daily Sessions</h2>
-            <button className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-2 transition-colors">
-              View Details
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="h-[300px]">
-            {lineData2.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                <div className="text-center">
-                  <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>No daily session data available</p>
-                </div>
+        <div className="h-[300px]">
+          {lineData1.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              <div className="text-center">
+                <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p>No monthly user data available</p>
               </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={lineData2}>
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke="#475f76" 
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </div>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={lineData1}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#64748b"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-8">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Monthly Growth</h2>
-          </div>
-          <div className="h-[300px]">
-            {monthlyData.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                <div className="text-center">
-                  <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>No monthly growth data available</p>
-                </div>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyData}>
-                  <XAxis dataKey="month" />
-                  <YAxis yAxisId="left" />
-                  <YAxis yAxisId="right" orientation="right" />
-                  <Tooltip />
-                  <Line 
-                    yAxisId="left"
-                    type="monotone" 
-                    dataKey="clients" 
-                    stroke="#8884d8" 
-                    strokeWidth={2}
-                    name="Clients"
-                  />
-                  <Line 
-                    yAxisId="right"
-                    type="monotone" 
-                    dataKey="sessions" 
-                    stroke="#82ca9d" 
-                    strokeWidth={2}
-                    name="Sessions"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </div>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Daily Sessions</h2>
+          <button className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-2 transition-colors">
+            View Details
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Session Types</h2>
-            <Activity className="w-5 h-5 text-gray-400" />
-          </div>
-          <div className="h-[300px]">
-            {specialtyData.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                <div className="text-center">
-                  <Activity className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>No session type data available</p>
-                </div>
+        <div className="h-[300px]">
+          {lineData2.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              <div className="text-center">
+                <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p>No daily session data available</p>
               </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={specialtyData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    label
-                  >
-                    {specialtyData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </div>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={lineData2}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#475f76"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
-    </>
+    </div>
   );
-};
-
-const RecentActivitySection = ({ recentActivities }: { recentActivities: RecentActivity[] }) => {
+};const RecentActivitySection = ({ recentActivities }: { recentActivities: RecentActivity[] }) => {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6">
       <div className="flex items-center justify-between mb-6">
@@ -660,7 +449,7 @@ const TopCounselorsSection = ({ topCounselors }: { topCounselors: TopCounselor[]
                 <p className="text-sm font-semibold text-gray-900">{counselor.sessions} sessions</p>
                 <div className="flex items-center gap-1 justify-end">
                   <Star className="text-yellow-500" size={14} fill="currentColor" />
-                  <span className="text-xs text-gray-600">{counselor.rating}</span>
+                  <span className="text-xs text-gray-600">{counselor.rating.toFixed(1)}</span>
                 </div>
               </div>
             </div>
@@ -696,11 +485,10 @@ export default function Dashboard() {
       scheduledSessions: 0
     },
     userDistributionData: [],
-    sessionStatusData: [],
     monthlyData: [],
+    monthlyRevenueData: [],
     lineData1: [],
     lineData2: [],
-    specialtyData: [],
     topCounselors: [],
     recentActivities: []
   });
@@ -710,114 +498,292 @@ export default function Dashboard() {
       setLoading(true);
       setError(null);
 
-      // Fetch all dashboard data from backend APIs
+      console.log('Starting dashboard data fetch...');
+
+      // Fetch all dashboard data from backend APIs using the correct endpoints
       const [
         metricsResponse,
         loginMetricsResponse,
-        sessionMetricsResponse,
+        sessionBreakdownResponse,
         userDistributionResponse,
-        sessionStatusResponse,
-        monthlyDataResponse,
-        dailyUsersResponse,
+        monthlyUsersResponse,
         dailySessionsResponse,
-        specialtyDataResponse,
+        monthlyGrowthResponse,
+        monthlyRevenueResponse,
         topCounselorsResponse,
         recentActivitiesResponse
       ] = await Promise.allSettled([
         API.get('/admin/dashboard/metrics'),
-        API.get('/admin/dashboard/login-metrics'),
-        API.get('/admin/dashboard/session-metrics'),
+        API.get('/admin/dashboard/login-metrics?period=30d'),
+        API.get('/admin/dashboard/session-breakdown'),
         API.get('/admin/dashboard/user-distribution'),
-        API.get('/admin/dashboard/session-status'),
-        API.get('/admin/dashboard/monthly-data'),
-        API.get('/admin/dashboard/daily-users'),
-        API.get('/admin/dashboard/daily-sessions'),
-        API.get('/admin/dashboard/specialty-data'),
-        API.get('/admin/dashboard/top-counselors'),
-        API.get('/admin/dashboard/recent-activities')
+        API.get('/admin/dashboard/monthly-users?months=5'),
+        API.get('/admin/dashboard/daily-sessions?days=7'),
+        API.get('/admin/dashboard/monthly-growth?months=6'),
+        API.get('/admin/dashboard/monthly-revenue?months=6'),
+        API.get('/admin/dashboard/top-counselors?limit=10&period=30d'),
+        API.get('/admin/dashboard/recent-activities?limit=10')
       ]);
 
-      // Process metrics data
-      const metrics = metricsResponse.status === 'fulfilled' 
-        ? metricsResponse.value.data 
-        : {
-            totalCounselors: 0,
-            totalPsychiatrists: 0,
-            totalSessions: 0,
-            totalRevenue: 'Rs.0'
+      console.log('API Responses Status:', {
+        metrics: metricsResponse.status,
+        loginMetrics: loginMetricsResponse.status,
+        sessionBreakdown: sessionBreakdownResponse.status,
+        userDistribution: userDistributionResponse.status,
+        monthlyUsers: monthlyUsersResponse.status,
+        dailySessions: dailySessionsResponse.status,
+        monthlyGrowth: monthlyGrowthResponse.status,
+        monthlyRevenue: monthlyRevenueResponse.status,
+        topCounselors: topCounselorsResponse.status,
+        recentActivities: recentActivitiesResponse.status
+      });
+
+      // Process monthly revenue data first (needed for total revenue calculation)
+      let monthlyRevenueData: ChartData[] = [];
+      let totalRevenue = 0;
+      if (monthlyRevenueResponse.status === 'fulfilled') {
+        console.log('Monthly revenue data:', monthlyRevenueResponse.value.data);
+        const responseData = monthlyRevenueResponse.value.data;
+        const monthlyRevenueRaw = responseData.data || responseData;
+        if (Array.isArray(monthlyRevenueRaw)) {
+          monthlyRevenueData = monthlyRevenueRaw.map((item: any) => {
+            totalRevenue += item.revenue || 0;
+            return {
+              month: item.month,
+              revenue: item.revenue || 0
+            };
+          });
+        }
+      } else {
+        console.error('Monthly revenue API failed:', monthlyRevenueResponse.reason);
+      }
+
+      // Process metrics data - expecting array format from backend
+      let metrics = {
+        totalCounselors: 0,
+        totalPsychiatrists: 0,
+        totalSessions: 0,
+        totalRevenue: 'Rs.0'
+      };
+
+      if (metricsResponse.status === 'fulfilled') {
+        console.log('Metrics data:', metricsResponse.value.data);
+        const responseData = metricsResponse.value.data;
+        // Handle the case where data might be wrapped in a success object
+        const metricsArray = responseData.data || responseData;
+        console.log('Metrics array:', metricsArray);
+        
+        if (Array.isArray(metricsArray)) {
+          metrics = {
+            totalCounselors: metricsArray.find((m: any) => m.label === 'Total Counselors')?.value || 0,
+            totalPsychiatrists: metricsArray.find((m: any) => m.label === 'Total Psychiatrists')?.value || 0,
+            totalSessions: metricsArray.find((m: any) => m.label === 'Total Sessions')?.value || 0,
+            totalRevenue: totalRevenue > 0 ? `Rs.${totalRevenue.toLocaleString()}` : (metricsArray.find((m: any) => m.label === 'Total Revenue')?.value || 'Rs.0')
           };
+        } else {
+          console.error('Metrics data is not an array:', metricsArray);
+        }
+      } else {
+        console.error('Metrics API failed:', metricsResponse.reason);
+      }
 
       // Process login metrics data
-      const loginMetrics = loginMetricsResponse.status === 'fulfilled'
-        ? loginMetricsResponse.value.data
-        : {
-            counselorLogins: 0,
-            psychiatristLogins: 0,
-            clientLogins: 0,
-            managementLogins: 0
+      let loginMetrics = {
+        counselorLogins: 0,
+        psychiatristLogins: 0,
+        clientLogins: 0,
+        managementLogins: 0
+      };
+
+      if (loginMetricsResponse.status === 'fulfilled') {
+        console.log('Login metrics data:', loginMetricsResponse.value.data);
+        const responseData = loginMetricsResponse.value.data;
+        const rawData = responseData.data || responseData;
+        
+        // Handle both array and object formats
+        if (Array.isArray(rawData)) {
+          // If it's an array, convert it to the expected object structure
+          console.log('Login metrics is array, converting...', rawData);
+          loginMetrics = {
+            counselorLogins: rawData.find(item => item.label === 'Counselor Logins')?.value || 0,
+            psychiatristLogins: rawData.find(item => item.label === 'Psychiatrist Logins')?.value || 0,
+            clientLogins: rawData.find(item => item.label === 'Client Logins')?.value || 0,
+            managementLogins: rawData.find(item => item.label === 'Management Logins')?.value || 0
           };
+        } else {
+          // If it's an object, use it directly
+          loginMetrics = rawData;
+        }
+        console.log('Processed login metrics:', loginMetrics);
+      } else {
+        console.error('Login metrics API failed:', loginMetricsResponse.reason);
+      }
 
-      // Process session metrics data
-      const sessionMetrics = sessionMetricsResponse.status === 'fulfilled'
-        ? sessionMetricsResponse.value.data
-        : {
-            counselorSessions: 0,
-            psychiatristSessions: 0,
-            completedSessions: 0,
-            ongoingSessions: 0,
-            scheduledSessions: 0
+      // Process session breakdown data
+      let sessionMetrics = {
+        counselorSessions: 0,
+        psychiatristSessions: 0,
+        completedSessions: 0,
+        ongoingSessions: 0,
+        scheduledSessions: 0,
+        cancelledSessions: 0,
+        totalSessions: 0
+      };
+
+      if (sessionBreakdownResponse.status === 'fulfilled') {
+        console.log('Session breakdown data:', sessionBreakdownResponse.value.data);
+        const responseData = sessionBreakdownResponse.value.data;
+        const rawData = responseData.data || responseData;
+        
+        // Handle both array and object formats
+        if (Array.isArray(rawData)) {
+          // If it's an array, convert it to the expected object structure
+          console.log('Session breakdown is array, converting...', rawData);
+          sessionMetrics = {
+            counselorSessions: rawData.find(item => item.label === 'Counselor Sessions')?.value || 0,
+            psychiatristSessions: rawData.find(item => item.label === 'Psychiatrist Sessions')?.value || 0,
+            completedSessions: rawData.find(item => item.label === 'Completed Sessions')?.value || 0,
+            ongoingSessions: rawData.find(item => item.label === 'Ongoing Sessions')?.value || 0,
+            scheduledSessions: rawData.find(item => item.label === 'Scheduled Sessions')?.value || 0,
+            cancelledSessions: rawData.find(item => item.label === 'Cancelled Sessions')?.value || 0,
+            totalSessions: rawData.find(item => item.label === 'Total Sessions')?.value || 0
           };
+        } else {
+          // If it's an object, use it directly
+          sessionMetrics = {
+            counselorSessions: rawData.counselorSessions || 0,
+            psychiatristSessions: rawData.psychiatristSessions || 0,
+            completedSessions: rawData.completedSessions || 0,
+            ongoingSessions: rawData.ongoingSessions || 0,
+            scheduledSessions: rawData.scheduledSessions || 0,
+            cancelledSessions: rawData.cancelledSessions || 0,
+            totalSessions: rawData.totalSessions || 0
+          };
+        }
+        console.log('Processed session metrics:', sessionMetrics);
+      } else {
+        console.error('Session breakdown API failed:', sessionBreakdownResponse.reason);
+      }
 
-      // Process chart data
-      const userDistributionData = userDistributionResponse.status === 'fulfilled'
-        ? userDistributionResponse.value.data
-        : [];
+      // Process chart data with error handling
+      let userDistributionData: ChartData[] = [];
+      if (userDistributionResponse.status === 'fulfilled') {
+        console.log('User distribution data:', userDistributionResponse.value.data);
+        const responseData = userDistributionResponse.value.data;
+        userDistributionData = responseData.data || responseData;
+      } else {
+        console.error('User distribution API failed:', userDistributionResponse.reason);
+      }
 
-      const sessionStatusData = sessionStatusResponse.status === 'fulfilled'
-        ? sessionStatusResponse.value.data
-        : [];
+      // Process monthly users data and convert to chart format for line graph
+      let lineData1: ChartData[] = [];
+      if (monthlyUsersResponse.status === 'fulfilled') {
+        console.log('Monthly users data:', monthlyUsersResponse.value.data);
+        const responseData = monthlyUsersResponse.value.data;
+        const monthlyUsersRaw = responseData.data || responseData;
+        if (Array.isArray(monthlyUsersRaw)) {
+          lineData1 = monthlyUsersRaw.map((item: any) => ({
+            name: item.month,
+            value: item.total
+          }));
+        }
+      } else {
+        console.error('Monthly users API failed:', monthlyUsersResponse.reason);
+      }
 
-      const monthlyData = monthlyDataResponse.status === 'fulfilled'
-        ? monthlyDataResponse.value.data
-        : [];
+      // Process daily sessions data and convert to chart format - ensure at least 7 days
+      let lineData2: ChartData[] = [];
+      if (dailySessionsResponse.status === 'fulfilled') {
+        console.log('Daily sessions data:', dailySessionsResponse.value.data);
+        const responseData = dailySessionsResponse.value.data;
+        const dailySessionsRaw = responseData.data || responseData;
+        
+        // Create a map of existing data by date
+        const dataMap = new Map<string, number>();
+        if (Array.isArray(dailySessionsRaw)) {
+          dailySessionsRaw.forEach((item: any) => {
+            const dateKey = new Date(item.date).toISOString().split('T')[0]; // YYYY-MM-DD format
+            dataMap.set(dateKey, item.total || 0);
+          });
+        }
+        
+        // Generate last 7 days including today
+        const today = new Date();
+        lineData2 = [];
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date(today);
+          date.setDate(today.getDate() - i);
+          const dateKey = date.toISOString().split('T')[0];
+          const value = dataMap.get(dateKey) || 0;
+          
+          lineData2.push({
+            name: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            value: value
+          });
+        }
+      } else {
+        console.error('Daily sessions API failed:', dailySessionsResponse.reason);
+      }
 
-      const lineData1 = dailyUsersResponse.status === 'fulfilled'
-        ? dailyUsersResponse.value.data
-        : [];
+      // Process monthly growth data
+      let monthlyData: ChartData[] = [];
+      if (monthlyGrowthResponse.status === 'fulfilled') {
+        console.log('Monthly growth data:', monthlyGrowthResponse.value.data);
+        const responseData = monthlyGrowthResponse.value.data;
+        const monthlyGrowthRaw = responseData.data || responseData;
+        if (Array.isArray(monthlyGrowthRaw)) {
+          monthlyData = monthlyGrowthRaw.map((item: any) => ({
+            month: item.month,
+            clients: item.users,
+            sessions: item.sessions,
+            revenue: item.revenue
+          }));
+        }
+      } else {
+        console.error('Monthly growth API failed:', monthlyGrowthResponse.reason);
+      }
 
-      const lineData2 = dailySessionsResponse.status === 'fulfilled'
-        ? dailySessionsResponse.value.data
-        : [];
+      let topCounselors: TopCounselor[] = [];
+      if (topCounselorsResponse.status === 'fulfilled') {
+        console.log('Top counselors data:', topCounselorsResponse.value.data);
+        const responseData = topCounselorsResponse.value.data;
+        topCounselors = responseData.data || responseData;
+      } else {
+        console.error('Top counselors API failed:', topCounselorsResponse.reason);
+      }
 
-      const specialtyData = specialtyDataResponse.status === 'fulfilled'
-        ? specialtyDataResponse.value.data
-        : [];
-
-      const topCounselors = topCounselorsResponse.status === 'fulfilled'
-        ? topCounselorsResponse.value.data
-        : [];
-
-      const recentActivities = recentActivitiesResponse.status === 'fulfilled'
-        ? recentActivitiesResponse.value.data.map((activity: any) => ({
+      let recentActivities: RecentActivity[] = [];
+      if (recentActivitiesResponse.status === 'fulfilled') {
+        console.log('Recent activities data:', recentActivitiesResponse.value.data);
+        const responseData = recentActivitiesResponse.value.data;
+        const activitiesRaw = responseData.data || responseData;
+        if (Array.isArray(activitiesRaw)) {
+          recentActivities = activitiesRaw.map((activity: any) => ({
             ...activity,
             icon: getActivityIcon(activity.type),
             color: getActivityColor(activity.type)
-          }))
-        : [];
+          }));
+        }
+      } else {
+        console.error('Recent activities API failed:', recentActivitiesResponse.reason);
+      }
 
-      setDashboardData({
+      const finalDashboardData = {
         metrics,
         loginMetrics,
         sessionMetrics,
         userDistributionData,
-        sessionStatusData,
         monthlyData,
+        monthlyRevenueData,
         lineData1,
         lineData2,
-        specialtyData,
         topCounselors,
         recentActivities
-      });
+      };
+
+      console.log('Final dashboard data:', finalDashboardData);
+      
+      setDashboardData(finalDashboardData);
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -925,31 +891,35 @@ export default function Dashboard() {
     );
   }
 
-  const metrics = [
-    { 
-      label: 'Total Counselors', 
+  const metrics: MetricCard[] = [
+    {
+      label: 'Total Counselors',
       value: dashboardData.metrics.totalCounselors,
       icon: Users,
       color: "bg-blue-100",
       textcolor: "text-blue-600"
     },
-    { 
-      label: 'Total Psychiatrists', 
+    {
+      label: 'Total Psychiatrists',
       value: dashboardData.metrics.totalPsychiatrists,
       icon: Stethoscope,
       color: "bg-purple-100",
       textcolor: "text-purple-600"
     },
-    { 
-      label: 'Total Sessions', 
+    {
+      label: 'Total Sessions',
       value: dashboardData.metrics.totalSessions,
       icon: MessageCircle,
       color: "bg-green-100",
       textcolor: "text-green-600"
     },
-    { 
-      label: 'Total Revenue', 
+    {
+      label: 'Total Revenue',
       value: dashboardData.metrics.totalRevenue,
+      secondaryValue: dashboardData.monthlyRevenueData.length > 0
+        ? `Rs.${Math.round(dashboardData.monthlyRevenueData.reduce((sum, item) => sum + (item.revenue || 0), 0) / dashboardData.monthlyRevenueData.length).toLocaleString()}`
+        : 'Rs.0',
+      secondaryLabel: 'Average Monthly',
       icon: HandCoins,
       color: "bg-yellow-100",
       textcolor: "text-yellow-600"
@@ -1007,6 +977,12 @@ export default function Dashboard() {
                       <div className="min-w-0 flex-1">
                         <p className="text-xl lg:text-2xl font-bold text-gray-900">{metric.value}</p>
                         <p className="text-gray-600 text-xs lg:text-sm leading-tight">{metric.label}</p>
+                        {metric.secondaryValue && (
+                          <div className="mt-1">
+                            <p className="text-sm font-semibold text-gray-800">{metric.secondaryValue}</p>
+                            <p className="text-gray-500 text-xs">{metric.secondaryLabel}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1021,17 +997,55 @@ export default function Dashboard() {
             <SessionBreakdownSection sessionMetrics={dashboardData.sessionMetrics} />
 
             {/* Analytics Charts */}
-            <AnalyticsSection 
+            <AnalyticsSection
               lineData1={dashboardData.lineData1}
               lineData2={dashboardData.lineData2}
-              monthlyData={dashboardData.monthlyData}
-              specialtyData={dashboardData.specialtyData}
             />
 
-            {/* User and Session Data */}
+            {/* Monthly Growth and Revenue Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-8">
-              <UserDistributionSection userDistributionData={dashboardData.userDistributionData} />
-              <SessionStatusSection sessionStatusData={dashboardData.sessionStatusData} />
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Monthly Growth</h2>
+                </div>
+                <div className="h-[300px]">
+                  {dashboardData.monthlyData.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                      <div className="text-center">
+                        <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                        <p>No monthly growth data available</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={dashboardData.monthlyData}>
+                        <XAxis dataKey="month" />
+                        <YAxis yAxisId="left" />
+                        <YAxis yAxisId="right" orientation="right" />
+                        <Tooltip />
+                        <Line
+                          yAxisId="left"
+                          type="monotone"
+                          dataKey="clients"
+                          stroke="#8884d8"
+                          strokeWidth={2}
+                          name="Clients"
+                        />
+                        <Line
+                          yAxisId="right"
+                          type="monotone"
+                          dataKey="sessions"
+                          stroke="#82ca9d"
+                          strokeWidth={2}
+                          name="Sessions"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+              </div>
+
+              <MonthlyRevenueSection monthlyRevenueData={dashboardData.monthlyRevenueData} />
             </div>
 
             {/* Bottom Row */}

@@ -911,13 +911,13 @@ HR Management Team`);
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Join Date</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Join Date (Read Only)</label>
                             <input
                               type="date"
                               value={editingMember.joinDate}
                               onChange={(e) => setEditingMember(prev => prev ? {...prev, joinDate: e.target.value} : null)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            />
+                            readOnly/>
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Salary</label>
