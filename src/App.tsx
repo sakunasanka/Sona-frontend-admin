@@ -31,7 +31,7 @@ function App() {
       <Routes>
         <Route path="/" element={<RootRedirect />} />
         <Route path="/example-use" element={<ExampleUse />} />
-        <Route path="/signup" element={<SignUp />} />
+        {/* <Route path="/signup" element={<SignUp />} /> */}
         <Route path="/signin" element={<SignIn />} />
         <Route path="/admin-dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/management-team-dashboard" element={<ProtectedRoute><MTDashboard /></ProtectedRoute>} />
