@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Menu, Bell } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import NotificationDropdown from '../ui/NotificationDropdown';
 import { useNotifications } from '../../hooks/useNotifications';
+import API from '../../api/api';
 
 const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
   const navigate = useNavigate();
   const handleProfile = () => navigate("/admin-profile");
 
   const [showDropdown, setShowDropdown] = useState(false);
+  const [profilePicture, setProfilePicture] = useState<string>('https://images.icon-icons.com/1378/PNG/512/avatardefault_92824.png');
 
   const {
     notifications,
@@ -18,6 +20,22 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
     deleteNotification,
     clearAllNotifications,
   } = useNotifications();
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await API.get('/admin-profile/profile');
+        if (response.data && response.data.success && response.data.data && response.data.data.profilePicture) {
+          setProfilePicture(response.data.data.profilePicture);
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        // Keep default avatar on error
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const handleMarkAsRead = async (notificationId: number) => {
     try {
@@ -95,9 +113,13 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
             onClick={() => handleProfile()}
           >
             <img
-              src="/assets/images/profiles/th.jpg"
+              src={profilePicture}
               alt="Profile"
               className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = 'https://images.icon-icons.com/1378/PNG/512/avatardefault_92824.png';
+              }}
             />
           </button>
         </div>
