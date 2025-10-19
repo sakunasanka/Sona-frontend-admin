@@ -17,12 +17,15 @@ import {
   Clock, 
   BookOpen, 
   CreditCard, 
-  DollarSign, 
+  HandCoins,
   FileText,
   ChevronDown,
   ChevronUp,
   ArrowRight,
-  RefreshCw
+  RefreshCw,
+  Download,
+  ExternalLink,
+  RotateCcw // Added for revoke icon
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import API from '../../api/api';
@@ -32,10 +35,14 @@ interface StudentPackage {
   status?: 'pending' | 'approved' | 'rejected';
   appliedDate?: string;
   school?: string;
-  studentId?: string;
+  uniEmail?: string;
   graduationYear?: string;
   verificationDocument?: string;
+  studentIDCopy?: string;
   rejectionReason?: string;
+  rejectedByName?: string;
+  rejectedBy?: number;
+  rejectedByRole?: string;
   clientID?: number;
 }
 
@@ -91,10 +98,14 @@ const validateClient = (client: any): Client | null => {
       status: client.studentPackage?.status,
       appliedDate: client.studentPackage?.appliedDate,
       school: client.studentPackage?.school,
-      studentId: client.studentPackage?.studentId,
+      uniEmail: client.studentPackage?.uniEmail,
       graduationYear: client.studentPackage?.graduationYear,
       verificationDocument: client.studentPackage?.verificationDocument,
+      studentIDCopy: client.studentPackage?.studentIDCopy,
       rejectionReason: client.studentPackage?.rejectionReason,
+      rejectedByName: client.studentPackage?.rejectedByName,
+      rejectedBy: client.studentPackage?.rejectedBy,
+      rejectedByRole: client.studentPackage?.rejectedByRole,
       clientID: client.studentPackage?.clientID
     },
     clientType: client.clientType || 'regular',
@@ -124,7 +135,7 @@ const Client: React.FC = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
-  const [actionType, setActionType] = useState<'approve' | 'reject'>('approve');
+  const [actionType, setActionType] = useState<'approve' | 'reject' | 'revoke'>('approve'); // Added 'revoke'
   const [rejectionReason, setRejectionReason] = useState('');
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
@@ -235,6 +246,46 @@ const Client: React.FC = () => {
     }
   };
 
+  // Function to handle downloading the student ID copy
+  const handleDownloadStudentID = (studentIDCopyUrl: string, clientName: string) => {
+    if (!studentIDCopyUrl) {
+      showNotification('error', 'No student ID copy available for download');
+      return;
+    }
+
+    try {
+      // Create a temporary anchor element to trigger download
+      const link = document.createElement('a');
+      link.href = studentIDCopyUrl;
+      
+      // Extract filename from URL or use client name
+      const fileName = studentIDCopyUrl.split('/').pop() || `student_id_${clientName.replace(/\s+/g, '_')}`;
+      link.download = fileName;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      showNotification('success', 'Student ID copy downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      showNotification('error', 'Failed to download student ID copy');
+    }
+  };
+
+  // Function to check if file is an image based on extension
+  const isImageFile = (url: string) => {
+    if (!url) return false;
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
+    return imageExtensions.some(ext => url.toLowerCase().includes(ext));
+  };
+
+  // Function to check if file is a PDF based on extension
+  const isPdfFile = (url: string) => {
+    if (!url) return false;
+    return url.toLowerCase().includes('.pdf');
+  };
+
   const getInitials = (name: string) => {
     if (!name) return '?';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -318,7 +369,7 @@ const Client: React.FC = () => {
     setShowProfileModal(true);
   };
 
-  const handleAction = (type: 'approve' | 'reject') => {
+  const handleAction = (type: 'approve' | 'reject' | 'revoke') => {
     setActionType(type);
     setRejectionReason('');
     setShowActionModal(true);
@@ -343,13 +394,21 @@ const Client: React.FC = () => {
     try {
       if (actionType === 'approve') {
         await API.post(`/adminclients/${selectedClient.id}/student-package/approve`);
-      } else {
+      } else if (actionType === 'reject') {
         await API.post(`/adminclients/${selectedClient.id}/student-package/reject`, {
           rejectionReason
         });
+      } else if (actionType === 'revoke') {
+        await API.post(`/adminclients/${selectedClient.id}/student-package/revoke`);
       }
       
-      showNotification('success', `Student package application ${actionType}d successfully!`);
+      const actionMessages = {
+        approve: 'approved',
+        reject: 'rejected',
+        revoke: 'revoked'
+      };
+      
+      showNotification('success', `Student package application ${actionMessages[actionType]} successfully!`);
       
       // Refresh data
       await fetchClients();
@@ -473,13 +532,6 @@ const Client: React.FC = () => {
             {/* Stats Cards */}
             <div className="flex flex-wrap gap-4 mb-4">
               {/* Total Clients */}
-              {/* <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex items-center justify-between w-[23%] h-[80px]">
-                <div className="flex items-center gap-2">
-                  <User className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm font-medium text-gray-900">Total: {stats.totalClients}</span>
-                </div>
-              </div> */}
-
               <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 justify-between w-[23%] h-[80px] flex items-center">
                 <div className="flex items-center gap-3 w-full">
                   <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -493,14 +545,7 @@ const Client: React.FC = () => {
               </div>
 
               {/* Student Clients */}
-              {/* <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex items-center justify-between w-[23%] h-[80px]">
-                <div className="flex items-center gap-2">
-                  <GraduationCap className="w-5 h-5 text-purple-600" />
-                  <span className="text-sm font-medium text-gray-900">Students: {stats.studentClients}</span>
-                </div>
-              </div> */}
-            
-            <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 justify-between w-[23%] h-[80px] flex items-center">
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 justify-between w-[23%] h-[80px] flex items-center">
                  <div className="flex items-center gap-3 w-full">
                    <div className="w-10 h-10 lg:w-12 lg:h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
                      <GraduationCap className="w-5 h-5 lg:w-6 lg:h-6  text-purple-600" />
@@ -513,14 +558,7 @@ const Client: React.FC = () => {
               </div> 
 
               {/* Regular Clients */}
-              {/* <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex items-center justify-between w-[23%] h-[80px]">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-indigo-600" />
-                  <span className="text-sm font-medium text-gray-900">Regular: {stats.regularClients}</span>
-                </div>
-              </div> */}
-
-               <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 justify-between w-[23%] h-[80px] flex items-center">
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 justify-between w-[23%] h-[80px] flex items-center">
                  <div className="flex items-center gap-3 w-full">
                    <div className="w-10 h-10 lg:w-12 lg:h-12 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
                      <CreditCard className="w-5 h-5 lg:w-6 lg:h-6 text-indigo-600" />
@@ -569,7 +607,6 @@ const Client: React.FC = () => {
                 {/* Regular Clients Filter */}
                 {activeTab === 'regular' && (
                   <div>
-                     
                     <select
                       value={selectedFilter}
                       onChange={(e) => setSelectedFilter(e.target.value as any)}
@@ -761,6 +798,81 @@ const Client: React.FC = () => {
                               {selectedClient.clientType?.charAt(0)?.toUpperCase() + selectedClient.clientType?.slice(1) || 'Unknown'}
                             </span>
                           </div>
+                          
+                          {/* Student ID Copy Section */}
+                              {selectedClient.studentPackage.studentIDCopy && (
+                                <div className="border-t pt-3 mt-3">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                      <FileText className="w-4 h-4 text-gray-400" />
+                                      <span className="text-sm font-medium text-gray-700">Student ID </span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      {/* View Button */}
+                                      <a
+                                        href={selectedClient.studentPackage.studentIDCopy}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                                      >
+                                        <ExternalLink className="w-3 h-3" />
+                                        <span>View</span>
+                                      </a>
+                                      {/* Download Button */}
+                                      <button
+                                        onClick={() => handleDownloadStudentID(
+                                          selectedClient.studentPackage.studentIDCopy!,
+                                          selectedClient.name
+                                        )}
+                                        className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                                      >
+                                        <Download className="w-3 h-3" />
+                                        <span>Download</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Preview for images */}
+                                  {isImageFile(selectedClient.studentPackage.studentIDCopy) && (
+                                    <div className="mt-2">
+                                      <p className="text-xs text-gray-500 mb-2">Preview:</p>
+                                      <div className="border rounded-lg p-2 bg-white max-w-xs">
+                                        <img 
+                                          src={selectedClient.studentPackage.studentIDCopy} 
+                                          alt="Student ID Copy"
+                                          className="max-w-full h-auto rounded"
+                                          onError={(e) => {
+                                            // If image fails to load, show file link instead
+                                            const target = e.target as HTMLImageElement;
+                                            target.style.display = 'none';
+                                            const parent = target.parentElement;
+                                            if (parent) {
+                                              parent.innerHTML = `
+                                                <div class="text-center p-4">
+                                                  <FileText class="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                                                  <p class="text-sm text-gray-600">Image preview not available</p>
+                                                  <a href="${selectedClient.studentPackage.studentIDCopy}" 
+                                                     target="_blank" 
+                                                     class="text-blue-600 hover:text-blue-800 text-sm">
+                                                    View file directly
+                                                  </a>
+                                                </div>
+                                              `;
+                                            }
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Info for PDFs */}
+                                  {isPdfFile(selectedClient.studentPackage.studentIDCopy) && (
+                                    <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+                                      <span>PDF document - Click "View" to open in new tab or "Download" to save</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                         </div>
                       </div>
 
@@ -772,13 +884,6 @@ const Client: React.FC = () => {
                             <div>
                               <p className="text-sm text-gray-500">Email</p>
                               <p className="font-medium">{selectedClient.email}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <MapPin className="w-5 h-5 text-gray-400" />
-                            <div>
-                              <p className="text-sm text-gray-500">Location</p>
-                              <p className="font-medium">{selectedClient.location || 'Unknown'}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
@@ -796,10 +901,10 @@ const Client: React.FC = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
-                            <DollarSign className="w-5 h-5 text-gray-400" />
+                            <HandCoins className="w-5 h-5 text-gray-400" />
                             <div>
                               <p className="text-sm text-gray-500">Total Spent</p>
-                              <p className="font-medium">${selectedClient.totalSpent}</p>
+                              <p className="font-medium">LKR  {selectedClient.totalSpent}</p>
                             </div>
                           </div>
                         </div>
@@ -827,12 +932,8 @@ const Client: React.FC = () => {
                                   <p className="font-medium">{selectedClient.studentPackage.school || ''}</p>
                                 </div>
                                 <div>
-                                  <span className="text-gray-500">Student ID:</span>
-                                  <p className="font-medium">{selectedClient.studentPackage.studentId || ''}</p>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500">Graduation Year:</span>
-                                  <p className="font-medium">{selectedClient.studentPackage.graduationYear || ''}</p>
+                                  <span className="text-gray-500">Student Email:</span>
+                                  <p className="font-medium">{selectedClient.studentPackage.uniEmail || ''}</p>
                                 </div>
                                 <div>
                                   <span className="text-gray-500">Applied Date:</span>
@@ -840,22 +941,21 @@ const Client: React.FC = () => {
                                 </div>
                               </div>
                               
-                              {selectedClient.studentPackage.verificationDocument && (
-                                <div className="flex items-center gap-2 text-sm">
-                                  <FileText className="w-4 h-4 text-gray-400" />
-                                  <span className="text-gray-500">Verification Document:</span>
-                                  <span className="font-medium text-blue-600">{selectedClient.studentPackage.verificationDocument}</span>
-                                </div>
-                              )}
-
                               {selectedClient.studentPackage.status === 'rejected' && selectedClient.studentPackage.rejectionReason && (
                                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                                   <div className="flex items-start gap-2">
                                     <AlertCircle className="w-4 h-4 text-red-500 mt-0.5" />
                                     <div>
+                                      <p className="text-sm font-medium text-red-800">Rejected By:</p>
+                                      <p className="text-sm text-red-700">Name:  {selectedClient.studentPackage.rejectedByName}</p>
+                                      <p className="text-sm text-red-700">Role:  {selectedClient.studentPackage.rejectedByRole}</p>
+                                      <p className="text-sm text-red-700"> UserID:  {selectedClient.studentPackage.rejectedBy}</p>                   
+                                    </div>
+                                    <AlertCircle className="w-4 h-4 text-red-500 mt-0.5" />
+                                    <div>
                                       <p className="text-sm font-medium text-red-800">Rejection Reason:</p>
                                       <p className="text-sm text-red-700">{selectedClient.studentPackage.rejectionReason}</p>
-                                    </div>
+                                    </div>  
                                   </div>
                                 </div>
                               )}
@@ -877,11 +977,6 @@ const Client: React.FC = () => {
                             </div>
                           </div>
                         )}
-
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Bio</h4>
-                          <p className="text-gray-600">{selectedClient.bio || 'No bio available'}</p>
-                        </div>
                       </div>
                     </div>
 
@@ -905,6 +1000,17 @@ const Client: React.FC = () => {
                           </button>
                         </>
                       )}
+                      {/* Revoke button for approved or rejected applications */}
+                      {selectedClient.studentPackage.applied && 
+                       (selectedClient.studentPackage.status === 'approved' || selectedClient.studentPackage.status === 'rejected') && (
+                        <button
+                          onClick={() => handleAction('revoke')}
+                          className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                          <span>Revoke Status</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -917,7 +1023,9 @@ const Client: React.FC = () => {
                 <div className="bg-white rounded-2xl max-w-md w-full">
                   <div className="p-6 border-b border-gray-200">
                     <h2 className="text-xl font-bold text-gray-900">
-                      {actionType === 'approve' ? 'Approve Student Package' : 'Reject Student Package'}
+                      {actionType === 'approve' ? 'Approve Student Package' : 
+                       actionType === 'reject' ? 'Reject Student Package' : 
+                       'Revoke Student Package Status'}
                     </h2>
                   </div>
 
@@ -940,7 +1048,9 @@ const Client: React.FC = () => {
                     <p className="text-gray-600 mb-4">
                       {actionType === 'approve' 
                         ? `Are you sure you want to approve ${selectedClient.name}'s student package application?`
-                        : `Are you sure you want to reject ${selectedClient.name}'s student package application?`
+                        : actionType === 'reject'
+                        ? `Are you sure you want to reject ${selectedClient.name}'s student package application?`
+                        : `Are you sure you want to revoke ${selectedClient.name}'s student package status and reset it to pending?`
                       }
                     </p>
 
@@ -956,7 +1066,9 @@ const Client: React.FC = () => {
                         className={`px-4 py-2 text-white rounded-lg flex items-center gap-2 transition-colors ${
                           actionType === 'approve' 
                             ? 'bg-green-600 hover:bg-green-700' 
-                            : 'bg-red-600 hover:bg-red-700'
+                            : actionType === 'reject'
+                            ? 'bg-red-600 hover:bg-red-700'
+                            : 'bg-orange-600 hover:bg-orange-700'
                         }`}
                       >
                         {actionType === 'approve' ? (
@@ -964,10 +1076,15 @@ const Client: React.FC = () => {
                             <Check className="w-4 h-4" />
                             <span>Approve</span>
                           </>
-                        ) : (
+                        ) : actionType === 'reject' ? (
                           <>
                             <X className="w-4 h-4" />
                             <span>Reject</span>
+                          </>
+                        ) : (
+                          <>
+                            <RotateCcw className="w-4 h-4" />
+                            <span>Revoke</span>
                           </>
                         )}
                       </button>
@@ -989,7 +1106,9 @@ const Client: React.FC = () => {
                     <p className="text-gray-600 mb-4">
                       {actionType === 'approve'
                         ? `You are about to approve ${selectedClient?.name}'s student package application. This action cannot be undone.`
-                        : `You are about to reject ${selectedClient?.name}'s student package application. This action cannot be undone.`
+                        : actionType === 'reject'
+                        ? `You are about to reject ${selectedClient?.name}'s student package application. This action cannot be undone.`
+                        : `You are about to revoke ${selectedClient?.name}'s student package status and reset it to pending. This action cannot be undone.`
                       }
                     </p>
 
@@ -1006,7 +1125,9 @@ const Client: React.FC = () => {
                         className={`px-4 py-2 text-white rounded-lg flex items-center gap-2 transition-colors ${
                           actionType === 'approve' 
                             ? 'bg-green-600 hover:bg-green-700' 
-                            : 'bg-red-600 hover:bg-red-700'
+                            : actionType === 'reject'
+                            ? 'bg-red-600 hover:bg-red-700'
+                            : 'bg-orange-600 hover:bg-orange-700'
                         } ${actionLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         {actionLoading ? (
