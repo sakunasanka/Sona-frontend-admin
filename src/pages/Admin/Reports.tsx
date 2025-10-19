@@ -457,7 +457,7 @@ const SessionAnalyticsReport = ({ data: _data, onBack }: { data: Report; onBack:
               </div>
             </div>
 
-            {/* Summary Cards */}
+            {/* Summary Cards
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
               <div className="bg-white p-4 rounded-lg border border-gray-200">
                 <div className="flex items-center justify-between">
@@ -488,7 +488,7 @@ const SessionAnalyticsReport = ({ data: _data, onBack }: { data: Report; onBack:
                   <XCircle className="w-8 h-8 text-red-600" />
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Session Distribution */}
             <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
@@ -1657,7 +1657,9 @@ const FinancialReport = ({ data: _data, onBack }: { data: Report; onBack: () => 
                     <p className="text-2xl font-bold text-gray-900">{formatCurrency(financialData!.summary.platformFees)}</p>
                     <p className="text-xs text-gray-500 mt-1">Fees collected by platform</p>
                   </div>
-                  <DollarSign className="w-8 h-8 text-green-600" />
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span className="text-green-600 font-bold text-sm">LKR</span>
+                  </div>
                 </div>
               </div>
 

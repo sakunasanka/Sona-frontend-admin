@@ -272,35 +272,87 @@ const SessionBreakdownSection = ({ sessionMetrics }: { sessionMetrics: SessionMe
   ];
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Session Breakdown</h2>
-          <p className="text-sm text-gray-600">Detailed session statistics by type and status</p>
-        </div>
-        <Activity className="w-5 h-5 text-gray-400" />
+  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-8">
+    <div className="flex items-center justify-between mb-6">
+      <div>
+        <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Session Breakdown</h2>
+        <p className="text-sm text-gray-600">Detailed session statistics by type and status</p>
       </div>
-      
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {sessionMetricsArray.map((metric, index) => {
-          const IconComponent = metric.icon;
-          return (
-            <div key={index} className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 ${metric.color} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                  <IconComponent className={`w-5 h-5 ${metric.textcolor}`} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-lg font-bold text-gray-900">{metric.value}</p>
-                  <p className="text-gray-600 text-xs leading-tight">{metric.label}</p>
-                </div>
+      <Activity className="w-5 h-5 text-gray-400" />
+    </div>
+
+    {/* ✅ First Row (3 cards) */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+      {sessionMetricsArray.slice(0, 3).map((metric, index) => {
+        const IconComponent = metric.icon;
+        return (
+          <div key={index} className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 ${metric.color} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                <IconComponent className={`w-5 h-5 ${metric.textcolor}`} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-bold text-gray-900">{metric.value}</p>
+                <p className="text-gray-600 text-xs leading-tight">{metric.label}</p>
               </div>
             </div>
-          );
-        })}
-      </div>
+          </div>
+        );
+      })}
     </div>
-  );
+
+    {/* ✅ Second Row (remaining cards) */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {sessionMetricsArray.slice(3).map((metric, index) => {
+        const IconComponent = metric.icon;
+        return (
+          <div key={index} className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 ${metric.color} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                <IconComponent className={`w-5 h-5 ${metric.textcolor}`} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-bold text-gray-900">{metric.value}</p>
+                <p className="text-gray-600 text-xs leading-tight">{metric.label}</p>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+);
+
+  // return (
+  //   <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-8">
+  //     <div className="flex items-center justify-between mb-6">
+  //       <div>
+  //         <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Session Breakdown</h2>
+  //         <p className="text-sm text-gray-600">Detailed session statistics by type and status</p>
+  //       </div>
+  //       <Activity className="w-5 h-5 text-gray-400" />
+  //     </div>
+      
+  //     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+  //       {sessionMetricsArray.map((metric, index) => {
+  //         const IconComponent = metric.icon;
+  //         return (
+  //           <div key={index} className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
+  //             <div className="flex items-center gap-3">
+  //               <div className={`w-10 h-10 ${metric.color} rounded-lg flex items-center justify-center flex-shrink-0`}>
+  //                 <IconComponent className={`w-5 h-5 ${metric.textcolor}`} />
+  //               </div>
+  //               <div className="min-w-0 flex-1">
+  //                 <p className="text-lg font-bold text-gray-900">{metric.value}</p>
+  //                 <p className="text-gray-600 text-xs leading-tight">{metric.label}</p>
+  //               </div>
+  //             </div>
+  //           </div>
+  //         );
+  //       })}
+  //     </div>
+  //   </div>
+  // );
 };
 
 const AnalyticsSection = ({

@@ -278,6 +278,8 @@ const FeedbackManagement: React.FC = () => {
   const [resolutionReason, setResolutionReason] = useState<{ [key: string]: string }>({});
   const [selectedProof, setSelectedProof] = useState<{ url: string; name: string; type: 'pdf' | 'image' } | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<{ [key: string]: boolean }>({});
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [confirmationAction, setConfirmationAction] = useState<{ type: 'resolved' | 'rejected'; itemId: string } | null>(null);
 
   // Fetch feedbacks from API
   const fetchFeedbacks = async (page: number = 1) => {
@@ -374,6 +376,19 @@ const FeedbackManagement: React.FC = () => {
 
   const handleResolutionReasonChange = (id: string, reason: string) => {
     setResolutionReason(prev => ({ ...prev, [id]: reason }));
+  };
+
+  const handleConfirmAction = async () => {
+    if (!confirmationAction) return;
+    
+    await handleStatusChange(confirmationAction.itemId, confirmationAction.type);
+    setShowConfirmation(false);
+    setConfirmationAction(null);
+  };
+
+  const handleCancelConfirmation = () => {
+    setShowConfirmation(false);
+    setConfirmationAction(null);
   };
 
   const handleSort = (field: SortField, type: 'session' | 'complaint') => {
@@ -614,6 +629,54 @@ const FeedbackManagement: React.FC = () => {
                   className="w-full h-auto rounded-lg max-h-96 object-contain"
                 />
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {showConfirmation && confirmationAction && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                  confirmationAction.type === 'resolved' ? 'bg-green-100' : 'bg-red-100'
+                }`}>
+                  {confirmationAction.type === 'resolved' ? (
+                    <CheckCircle className="w-6 h-6 text-green-600" />
+                  ) : (
+                    <AlertTriangle className="w-6 h-6 text-red-600" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Confirm {confirmationAction.type === 'resolved' ? 'Resolution' : 'Rejection'}
+                  </h3>
+                  <p className="text-gray-600">
+                    Are you sure you want to mark this complaint as {confirmationAction.type}?
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCancelConfirmation}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  No
+                </button>
+                <button
+                  onClick={handleConfirmAction}
+                  className={`flex-1 px-4 py-2 rounded-lg text-white transition-colors ${
+                    confirmationAction.type === 'resolved'
+                      ? 'bg-green-600 hover:bg-green-700'
+                      : 'bg-red-600 hover:bg-red-700'
+                  }`}
+                >
+                  Yes
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1041,7 +1104,8 @@ const FeedbackManagement: React.FC = () => {
                                     <button
                                       onClick={() => {
                                         if (resolutionReason[item.id] && !updatingStatus[item.id]) {
-                                          handleStatusChange(item.id, 'resolved');
+                                          setConfirmationAction({ type: 'resolved', itemId: item.id });
+                                          setShowConfirmation(true);
                                         }
                                       }}
                                       disabled={!resolutionReason[item.id] || updatingStatus[item.id]}
@@ -1057,7 +1121,8 @@ const FeedbackManagement: React.FC = () => {
                                     <button
                                       onClick={() => {
                                         if (resolutionReason[item.id] && !updatingStatus[item.id]) {
-                                          handleStatusChange(item.id, 'rejected');
+                                          setConfirmationAction({ type: 'rejected', itemId: item.id });
+                                          setShowConfirmation(true);
                                         }
                                       }}
                                       disabled={!resolutionReason[item.id] || updatingStatus[item.id]}
