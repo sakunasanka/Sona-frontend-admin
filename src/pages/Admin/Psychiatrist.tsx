@@ -79,7 +79,13 @@ interface Psychiatrist {
   sessionFee?: number;
   eduQualifications?: EducationQualification[];
   experiences?: Experience[];
+  // Rejection information
+  rejectionReason?: string;
+  rejectedBy?: number;
+  rejectedByName?: string;
+  rejectedByRole?: string;
 }
+
 
 const Psychiatrist: React.FC = () => {
   const [psychiatrists, setPsychiatrists] = useState<Psychiatrist[]>([]);
@@ -668,6 +674,26 @@ const Psychiatrist: React.FC = () => {
                                 {(selectedPsychiatrist.status || 'pending').charAt(0).toUpperCase() + (selectedPsychiatrist.status || 'pending').slice(1)}
                               </span>
                             </div>
+                            {/* Rejection Information Display */}
+                            {selectedPsychiatrist.status === 'rejected' && selectedPsychiatrist.rejectionReason && (
+                              <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div className="flex items-start gap-3">
+                                  <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                                  <div className="flex-1">
+                                    <h4 className="text-sm font-semibold text-red-800 mb-2">Rejection Details</h4>
+                                    <p className="text-sm text-red-700 mb-2">{selectedPsychiatrist.rejectionReason}</p>
+                                    {selectedPsychiatrist.rejectedByName && (
+                                      <p className="text-xs text-red-600">
+                                        Rejected by: {selectedPsychiatrist.rejectedByName}
+                                        {selectedPsychiatrist.rejectedByRole && ` (${selectedPsychiatrist.rejectedByRole})`}
+                                        {selectedPsychiatrist.rejectedBy && ` (${selectedPsychiatrist.rejectedBy})`}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
                           </div>
                         </div>
 
