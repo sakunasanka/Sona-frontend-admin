@@ -17,7 +17,7 @@ import {
   Clock, 
   BookOpen, 
   CreditCard, 
-  DollarSign, 
+  HandCoins,
   FileText,
   ChevronDown,
   ChevronUp,
@@ -34,7 +34,7 @@ interface StudentPackage {
   status?: 'pending' | 'approved' | 'rejected';
   appliedDate?: string;
   school?: string;
-  studentId?: string;
+  uniEmail?: string;
   graduationYear?: string;
   verificationDocument?: string;
   studentIDCopy?: string; // Added this field
@@ -94,7 +94,7 @@ const validateClient = (client: any): Client | null => {
       status: client.studentPackage?.status,
       appliedDate: client.studentPackage?.appliedDate,
       school: client.studentPackage?.school,
-      studentId: client.studentPackage?.studentId,
+      uniEmail: client.studentPackage?.uniEmail,
       graduationYear: client.studentPackage?.graduationYear,
       verificationDocument: client.studentPackage?.verificationDocument,
       studentIDCopy: client.studentPackage?.studentIDCopy, // Added this line
@@ -872,13 +872,13 @@ const Client: React.FC = () => {
                               <p className="font-medium">{selectedClient.email}</p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
+                          {/* <div className="flex items-center gap-3">
                             <MapPin className="w-5 h-5 text-gray-400" />
                             <div>
                               <p className="text-sm text-gray-500">Location</p>
                               <p className="font-medium">{selectedClient.location || 'Unknown'}</p>
                             </div>
-                          </div>
+                          </div> */}
                           <div className="flex items-center gap-3">
                             <Calendar className="w-5 h-5 text-gray-400" />
                             <div>
@@ -894,10 +894,10 @@ const Client: React.FC = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
-                            <DollarSign className="w-5 h-5 text-gray-400" />
+                            <HandCoins className="w-5 h-5 text-gray-400" />
                             <div>
                               <p className="text-sm text-gray-500">Total Spent</p>
-                              <p className="font-medium">${selectedClient.totalSpent}</p>
+                              <p className="font-medium">LKR  {selectedClient.totalSpent}</p>
                             </div>
                           </div>
                         </div>
@@ -925,13 +925,13 @@ const Client: React.FC = () => {
                                   <p className="font-medium">{selectedClient.studentPackage.school || ''}</p>
                                 </div>
                                 <div>
-                                  <span className="text-gray-500">Student ID:</span>
-                                  <p className="font-medium">{selectedClient.studentPackage.studentId || ''}</p>
+                                  <span className="text-gray-500">Student Email:</span>
+                                  <p className="font-medium">{selectedClient.studentPackage.uniEmail || ''}</p>
                                 </div>
-                                <div>
+                                {/* <div>
                                   <span className="text-gray-500">Graduation Year:</span>
                                   <p className="font-medium">{selectedClient.studentPackage.graduationYear || ''}</p>
-                                </div>
+                                </div> */}
                                 <div>
                                   <span className="text-gray-500">Applied Date:</span>
                                   <p className="font-medium">{selectedClient.studentPackage.appliedDate ? new Date(selectedClient.studentPackage.appliedDate).toLocaleDateString() : ''}</p>
@@ -970,10 +970,10 @@ const Client: React.FC = () => {
                           </div>
                         )}
 
-                        <div>
+                        {/* <div>
                           <h4 className="font-semibold text-gray-900 mb-2">Bio</h4>
                           <p className="text-gray-600">{selectedClient.bio || 'No bio available'}</p>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
 
