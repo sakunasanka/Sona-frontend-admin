@@ -1,13 +1,23 @@
 import React, { useState } from 'react';
 import { AlertCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Card, Button, Input, Checkbox } from '../../components/ui';
+import { useNavigate, useLocation } from 'react-router-dom';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
+import Checkbox from '../../components/ui/Checkbox';
 import PasswordResetModal from '../../components/auth/PasswordResetModal';
 import API from '../../api/api';
 
 const SignIn = () => {
   const navigate = useNavigate();
-
+  const location = useLocation();
+  
+  // Get the selected role from navigation state if available
+  const passedRole = location.state?.selectedRole;
+  const userType = (passedRole === 'counsellor' || passedRole === 'psychiatrist') 
+    ? passedRole as 'counsellor' | 'psychiatrist'
+    : 'counsellor';
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -32,10 +42,10 @@ const SignIn = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-
+    
     setIsLoading(true);
     setErrors({});
-
+    
     try {
       const response = await API.post('/auth/signin', { email, password });
 
@@ -62,9 +72,9 @@ const SignIn = () => {
         <Card className="p-8">
           {/* Logo and Header */}
           <div className="text-center mb-8">
-            <img
-              src="/assets/images/Sona.png"
-              alt="Sona Logo"
+            <img 
+              src="/assets/images/Sona.png" 
+              alt="Sona Logo" 
               className="h-10 w-auto mx-auto mb-6"
             />
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back!</h1>
@@ -123,16 +133,16 @@ const SignIn = () => {
 
             {errors.general && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-red-700 text-sm flex items-center">
+              <p className="text-red-700 text-sm flex items-center">
                   <AlertCircle className="w-4 h-4 mr-2" />
                   {errors.general}
-                </p>
+              </p>
               </div>
             )}
 
-            <Button
-              type="submit"
-              variant="primary"
+            <Button 
+              type="submit" 
+              variant="primary" 
               className="w-full py-3 font-semibold"
               disabled={isLoading}
             >
@@ -140,22 +150,22 @@ const SignIn = () => {
             </Button>
           </form>
 
-          {/* <div className="text-center mt-8">
+          <div className="text-center mt-8">
             <p className="text-gray-600 text-sm">
               Don't have an account?{' '}
               <button
                 onClick={() => navigate('/signup')}
                 className="text-pink-500 font-medium hover:text-pink-600 hover:underline"
-              >
+            >
                 Sign up here
-              </button>
+            </button>
             </p>
-          </div> */}
+          </div>
         </Card>
-
-        <PasswordResetModal
-          isOpen={showPasswordReset}
-          onClose={() => setShowPasswordReset(false)}
+        
+        <PasswordResetModal 
+          isOpen={showPasswordReset} 
+          onClose={() => setShowPasswordReset(false)} 
         />
       </div>
     </div>

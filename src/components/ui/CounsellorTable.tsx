@@ -26,6 +26,10 @@ export interface Counsellor {
     name?: string;
     email: string;
   };
+  avatar?: string;
+  name?: string;
+  email?: string;
+  createdAt?: string;
 }
 
 
@@ -77,18 +81,6 @@ const CounsellorTable: React.FC<CounsellorTableProps> = ({
   };
 
 
-  const getCategoryColor = (category: string) => {
-    const colors = {
-      clinical: 'bg-purple-100 text-purple-800',
-      family: 'bg-blue-100 text-blue-800',
-      career: 'bg-green-100 text-green-800',
-      addiction: 'bg-red-100 text-red-800',
-      trauma: 'bg-orange-100 text-orange-800',
-    };
-    return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
-  };
-
-
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       <div className="overflow-x-auto">
@@ -137,7 +129,24 @@ const CounsellorTable: React.FC<CounsellorTableProps> = ({
               >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <div className="h-10 w-10 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-full flex items-center justify-center mr-3 shadow-sm">
+                    {counsellor.avatar ? (
+                      <img
+                        src={counsellor.avatar}
+                        alt={counsellor.user?.name || 'Profile'}
+                        className="h-10 w-10 rounded-full object-cover mr-3 shadow-sm"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const fallback = target.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className={`h-10 w-10 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-full flex items-center justify-center mr-3 shadow-sm ${
+                        counsellor.avatar ? 'hidden' : ''
+                      }`}
+                    >
                       <span className="text-white text-sm font-semibold">
                         {getInitials(counsellor.user?.name)}
                       </span>

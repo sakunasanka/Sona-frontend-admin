@@ -570,10 +570,23 @@ const Counselor: React.FC = () => {
                     return (
                       <div key={counselor.id} className="px-4 py-4 grid grid-cols-12 gap-2 items-center hover:bg-gray-50 transition-colors">
                         <div className="col-span-3 flex items-center gap-2">
+                          {counselor.avatar ? (
+                            <img
+                              src={counselor.avatar}
+                              alt={name || 'Profile'}
+                              className="w-8 h-8 rounded-full object-cover"
+                              onError={() => {
+                                const target = document.querySelector(`img[alt="${name || 'Profile'}"]`) as HTMLImageElement;
+                                if (target) target.style.display = 'none';
+                                const fallback = target?.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold ${
                             status === 'approved' ? 'bg-green-500' :
                             status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
-                          }`}>
+                          } ${counselor.avatar ? 'hidden' : ''}`}>
                             {getInitials(name)}
                           </div>
                           <div className="min-w-0 flex-1">
@@ -692,10 +705,23 @@ const Counselor: React.FC = () => {
                         {/* Profile Info */}
                         <div className="lg:col-span-1">
                           <div className="text-center">
+                            {selectedCounselor.avatar ? (
+                              <img
+                                src={selectedCounselor.avatar}
+                                alt={selectedCounselor.name || 'Profile'}
+                                className="w-24 h-24 rounded-full mx-auto object-cover"
+                                onError={() => {
+                                  const target = document.querySelector(`img[alt="${selectedCounselor.name || 'Profile'}"]`) as HTMLImageElement;
+                                  if (target) target.style.display = 'none';
+                                  const fallback = target?.nextElementSibling as HTMLElement;
+                                  if (fallback) fallback.style.display = 'flex';
+                                }}
+                              />
+                            ) : null}
                             <div className={`w-24 h-24 rounded-full mx-auto flex items-center justify-center text-white text-2xl font-bold ${
                               (selectedCounselor.status || 'pending') === 'approved' ? 'bg-green-500' :
                               (selectedCounselor.status || 'pending') === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
-                            }`}>
+                            } ${selectedCounselor.avatar ? 'hidden' : ''}`}>
                               {getInitials(selectedCounselor.name)}
                             </div>
                             <h3 className="mt-4 text-xl font-bold text-gray-900">{selectedCounselor.name}</h3>
@@ -840,7 +866,7 @@ const Counselor: React.FC = () => {
                                   </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                  {selectedCounselor.eduQualifications.map((edu, index) => {
+                                  {selectedCounselor.eduQualifications.map((edu) => {
                                     const documentUrl = getDocumentUrl(edu);
                                     return (
                                       <tr key={edu.id} className="hover:bg-gray-50">
@@ -954,7 +980,7 @@ const Counselor: React.FC = () => {
                                   </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                  {selectedCounselor.experiences.map((exp, index) => {
+                                  {selectedCounselor.experiences.map((exp) => {
                                     const documentUrl = getDocumentUrl(exp);
                                     return (
                                       <tr key={exp.id} className="hover:bg-gray-50">
@@ -1093,7 +1119,7 @@ const Counselor: React.FC = () => {
                           src={selectedDocument} 
                           alt="Document preview"
                           className="max-w-full max-h-full object-contain rounded"
-                          onError={(e) => {
+                          onError={() => {
                             console.error('Error loading image:', selectedDocument);
                             showNotification('error', 'Failed to load image');
                           }}
