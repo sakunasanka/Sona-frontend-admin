@@ -39,6 +39,9 @@ interface StudentPackage {
   verificationDocument?: string;
   studentIDCopy?: string; // Added this field
   rejectionReason?: string;
+  rejectedByName?: string; // Added this field
+  rejectedBy?: number; // Added this field
+  rejectedByRole?: string; // Added this field
   clientID?: number;
 }
 
@@ -99,6 +102,9 @@ const validateClient = (client: any): Client | null => {
       verificationDocument: client.studentPackage?.verificationDocument,
       studentIDCopy: client.studentPackage?.studentIDCopy, // Added this line
       rejectionReason: client.studentPackage?.rejectionReason,
+      rejectedByName: client.studentPackage?.rejectedByName,
+      rejectedBy: client.studentPackage?.rejectedBy,
+      rejectedByRole: client.studentPackage?.rejectedByRole,
       clientID: client.studentPackage?.clientID
     },
     clientType: client.clientType || 'regular',
@@ -939,18 +945,27 @@ const Client: React.FC = () => {
                               </div>
                               
                               
-
                               {selectedClient.studentPackage.status === 'rejected' && selectedClient.studentPackage.rejectionReason && (
                                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                                   <div className="flex items-start gap-2">
+                                    {/* Display who rejected it */}
+                                    <AlertCircle className="w-4 h-4 text-red-500 mt-0.5" />
+                                    <div>
+                                      <p className="text-sm font-medium text-red-800">Rejected By:</p>
+                                      <p className="text-sm text-red-700">Name:  {selectedClient.studentPackage.rejectedByName}</p>
+                                      <p className="text-sm text-red-700">Role:  {selectedClient.studentPackage.rejectedByRole}</p>
+                                      <p className="text-sm text-red-700"> UserID:  {selectedClient.studentPackage.rejectedBy}</p>                   
+                                    </div>
                                     <AlertCircle className="w-4 h-4 text-red-500 mt-0.5" />
                                     <div>
                                       <p className="text-sm font-medium text-red-800">Rejection Reason:</p>
                                       <p className="text-sm text-red-700">{selectedClient.studentPackage.rejectionReason}</p>
-                                    </div>
+                                    </div>  
                                   </div>
                                 </div>
                               )}
+                              
+
                             </div>
                           ) : (
                             <p className="text-gray-500 text-sm">No student package application submitted.</p>
