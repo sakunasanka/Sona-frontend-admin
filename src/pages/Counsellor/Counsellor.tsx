@@ -78,7 +78,7 @@ interface Counselor {
   description?: string;
   rating?: number;
   sessionFee?: number;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'unset';
   coverImage?: string;
   instagram?: string;
   linkedin?: string;
@@ -89,6 +89,11 @@ interface Counselor {
   experiences: Experience[];
   createdAt: string;
   updatedAt: string;
+  // Rejection information
+  rejectionReason?: string;
+  rejectedBy?: number;
+  rejectedByName?: string;
+  rejectedByRole?: string;
 }
 
 const Counselor: React.FC = () => {
@@ -158,7 +163,8 @@ const Counselor: React.FC = () => {
     const badges = {
       pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
       approved: 'bg-green-100 text-green-800 border-green-200',
-      rejected: 'bg-red-100 text-red-800 border-red-200'
+      rejected: 'bg-red-100 text-red-800 border-red-200',
+      unset: 'bg-gray-100 text-gray-800 border-gray-200'
     };
     return badges[status as keyof typeof badges] || badges.pending;
   };
@@ -223,17 +229,22 @@ const Counselor: React.FC = () => {
         requestData.rejectionReason = rejectionReason;
       }
 
-      await API.put(
+      const response = await API.put(
         `/admincounsellors/${selectedCounselor.id}/status`,
         requestData
       );
 
+      // Update the counselor with the full response data including rejection info
       setCounselors(prev => 
         prev.map(c => 
           c.id === selectedCounselor.id
             ? { 
                 ...c, 
                 status: newStatus as 'pending' | 'approved' | 'rejected',
+                rejectionReason: response.data.rejectionReason,
+                rejectedBy: response.data.rejectedBy,
+                rejectedByName: response.data.rejectedByName,
+                rejectedByRole: response.data.rejectedByRole
               }
             : c
         )
@@ -487,6 +498,7 @@ const Counselor: React.FC = () => {
                     <option value="pending">Pending</option>
                     <option value="approved">Approved</option>
                     <option value="rejected">Rejected</option>
+                    <option value="unset">Unset</option>
                   </select>
                 </div>
               </div>
@@ -672,6 +684,27 @@ const Counselor: React.FC = () => {
                                 {(selectedCounselor.status || 'pending').charAt(0).toUpperCase() + (selectedCounselor.status || 'pending').slice(1)}
                               </span>
                             </div>
+
+                            {/* Rejection Information Display */}
+                            {selectedCounselor.status === 'rejected' && selectedCounselor.rejectionReason && (
+                              <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div className="flex items-start gap-3">
+                                  <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                                  <div className="flex-1">
+                                    <h4 className="text-sm font-semibold text-red-800 mb-2">Rejection Details</h4>
+                                    <p className="text-sm text-red-700 mb-2">{selectedCounselor.rejectionReason}</p>
+                                    {selectedCounselor.rejectedByName && (
+                                      <p className="text-xs text-red-600">
+                                        Rejected by: {selectedCounselor.rejectedByName}
+                                        {selectedCounselor.rejectedByRole && ` (${selectedCounselor.rejectedByRole})`}
+                                        {selectedCounselor.rejectedBy && ` (${selectedCounselor.rejectedBy})`}
+                                      </p>
+                                    )}
+
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
 
