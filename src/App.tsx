@@ -1,4 +1,3 @@
-import Home from './pages/Home';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import SignUp from "./pages/Auth/SignUp";
 import SignIn from './pages/Auth/SignIn';
@@ -18,6 +17,10 @@ import Team from './pages/ManagementTeam/Team';
 import Calendar from './pages/ManagementTeam/Calendar';
 import Feedback from './pages/Admin/Feedback';
 import FeedbackManagement from './pages/Admin/Feedback';
+import ForbiddenPage from './pages/ForbiddenPage';
+import NotFoundPage from './pages/NotFoundPage';
+import ProtectedRoute from './components/ProtectedRoute';
+import RootRedirect from './components/RootRedirect';
 
  
 
@@ -26,27 +29,27 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<RootRedirect />} />
         <Route path="/example-use" element={<ExampleUse />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/signin" element={<SignIn />} />
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
-        <Route path="/management-team-dashboard" element={<MTDashboard />} />
-        <Route path="/admin-profile" element={<AdminProfile />} />
-        <Route path="/blogs" element={<Blogs />} />
-        <Route path="/counsellor" element={<Counsellor />} />
-        <Route path="/client" element={<Client />} />
-        {/* <Route path="/admin-analytics" element={<Analytics />} />   */}
-        <Route path="/calendar" element={<Calendar />} />
-        <Route path='/management-team' element={<ManagementTeam />} />
-        <Route path='/reports' element={<Reports />} />
-        <Route path="/psychiatrist" element={<Psychiatrist />} />
-        <Route path="/message" element={<Message />} />
-        <Route path="/feedback" element={<FeedbackManagement />} />
+        <Route path="/admin-dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/management-team-dashboard" element={<ProtectedRoute><MTDashboard /></ProtectedRoute>} />
+        <Route path="/admin-profile" element={<ProtectedRoute><AdminProfile /></ProtectedRoute>} />
+        <Route path="/blogs" element={<ProtectedRoute><Blogs /></ProtectedRoute>} />
+        <Route path="/counsellor" element={<ProtectedRoute><Counsellor /></ProtectedRoute>} />
+        <Route path="/client" element={<ProtectedRoute><Client /></ProtectedRoute>} />
+        <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+        <Route path='/management-team' element={<ProtectedRoute><ManagementTeam /></ProtectedRoute>} />
+        <Route path='/reports' element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+        <Route path="/psychiatrist" element={<ProtectedRoute><Psychiatrist /></ProtectedRoute>} />
+        <Route path="/message" element={<ProtectedRoute><Message /></ProtectedRoute>} />
+        <Route path="/feedback" element={<ProtectedRoute><FeedbackManagement /></ProtectedRoute>} />
 
-        <Route path="*" element={<div className="text-center text-red-500">404 Not Found</div>} />
-        <Route path="/MTDashboard" element={<MTDashboard />} />
-        <Route path="/team" element={<Team />} />
+        <Route path="/forbidden" element={<ForbiddenPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+        <Route path="/MTDashboard" element={<ProtectedRoute><MTDashboard /></ProtectedRoute>} />
+        <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
          
       </Routes>
     </Router>
