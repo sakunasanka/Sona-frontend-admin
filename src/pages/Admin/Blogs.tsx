@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Eye, CheckCircle, XCircle, Clock, RotateCcw, Calendar, User, Heart, 
   TrendingUp, Filter, Search, X, AlertTriangle, MapPin, Mail, Tag,
-  ArrowRight, BookOpen, MessageCircle, Star
+  ArrowRight, BookOpen, MessageCircle, Star, Shield
 } from 'lucide-react';
 import { NavBar, Sidebar } from '../../components/layout';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +12,8 @@ interface User {
   id: number;
   name: string;
   email: string;
+  avatar?: string;
+  role: string;
 }
 
 interface BlogPost {
@@ -23,15 +25,15 @@ interface BlogPost {
   likes: number;
   comments: number;
   backgroundColor: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'edited';
   createdAt: string;
   updatedAt: string;
   user: User;
-  rejectionReason?: string;
-  approvedBy?: string;
-  approvedAt?: string;
-  rejectedBy?: string;
-  rejectedAt?: string;
+  isAnonymous: boolean;
+  rejectedReason?: string;
+  actionBy?: number;
+  actionAt?: string;
+  actionUser?: User;
 }
 
 const PostCard = ({ post, onView }: { post: BlogPost; onView: (post: BlogPost) => void }) => {
@@ -40,6 +42,7 @@ const PostCard = ({ post, onView }: { post: BlogPost; onView: (post: BlogPost) =
       case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'approved': return 'bg-green-100 text-green-800 border-green-200';
       case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
+      case 'edited': return 'bg-blue-100 text-blue-800 border-blue-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
@@ -49,6 +52,7 @@ const PostCard = ({ post, onView }: { post: BlogPost; onView: (post: BlogPost) =
       case 'pending': return <Clock className="w-4 h-4" />;
       case 'approved': return <CheckCircle className="w-4 h-4" />;
       case 'rejected': return <XCircle className="w-4 h-4" />;
+      case 'edited': return <Shield className="w-4 h-4" />;
       default: return null;
     }
   };
@@ -67,9 +71,17 @@ const PostCard = ({ post, onView }: { post: BlogPost; onView: (post: BlogPost) =
   return (
     <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 overflow-hidden">
       <div className="aspect-video overflow-hidden relative" style={{ backgroundColor: post.backgroundColor }}>
-        <div className="w-full h-full flex items-center justify-center">
-          <BookOpen className="w-16 h-16 text-gray-400" />
-        </div>
+        {post.image ? (
+          <img 
+            src={post.image} 
+            alt="Blog post" 
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <BookOpen className="w-16 h-16 text-gray-400" />
+          </div>
+        )}
       </div>
 
       <div className="p-5">
@@ -78,20 +90,30 @@ const PostCard = ({ post, onView }: { post: BlogPost; onView: (post: BlogPost) =
             {getStatusIcon(post.status)}
             {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
           </span>
+          {post.isAnonymous && (
+            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600 border border-gray-200">
+              <Shield className="w-3 h-3" />
+              Anonymous
+            </span>
+          )}
         </div>
 
-        <h3 className="text-lg font-bold text-gray-900 mb-2">Post by {post.user.name}</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-2">
+          {post.isAnonymous ? 'Anonymous Post' : `Post by ${post.user.name}`}
+        </h3>
         <p className="text-gray-600 text-sm mb-4 line-clamp-2">{excerpt}</p>
 
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-            <User className="w-4 h-4 text-gray-600" />
+        {!post.isAnonymous && (
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+              <User className="w-4 h-4 text-gray-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">{post.user.name}</p>
+              <p className="text-xs text-gray-500">{formatDate(post.createdAt)}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-900">{post.user.name}</p>
-            <p className="text-xs text-gray-500">{formatDate(post.createdAt)}</p>
-          </div>
-        </div>
+        )}
 
         <div className="flex items-center gap-3 text-xs text-gray-500 mb-4">
           <span className="flex items-center gap-1">
@@ -101,10 +123,6 @@ const PostCard = ({ post, onView }: { post: BlogPost; onView: (post: BlogPost) =
           <span className="flex items-center gap-1">
             <Heart className="w-3 h-3" />
             {post.likes}
-          </span>
-          <span className="flex items-center gap-1">
-            <MessageCircle className="w-3 h-3" />
-            {post.comments}
           </span>
         </div>
 
@@ -152,6 +170,7 @@ const PostDetailsModal = ({
       case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'approved': return 'bg-green-100 text-green-800 border-green-200';
       case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
+      case 'edited': return 'bg-blue-100 text-blue-800 border-blue-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
@@ -161,6 +180,7 @@ const PostDetailsModal = ({
       case 'pending': return <Clock className="w-5 h-5" />;
       case 'approved': return <CheckCircle className="w-5 h-5" />;
       case 'rejected': return <XCircle className="w-5 h-5" />;
+      case 'edited': return <Shield className="w-5 h-5" />;
       default: return null;
     }
   };
@@ -175,8 +195,16 @@ const PostDetailsModal = ({
                 {getStatusIcon(post.status)}
                 {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
               </span>
+              {post.isAnonymous && (
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-600 border border-gray-200">
+                  <Shield className="w-4 h-4" />
+                  Anonymous
+                </span>
+              )}
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Post by {post.user.name}</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              {post.isAnonymous ? 'Anonymous Post' : `Post by ${post.user.name}`}
+            </h2>
           </div>
           <button
             onClick={onClose}
@@ -190,9 +218,17 @@ const PostDetailsModal = ({
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-3">
               <div className="aspect-video rounded-xl overflow-hidden mb-6" style={{ backgroundColor: post.backgroundColor }}>
-                <div className="w-full h-full flex items-center justify-center">
-                  <BookOpen className="w-24 h-24 text-gray-400" />
-                </div>
+                {post.image ? (
+                  <img 
+                    src={post.image} 
+                    alt="Blog post" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <BookOpen className="w-24 h-24 text-gray-400" />
+                  </div>
+                )}
               </div>
 
               <div className="prose max-w-none mb-6">
@@ -219,18 +255,20 @@ const PostDetailsModal = ({
             </div>
 
             <div className="space-y-4">
-              <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Author Details</h3>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                    <User className="w-6 h-6 text-gray-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">{post.user.name}</h4>
-                    <p className="text-sm text-gray-600">{post.user.email}</p>
+              {!post.isAnonymous && (
+                <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Author Details</h3>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                      <User className="w-6 h-6 text-gray-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-900">{post.user.name}</h4>
+                      <p className="text-sm text-gray-600">{post.user.email}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="bg-blue-50 rounded-xl p-5 border border-blue-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Post Statistics</h3>
@@ -248,13 +286,6 @@ const PostDetailsModal = ({
                       Likes
                     </span>
                     <span className="font-medium text-gray-900">{post.likes}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 flex items-center gap-2">
-                      <MessageCircle className="w-4 h-4" />
-                      Comments
-                    </span>
-                    <span className="font-medium text-gray-900">{post.comments}</span>
                   </div>
                 </div>
               </div>
@@ -278,33 +309,33 @@ const PostDetailsModal = ({
                       </div>
                     </div>
                   )}
-                  {post.approvedAt && (
+                  {post.actionAt && (
                     <div className="flex items-start gap-3">
                       <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">Approved</p>
-                        <p className="text-xs text-gray-600">{formatDate(post.approvedAt)}</p>
-                      </div>
-                    </div>
-                  )}
-                  {post.rejectedAt && (
-                    <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Rejected</p>
-                        <p className="text-xs text-gray-600">{formatDate(post.rejectedAt)}</p>
+                        <p className="text-sm font-medium text-gray-900">
+                          {post.status === 'approved' ? 'Approved' : 'Rejected'} by {post.actionUser?.name || 'Admin'}
+                        </p>
+                        <p className="text-xs text-gray-600">{formatDate(post.actionAt)}</p>
                       </div>
                     </div>
                   )}
                 </div>
               </div>
+
+              {post.rejectedReason && (
+                <div className="bg-red-50 rounded-xl p-5 border border-red-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Rejection Reason</h3>
+                  <p className="text-sm text-gray-700">{post.rejectedReason}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6">
           <div className="flex gap-3 justify-end">
-            {post.status === 'pending' && (
+            {(post.status === 'pending' || post.status === 'edited') && (
               <>
                 <button
                   onClick={() => {
@@ -329,10 +360,12 @@ const PostDetailsModal = ({
               </>
             )}
             
-            {post.status === 'approved' && (
+            {(post.status === 'approved' || post.status === 'rejected') && (
               <>
-                <span className="inline-block px-4 py-2 rounded-lg text-white font-medium bg-green-500">
-                  Approved
+                <span className={`inline-block px-4 py-2 rounded-lg text-white font-medium ${
+                  post.status === 'approved' ? 'bg-green-500' : 'bg-red-500'
+                }`}>
+                  {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
                 </span>
                 <button
                   onClick={() => {
@@ -342,17 +375,10 @@ const PostDetailsModal = ({
                   className="flex items-center gap-2 px-5 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
                 >
                   <RotateCcw className="w-5 h-5" />
-                  Revoke Approval
+                  Revoke
                 </button>
               </>
             )}
-            
-            {post.status === 'rejected' && (
-              <span className="inline-block px-4 py-2 rounded-lg text-white font-medium bg-red-500">
-                Rejected
-              </span>
-            )}
-
           </div>
         </div>
       </div>
@@ -491,31 +517,31 @@ const BlogAdmin = () => {
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [postToReject, setPostToReject] = useState<BlogPost | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'edited'>('all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
-useEffect(() => {
-  const fetchPosts = async () => {
-    try {
-      setLoading(true);
-      const response = await API.get('/adminblogs');
-      
-      // Ensure we always set an array, even if response.data is null/undefined
-      const postsData = Array.isArray(response.data) ? response.data : [];
-      setPosts(postsData);
-      
-    } catch (err) {
-      setError('Failed to fetch posts');
-      console.error(err);
-      setPosts([]); // Set empty array on error
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        const response = await API.get('/adminblogs');
+        
+        // Ensure we always set an array, even if response.data is null/undefined
+        const postsData = Array.isArray(response.data) ? response.data : [];
+        setPosts(postsData);
+        
+      } catch (err) {
+        setError('Failed to fetch posts');
+        console.error(err);
+        setPosts([]); // Set empty array on error
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchPosts();
-}, []);
+    fetchPosts();
+  }, []);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -527,11 +553,15 @@ useEffect(() => {
 
   const handleAction = async (action: { type: 'approve' | 'reject' | 'revoke'; postId: string; reason?: string }) => {
     try {
-      const status = action.type === 'approve' ? 'approved' : 
-                    action.type === 'reject' ? 'rejected' : 
-                    'pending';
-      
-      await API.patch(`/adminblogs/${action.postId}/status`, { status, reason: action.reason });
+      if (action.type === 'revoke') {
+        await API.patch(`/adminblogs/${action.postId}/revoke`);
+      } else {
+        const status = action.type === 'approve' ? 'approved' : 'rejected';
+        await API.patch(`/adminblogs/${action.postId}/status`, { 
+          status, 
+          reason: action.reason 
+        });
+      }
       
       setPosts(prevPosts => 
         prevPosts.map(post => {
@@ -543,25 +573,23 @@ useEffect(() => {
                 return {
                   ...post,
                   status: 'approved',
-                  approvedAt: now,
-                  rejectionReason: undefined,
-                  rejectedAt: undefined,
+                  actionAt: now,
+                  rejectedReason: undefined,
                 };
               case 'reject':
                 return {
                   ...post,
                   status: 'rejected',
-                  rejectionReason: action.reason,
-                  rejectedAt: now,
-                  approvedAt: undefined,
+                  rejectedReason: action.reason,
+                  actionAt: now,
                 };
               case 'revoke':
                 return {
                   ...post,
                   status: 'pending',
-                  approvedAt: undefined,
-                  rejectedAt: undefined,
-                  rejectionReason: undefined,
+                  actionAt: undefined,
+                  rejectedReason: undefined,
+                  actionUser: undefined,
                 };
               default:
                 return post;
@@ -603,7 +631,8 @@ useEffect(() => {
 
   const filteredPosts = posts.filter(post => {
     const matchesSearch = post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.user.name.toLowerCase().includes(searchTerm.toLowerCase());
+                         (post.isAnonymous ? 'anonymous'.includes(searchTerm.toLowerCase()) : 
+                          post.user.name.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || post.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -614,6 +643,7 @@ useEffect(() => {
       pending: posts.filter(p => p.status === 'pending').length,
       approved: posts.filter(p => p.status === 'approved').length,
       rejected: posts.filter(p => p.status === 'rejected').length,
+      edited: posts.filter(p => p.status === 'edited').length,
     };
   };
 
@@ -661,7 +691,7 @@ useEffect(() => {
             </div>
             
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 lg:gap-6 mb-8">
               {/* Total Posts */}
               <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
                 <div className="flex items-center gap-3 w-full">
@@ -713,6 +743,19 @@ useEffect(() => {
                   </div>
                 </div>
               </div>
+
+              {/* Edited Posts */}
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Shield className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{statusCounts.edited}</p>
+                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Edited</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Filters */}
@@ -740,6 +783,7 @@ useEffect(() => {
                     <option value="pending">Pending</option>
                     <option value="approved">Approved</option>
                     <option value="rejected">Rejected</option>
+                    <option value="edited">Edited</option>
                   </select>
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                     <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
