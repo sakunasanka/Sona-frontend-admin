@@ -108,7 +108,7 @@ const Counselor: React.FC = () => {
     pending: 0,
     approved: 0,
     rejected: 0,
-    total: 0
+    totalCounselors: 0
   });
   const [activeTab, setActiveTab] = useState<'profile' | 'education' | 'experiences'>('profile');
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
@@ -410,7 +410,7 @@ const Counselor: React.FC = () => {
                     <User className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{statusCounts.total}</p>
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{statusCounts.totalCounselors}</p>
                     <p className="text-gray-600 text-xs lg:text-sm leading-tight">Total Counselors</p>
                   </div>
                 </div>

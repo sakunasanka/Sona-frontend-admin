@@ -22,7 +22,9 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowRight,
-  RefreshCw
+  RefreshCw,
+  Download,
+  ExternalLink
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import API from '../../api/api';
@@ -35,6 +37,7 @@ interface StudentPackage {
   studentId?: string;
   graduationYear?: string;
   verificationDocument?: string;
+  studentIDCopy?: string; // Added this field
   rejectionReason?: string;
   clientID?: number;
 }
@@ -94,6 +97,7 @@ const validateClient = (client: any): Client | null => {
       studentId: client.studentPackage?.studentId,
       graduationYear: client.studentPackage?.graduationYear,
       verificationDocument: client.studentPackage?.verificationDocument,
+      studentIDCopy: client.studentPackage?.studentIDCopy, // Added this line
       rejectionReason: client.studentPackage?.rejectionReason,
       clientID: client.studentPackage?.clientID
     },
@@ -233,6 +237,46 @@ const Client: React.FC = () => {
       showNotification('error', 'Failed to fetch client details');
       return null;
     }
+  };
+
+  // Function to handle downloading the student ID copy
+  const handleDownloadStudentID = (studentIDCopyUrl: string, clientName: string) => {
+    if (!studentIDCopyUrl) {
+      showNotification('error', 'No student ID copy available for download');
+      return;
+    }
+
+    try {
+      // Create a temporary anchor element to trigger download
+      const link = document.createElement('a');
+      link.href = studentIDCopyUrl;
+      
+      // Extract filename from URL or use client name
+      const fileName = studentIDCopyUrl.split('/').pop() || `student_id_${clientName.replace(/\s+/g, '_')}`;
+      link.download = fileName;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      showNotification('success', 'Student ID copy downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      showNotification('error', 'Failed to download student ID copy');
+    }
+  };
+
+  // Function to check if file is an image based on extension
+  const isImageFile = (url: string) => {
+    if (!url) return false;
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
+    return imageExtensions.some(ext => url.toLowerCase().includes(ext));
+  };
+
+  // Function to check if file is a PDF based on extension
+  const isPdfFile = (url: string) => {
+    if (!url) return false;
+    return url.toLowerCase().includes('.pdf');
   };
 
   const getInitials = (name: string) => {
@@ -473,13 +517,6 @@ const Client: React.FC = () => {
             {/* Stats Cards */}
             <div className="flex flex-wrap gap-4 mb-4">
               {/* Total Clients */}
-              {/* <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex items-center justify-between w-[23%] h-[80px]">
-                <div className="flex items-center gap-2">
-                  <User className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm font-medium text-gray-900">Total: {stats.totalClients}</span>
-                </div>
-              </div> */}
-
               <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 justify-between w-[23%] h-[80px] flex items-center">
                 <div className="flex items-center gap-3 w-full">
                   <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -493,14 +530,7 @@ const Client: React.FC = () => {
               </div>
 
               {/* Student Clients */}
-              {/* <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex items-center justify-between w-[23%] h-[80px]">
-                <div className="flex items-center gap-2">
-                  <GraduationCap className="w-5 h-5 text-purple-600" />
-                  <span className="text-sm font-medium text-gray-900">Students: {stats.studentClients}</span>
-                </div>
-              </div> */}
-            
-            <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 justify-between w-[23%] h-[80px] flex items-center">
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 justify-between w-[23%] h-[80px] flex items-center">
                  <div className="flex items-center gap-3 w-full">
                    <div className="w-10 h-10 lg:w-12 lg:h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
                      <GraduationCap className="w-5 h-5 lg:w-6 lg:h-6  text-purple-600" />
@@ -513,14 +543,7 @@ const Client: React.FC = () => {
               </div> 
 
               {/* Regular Clients */}
-              {/* <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex items-center justify-between w-[23%] h-[80px]">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-indigo-600" />
-                  <span className="text-sm font-medium text-gray-900">Regular: {stats.regularClients}</span>
-                </div>
-              </div> */}
-
-               <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 justify-between w-[23%] h-[80px] flex items-center">
+              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 justify-between w-[23%] h-[80px] flex items-center">
                  <div className="flex items-center gap-3 w-full">
                    <div className="w-10 h-10 lg:w-12 lg:h-12 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
                      <CreditCard className="w-5 h-5 lg:w-6 lg:h-6 text-indigo-600" />
@@ -569,7 +592,6 @@ const Client: React.FC = () => {
                 {/* Regular Clients Filter */}
                 {activeTab === 'regular' && (
                   <div>
-                     
                     <select
                       value={selectedFilter}
                       onChange={(e) => setSelectedFilter(e.target.value as any)}
@@ -761,6 +783,82 @@ const Client: React.FC = () => {
                               {selectedClient.clientType?.charAt(0)?.toUpperCase() + selectedClient.clientType?.slice(1) || 'Unknown'}
                             </span>
                           </div>
+                          
+                          {/* Student ID Copy Section */}
+                              {selectedClient.studentPackage.studentIDCopy && (
+                                <div className="border-t pt-3 mt-3">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                      <FileText className="w-4 h-4 text-gray-400" />
+                                      <span className="text-sm font-medium text-gray-700">Student ID </span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      {/* View Button */}
+                                      <a
+                                        href={selectedClient.studentPackage.studentIDCopy}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                                      >
+                                        <ExternalLink className="w-3 h-3" />
+                                        <span>View</span>
+                                      </a>
+                                      {/* Download Button */}
+                                      <button
+                                        onClick={() => handleDownloadStudentID(
+                                          selectedClient.studentPackage.studentIDCopy!,
+                                          selectedClient.name
+                                        )}
+                                        className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                                      >
+                                        <Download className="w-3 h-3" />
+                                        <span>Download</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Preview for images */}
+                                  {isImageFile(selectedClient.studentPackage.studentIDCopy) && (
+                                    <div className="mt-2">
+                                      <p className="text-xs text-gray-500 mb-2">Preview:</p>
+                                      <div className="border rounded-lg p-2 bg-white max-w-xs">
+                                        <img 
+                                          src={selectedClient.studentPackage.studentIDCopy} 
+                                          alt="Student ID Copy"
+                                          className="max-w-full h-auto rounded"
+                                          onError={(e) => {
+                                            // If image fails to load, show file link instead
+                                            const target = e.target as HTMLImageElement;
+                                            target.style.display = 'none';
+                                            const parent = target.parentElement;
+                                            if (parent) {
+                                              parent.innerHTML = `
+                                                <div class="text-center p-4">
+                                                  <FileText class="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                                                  <p class="text-sm text-gray-600">Image preview not available</p>
+                                                  <a href="${selectedClient.studentPackage.studentIDCopy}" 
+                                                     target="_blank" 
+                                                     class="text-blue-600 hover:text-blue-800 text-sm">
+                                                    View file directly
+                                                  </a>
+                                                </div>
+                                              `;
+                                            }
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Info for PDFs */}
+                                  {isPdfFile(selectedClient.studentPackage.studentIDCopy) && (
+                                    <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+                                      {/*<FileText className="w-4 h-4" />*/}
+                                      <span>PDF document - Click "View" to open in new tab or "Download" to save</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                         </div>
                       </div>
 
@@ -840,13 +938,7 @@ const Client: React.FC = () => {
                                 </div>
                               </div>
                               
-                              {selectedClient.studentPackage.verificationDocument && (
-                                <div className="flex items-center gap-2 text-sm">
-                                  <FileText className="w-4 h-4 text-gray-400" />
-                                  <span className="text-gray-500">Verification Document:</span>
-                                  <span className="font-medium text-blue-600">{selectedClient.studentPackage.verificationDocument}</span>
-                                </div>
-                              )}
+                              
 
                               {selectedClient.studentPackage.status === 'rejected' && selectedClient.studentPackage.rejectionReason && (
                                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
