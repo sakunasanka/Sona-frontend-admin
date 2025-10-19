@@ -1,83 +1,165 @@
 import React, { useState } from 'react';
+import { AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Card, CardContent, Checkbox, Input } from '../../components/ui';
+import { Card, Button, Input, Checkbox } from '../../components/ui';
+import PasswordResetModal from '../../components/auth/PasswordResetModal';
 import API from '../../api/api';
 
-
 const SignIn = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [errors, setErrors] = useState<{
+    email?: string;
+    password?: string;
+    general?: string;
+  }>({});
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const validateForm = () => {
+    const newErrors: typeof errors = {};
+    if (!email) newErrors.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Please enter a valid email address';
+    if (!password) newErrors.password = 'Password is required';
+    else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    if (!validateForm()) return;
 
+    setIsLoading(true);
+    setErrors({});
 
     try {
       const response = await API.post('/auth/signin', { email, password });
 
+      const token = response.data?.data?.token;
 
-    // 🔍 Check full response
-    //console.log('Login response:', response.data);
-
-
-    const token = response.data?.data?.token;
-
-
-    if (token) {
-      localStorage.setItem('token', token);
-      //console.log('Token stored:', token);
-    } else {
-      console.warn('Token is missing in the response');
-    }
-      // Redirect
-      navigate('/admin-dashboard');
+      if (token) {
+        localStorage.setItem('token', token);
+        // Redirect to admin dashboard
+        navigate('/admin-dashboard');
+      } else {
+        setErrors({ general: 'Login failed. Please try again.' });
+      }
     } catch (err: any) {
-      console.error(err);
-      setError(err?.response?.data?.error || 'Signin failed');
+      console.error('Sign in error:', err);
+      setErrors({ general: err?.response?.data?.error || 'An error occurred. Please try again later.' });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-
   return (
-    <div className="flex justify-center items-center min-h-screen bg-red-200">
-      <Card
-        title={<span className="block text-center text-3xl font-bold m-8">Sign In</span>}
-        className="w-4/12 min-h-[600px] border-stone-500 border-2"
-      >
-        <CardContent>
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            <Input type="email" placeholder="Email" label="Email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-            <Input type="password" placeholder="Password" label="Password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-            <Checkbox label="Remember email" />
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md">
+        <Card className="p-8">
+          {/* Logo and Header */}
+          <div className="text-center mb-8">
+            <img
+              src="/assets/images/Sona.png"
+              alt="Sona Logo"
+              className="h-10 w-auto mx-auto mb-6"
+            />
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back!</h1>
+            <p className="text-gray-600">Sign in to access your account</p>
+          </div>
 
+          <form onSubmit={handleSignIn} className="space-y-6">
+            <div>
+              <Input
+                type="email"
+                placeholder="you@example.com"
+                label="Email Address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                name="email"
+              />
+              {errors.email && (
+                <p className="text-red-600 text-sm mt-2 flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                  {errors.email}
+                </p>
+              )}
+            </div>
 
-            <Button variant="rounded" className="w-full py-3" type="submit" disabled={loading}>
-              {loading ? 'Signing In...' : 'Sign In'}
+            <div>
+              <Input
+                type="password"
+                placeholder="••••••••"
+                label="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                name="password"
+              />
+              {errors.password && (
+                <p className="text-red-600 text-sm mt-2 flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                  {errors.password}
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Checkbox
+                label="Remember me"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              <button
+                type="button"
+                className="text-pink-500 hover:text-pink-600 text-sm font-medium hover:underline"
+                onClick={() => setShowPasswordReset(true)}
+              >
+                Forgot Password?
+              </button>
+            </div>
+
+            {errors.general && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-red-700 text-sm flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                  {errors.general}
+                </p>
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-full py-3 font-semibold"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
-
-
-            {error && <p className="text-center text-sm text-red-600">{error}</p>}
-
-
-            <p className="text-center text-sm text-gray-500 pt-4">
-              Do not have an account?{' '}
-              <a href="/login" className="text-blue-600 hover:underline">Sign Up</a><br />
-              <a href="/forgot_password" className="text-blue-600 hover:underline">Forgot password</a>
-            </p>
           </form>
-        </CardContent>
-      </Card>
+
+          {/* <div className="text-center mt-8">
+            <p className="text-gray-600 text-sm">
+              Don't have an account?{' '}
+              <button
+                onClick={() => navigate('/signup')}
+                className="text-pink-500 font-medium hover:text-pink-600 hover:underline"
+              >
+                Sign up here
+              </button>
+            </p>
+          </div> */}
+        </Card>
+
+        <PasswordResetModal
+          isOpen={showPasswordReset}
+          onClose={() => setShowPasswordReset(false)}
+        />
+      </div>
     </div>
   );
 };
-
 
 export default SignIn;

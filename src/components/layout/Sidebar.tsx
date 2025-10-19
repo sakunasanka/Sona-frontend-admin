@@ -3,6 +3,31 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, MessageCircle, FileText, LogOut, User, Grid2X2, ChartAreaIcon, BookOpen as Blog, ChevronDown, ChevronRight, AlertCircle } from 'lucide-react';
 import { Button } from '../ui';
 
+// JWT decode utility
+const decodeToken = (token: string) => {
+	try {
+		const base64Url = token.split('.')[1];
+		const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+		const jsonPayload = decodeURIComponent(
+			atob(base64)
+				.split('')
+				.map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+				.join('')
+		);
+		return JSON.parse(jsonPayload);
+	} catch {
+		return null;
+	}
+};
+
+// Get current user type
+const getCurrentUserType = () => {
+	const token = localStorage.getItem('token');
+	if (!token) return null;
+	const payload = decodeToken(token);
+	return payload?.userType;
+};
+
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -23,6 +48,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   const navigate = useNavigate();
   const [isUsersExpanded, setIsUsersExpanded] = useState(false);
 
+  const userType = getCurrentUserType();
+  const isMTMember = userType === 'MT-member';
+
   const menuItems = [
     { icon: Grid2X2, label: 'Dashboard', href: '/admin-dashboard', id: 'home' },
     // { icon: User, label: 'Profile', href: '/admin-profile', id: 'profile' },
@@ -36,7 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       subItems: [
         { label: 'Clients', href: '/client', id: 'client' },
         { label: 'Psychiatrists', href: '/psychiatrist', id: 'psychatrists' },
-        { label: 'Management Team', href: '/management-team', id: 'management_team' },
+        ...(!isMTMember ? [{ label: 'Management Team', href: '/management-team', id: 'management_team' }] : []),
         { label: 'Counsellors', href: '/counsellor', id: 'counsellors' },
       ]
     },
@@ -217,6 +245,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               icon={<LogOut size={20} className="text-slate-100 group-hover:text-red-600 transition-colors duration-200" />}
               onClick={() => {
                 console.log('Logout clicked');
+                localStorage.removeItem('token');
                 navigate('/signin');
                 onClose();
               }}
