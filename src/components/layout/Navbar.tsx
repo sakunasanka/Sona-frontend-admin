@@ -94,9 +94,9 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
             className="w-8 h-8 rounded-full overflow-hidden hover:ring-2 hover:ring-gray-300 transition-all"
             onClick={() => handleProfile()}
           >
-            <img 
-              src={currentProfilePicture} 
-          alt="Profile"
+            <img
+              src="/assets/images/profiles/th.jpg"
+              alt="Profile"
               className="w-full h-full object-cover"
             />
           </button>
