@@ -401,7 +401,7 @@ const AnalyticsSection = ({
         </div>
       ) : (
         <div className="space-y-4">
-          {recentActivities.map((activity, index) => (
+          {recentActivities.slice(0, 5).map((activity, index) => (
             <div key={index} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
               <div className={`p-2 rounded-lg bg-gray-100 ${activity.color}`}>
                 <activity.icon size={16} />
