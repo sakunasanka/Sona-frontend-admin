@@ -780,7 +780,7 @@ HR Management Team`);
                         </div>
 
                         {/* Avatar Upload */}
-                        <div className="mt-4">
+                        {/* <div className="mt-4">
                           <label className="block text-sm font-medium text-gray-700 mb-2">Profile Picture</label>
                           <div className="flex items-center gap-4">
                             {newMemberForm.avatar && (
@@ -801,7 +801,7 @@ HR Management Team`);
                               />
                             </label>
                           </div>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
 
