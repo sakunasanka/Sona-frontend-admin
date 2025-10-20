@@ -1,17 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../../components/layout/Sidebar';
 import Navbar from '../../components/layout/Navbar';
 import { 
-  Users, User, Clock, XCircle,
+  Users, 
   X, 
   Mail, 
-  Phone, 
-  MapPin, 
   Calendar,
-  Building,
-  Award,
-  Star,
-  FileText,
   User as UserIcon,
   Send,
   Eye,
@@ -21,216 +15,101 @@ import {
   Upload,
   Save,
   Search,
-  Filter,
-  CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Edit,
+  Trash2
 } from 'lucide-react';
+import API from '../../api/api';
 
 interface TeamMember {
+  _id?: string;
   id: string;
   name: string;
   position: string;
   email: string;
-  phone: string;
-  location: string;
   joinDate: string;
-  department: string;
   avatar: string;
-  experience: string;
-  skills: string[];
   bio: string;
-  education: string[];
-  certifications: string[];
-  previousRoles: Array<{
-    company: string;
-    position: string;
-    duration: string;
-  }>;
-  achievements: string[];
   salary: string;
-  reportingTo: string;
+  status?: string;
+  rejectionReason?: string;
+  rejectionEmailSent?: boolean;
 }
 
 function ManagementTeam() {
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
-    {
-      id: '1',
-      name: 'Nimal Perera',
-      position: 'Senior Product Manager',
-      email: 'nimal.perera@sona.lk',
-      phone: '+94 77 123 4567',
-      location: 'Colombo 03, Sri Lanka',
-      joinDate: '2024-01-15',
-      department: 'Product',
-      avatar: 'https://images.pexels.com/photos/3778876/pexels-photo-3778876.jpeg?auto=compress&cs=tinysrgb&w=150',
-      experience: '8 years',
-      skills: ['Product Strategy', 'Agile Management', 'User Research', 'Data Analytics'],
-      bio: 'Experienced product manager with expertise in healthcare technology solutions. Led multiple successful product launches in the Sri Lankan healthcare sector.',
-      education: ['MBA - University of Colombo', 'BSc in Computer Science - University of Moratuwa'],
-      certifications: ['Certified Scrum Product Owner', 'Google Analytics Certified'],
-      previousRoles: [
-        { company: 'Dialog Axiata', position: 'Product Manager', duration: '2020-2023' },
-        { company: 'Virtusa', position: 'Associate Product Manager', duration: '2018-2020' }
-      ],
-      achievements: [
-        'Led the development of Sri Lanka\'s first telemedicine platform',
-        'Increased user engagement by 45% through localized product optimization',
-        'Successfully managed a team of 10 engineers and designers'
-      ],
-      salary: 'Rs. 250,000',
-      reportingTo: 'VP of Product'
-    },
-    {
-      id: '2',
-      name: 'Chamari Silva',
-      position: 'Engineering Lead',
-      email: 'chamari.silva@sona.lk',
-      phone: '+94 76 234 5678',
-      location: 'Nugegoda, Sri Lanka',
-      joinDate: '2024-01-10',
-      department: 'Engineering',
-      avatar: 'https://images.pexels.com/photos/3992656/pexels-photo-3992656.jpeg?auto=compress&cs=tinysrgb&w=150',
-      experience: '12 years',
-      skills: ['Full Stack Development', 'Cloud Architecture', 'Team Leadership', 'DevOps'],
-      bio: 'Senior engineering leader with extensive experience in healthcare software development and team management.',
-      education: ['MSc in Computer Science - University of Moratuwa', 'BSc in Software Engineering - University of Colombo'],
-      certifications: ['AWS Solutions Architect', 'Microsoft Certified: Azure Solutions Architect'],
-      previousRoles: [
-        { company: 'WSO2', position: 'Senior Software Engineer', duration: '2019-2023' },
-        { company: 'IFS', position: 'Software Engineer', duration: '2016-2019' }
-      ],
-      achievements: [
-        'Architected scalable healthcare solutions used by major hospitals in Sri Lanka',
-        'Reduced system downtime by 80%',
-        'Mentored 15+ junior engineers'
-      ],
-      salary: 'Rs. 350,000',
-      reportingTo: 'CTO'
-    },
-    {
-      id: '3',
-      name: 'Ashan Jayawardena',
-      position: 'Head of Marketing',
-      email: 'ashan.jayawardena@sona.lk',
-      phone: '+94 71 345 6789',
-      location: 'Rajagiriya, Sri Lanka',
-      joinDate: '2024-01-20',
-      department: 'Marketing',
-      avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=150',
-      experience: '10 years',
-      skills: ['Digital Marketing', 'Brand Strategy', 'Market Research', 'Content Strategy'],
-      bio: 'Marketing professional with expertise in healthcare and wellness sector marketing in Sri Lanka.',
-      education: ['MBA Marketing - University of Sri Jayewardenepura', 'BBA - University of Colombo'],
-      certifications: ['Google Ads Certified', 'HubSpot Marketing Certified'],
-      previousRoles: [
-        { company: 'Hemas Holdings', position: 'Marketing Manager', duration: '2021-2023' },
-        { company: 'Asiri Health', position: 'Brand Manager', duration: '2018-2021' }
-      ],
-      achievements: [
-        'Increased brand awareness by 60% in Sri Lankan healthcare sector',
-        'Successfully launched digital health awareness campaigns',
-        'Built marketing team from 3 to 15 members'
-      ],
-      salary: 'Rs. 275,000',
-      reportingTo: 'CMO'
-    },
-    {
-      id: '4',
-      name: 'Dilini Gunasekara',
-      position: 'Head of Operations',
-      email: 'dilini.gunasekara@sona.lk',
-      phone: '+94 75 456 7890',
-      location: 'Battaramulla, Sri Lanka',
-      joinDate: '2024-01-08',
-      department: 'Operations',
-      avatar: 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=150',
-      experience: '9 years',
-      skills: ['Operations Management', 'Process Optimization', 'Team Leadership', 'Healthcare Operations'],
-      bio: 'Operations expert with focus on healthcare service delivery and process optimization.',
-      education: ['MSc in Healthcare Management - PGIM Colombo', 'BBM - University of Kelaniya'],
-      certifications: ['Certified Healthcare Operations Professional', 'Six Sigma Green Belt'],
-      previousRoles: [
-        { company: 'Durdans Hospital', position: 'Operations Manager', duration: '2020-2023' },
-        { company: 'Nawaloka Hospitals', position: 'Assistant Manager', duration: '2018-2020' }
-      ],
-      achievements: [
-        'Streamlined patient care processes reducing wait times by 40%',
-        'Implemented new healthcare service delivery protocols',
-        'Managed operations team of 25+ staff members'
-      ],
-      salary: 'Rs. 225,000',
-      reportingTo: 'COO'
-    },
-    {
-      id: '5',
-      name: 'Thilina Ranasinghe',
-      position: 'Head of Technology',
-      email: 'thilina.ranasinghe@sona.lk',
-      phone: '+94 77 567 8901',
-      location: 'Malabe, Sri Lanka',
-      joinDate: '2024-01-25',
-      department: 'Technology',
-      avatar: 'https://images.pexels.com/photos/3778876/pexels-photo-3778876.jpeg?auto=compress&cs=tinysrgb&w=150',
-      experience: '15 years',
-      skills: ['Technology Strategy', 'System Architecture', 'Digital Transformation', 'Healthcare IT'],
-      bio: 'Technology leader with extensive experience in healthcare IT systems and digital transformation.',
-      education: ['MSc in IT - University of Moratuwa', 'BEng in Computer Engineering - University of Peradeniya'],
-      certifications: ['TOGAF Certified', 'Healthcare Information Security Certified'],
-      previousRoles: [
-        { company: 'Lanka Hospitals', position: 'IT Director', duration: '2020-2023' },
-        { company: 'Millennium IT', position: 'Technical Lead', duration: '2018-2020' }
-      ],
-      achievements: [
-        'Led digital transformation of major healthcare provider',
-        'Implemented enterprise-wide EMR system',
-        'Developed IT strategy aligned with healthcare standards'
-      ],
-      salary: 'Rs. 400,000',
-      reportingTo: 'CTO'
-    }
-  ]);
-
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [viewingProfile, setViewingProfile] = useState<TeamMember | null>(null);
   const [emailSending, setEmailSending] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState('All Status');
   const [emailSent, setEmailSent] = useState(false);
-  const [sortBy, setSortBy] = useState<'name' | 'position' | 'department' | 'joinDate'>('name');
+  const [sortBy, setSortBy] = useState<'name' | 'position' | 'joinDate'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   
   // Add member modal states
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
-  const [newMemberForm, setNewMemberForm] = useState<Omit<TeamMember, 'id'>>({
+  const [newMemberForm, setNewMemberForm] = useState<Omit<TeamMember, 'id'> & { password: string; displayName: string }>({
     name: '',
     position: '',
     email: '',
-    phone: '',
-    location: '',
     joinDate: new Date().toISOString().split('T')[0],
-    department: '',
     avatar: '',
-    experience: '',
-    skills: [],
     bio: '',
-    education: [],
-    certifications: [],
-    previousRoles: [],
-    achievements: [],
     salary: '',
-    reportingTo: ''
+    password: 'DefaultPassword123!', // Default password
+    displayName: '',
   });
-  const [newSkill, setNewSkill] = useState('');
-  const [newEducation, setNewEducation] = useState('');
-  const [newCertification, setNewCertification] = useState('');
-  const [newAchievement, setNewAchievement] = useState('');
-  const [newRole, setNewRole] = useState({ company: '', position: '', duration: '' });
   const [formSubmitting, setFormSubmitting] = useState(false);
+
+  // Edit member state
+  const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  // Fetch team members from API
+  const fetchTeamMembers = async () => {
+    try {
+      setLoading(true);
+      const response = await API.get('/adminmtmembers');
+      
+      // Handle different possible response structures
+      const members = response.data.data.map((item: any) => {
+        // If the data already has user fields flattened, use as is
+        if (item.name && item.email) {
+          return {
+            ...item,
+          };
+        }
+        
+        // If data has nested user object, flatten it
+        return {
+          ...item,
+          name: item.user?.name || '',
+          email: item.user?.email || '',
+          avatar: item.user?.avatar || '',
+          id: item.user?.id || item.id || item._id || '',
+        };
+      });
+      
+      setTeamMembers(members);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch team members:', err);
+      setError('Failed to load team members. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTeamMembers();
+  }, []);
 
   // Add member functions
   const resetAddMemberForm = () => {
@@ -238,154 +117,183 @@ function ManagementTeam() {
       name: '',
       position: '',
       email: '',
-      phone: '',
-      location: '',
       joinDate: new Date().toISOString().split('T')[0],
-      department: '',
-      avatar: '',
-      experience: '',
-      skills: [],
+      avatar: 'https://via.placeholder.com/150', // Default placeholder,
       bio: '',
-      education: [],
-      certifications: [],
-      previousRoles: [],
-      achievements: [],
       salary: '',
-      reportingTo: ''
+      password: 'DefaultPassword123!',
+      displayName: '',
     });
-    setNewSkill('');
-    setNewEducation('');
-    setNewCertification('');
-    setNewAchievement('');
-    setNewRole({ company: '', position: '', duration: '' });
-  };
-
-  const handleAddSkill = () => {
-    if (newSkill.trim()) {
-      setNewMemberForm(prev => ({
-        ...prev,
-        skills: [...prev.skills, newSkill.trim()]
-      }));
-      setNewSkill('');
-    }
-  };
-
-  const handleRemoveSkill = (index: number) => {
-    setNewMemberForm(prev => ({
-      ...prev,
-      skills: prev.skills.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleAddEducation = () => {
-    if (newEducation.trim()) {
-      setNewMemberForm(prev => ({
-        ...prev,
-        education: [...prev.education, newEducation.trim()]
-      }));
-      setNewEducation('');
-    }
-  };
-
-  const handleRemoveEducation = (index: number) => {
-    setNewMemberForm(prev => ({
-      ...prev,
-      education: prev.education.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleAddCertification = () => {
-    if (newCertification.trim()) {
-      setNewMemberForm(prev => ({
-        ...prev,
-        certifications: [...prev.certifications, newCertification.trim()]
-      }));
-      setNewCertification('');
-    }
-  };
-
-  const handleRemoveCertification = (index: number) => {
-    setNewMemberForm(prev => ({
-      ...prev,
-      certifications: prev.certifications.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleAddAchievement = () => {
-    if (newAchievement.trim()) {
-      setNewMemberForm(prev => ({
-        ...prev,
-        achievements: [...prev.achievements, newAchievement.trim()]
-      }));
-      setNewAchievement('');
-    }
-  };
-
-  const handleRemoveAchievement = (index: number) => {
-    setNewMemberForm(prev => ({
-      ...prev,
-      achievements: prev.achievements.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleAddRole = () => {
-    if (newRole.company.trim() && newRole.position.trim() && newRole.duration.trim()) {
-      setNewMemberForm(prev => ({
-        ...prev,
-        previousRoles: [...prev.previousRoles, { ...newRole }]
-      }));
-      setNewRole({ company: '', position: '', duration: '' });
-    }
-  };
-
-  const handleRemoveRole = (index: number) => {
-    setNewMemberForm(prev => ({
-      ...prev,
-      previousRoles: prev.previousRoles.filter((_, i) => i !== index)
-    }));
   };
 
   const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setNewMemberForm(prev => ({ ...prev, avatar: result }));
-      };
-      reader.readAsDataURL(file);
+  const file = event.target.files?.[0];
+  if (file) {
+    // For now, just use a placeholder URL to avoid database issues
+    // In a real app, you'd upload to a cloud service and get a URL
+    setNewMemberForm(prev => ({ 
+      ...prev, 
+      avatar: "https://via.placeholder.com/150" 
+    }));
+    setError("Note: Using placeholder avatar. In production, images would be uploaded to cloud storage.");
+  }
+};
+
+  const handleSalaryChange = (value: string) => {
+    // Remove any non-digit characters except decimal point
+    const numericValue = value.replace(/[^\d.]/g, '');
+    setNewMemberForm(prev => ({ ...prev, salary: numericValue }));
+  };
+
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
+    return password;
   };
 
   const handleSubmitNewMember = async () => {
+  setFormSubmitting(true);
+
+  try {
+    // Check if email already exists
+    const emailExists = await checkEmailExists(newMemberForm.email.trim());
+    if (emailExists) {
+      setError(`Email "${newMemberForm.email}" is already registered. Please use a different email address.`);
+      setFormSubmitting(false);
+      return;
+    }
+
+    // Transform the data to match backend expectations - only send necessary fields
+    const payload = {
+      email: newMemberForm.email.trim(),
+      password: newMemberForm.password,
+      displayName: newMemberForm.name.trim(),
+      additionalData: {
+        position: newMemberForm.position.trim(),
+        joinDate: newMemberForm.joinDate,
+        bio: newMemberForm.bio.trim(),
+        salary: newMemberForm.salary.trim(),
+        // Use a simple placeholder instead of base64 to avoid database limits
+        avatar: newMemberForm.avatar && newMemberForm.avatar.length < 1000 
+          ? newMemberForm.avatar 
+          : "https://via.placeholder.com/150",
+      }
+    };
+
+    console.log("Payload being sent:", JSON.stringify(payload, null, 2));
+
+    const response = await API.post("/adminmtmembers", payload);
+    console.log("API response:", response.data);
+
+    // Refresh the list
+    await fetchTeamMembers();
+
+    // Reset form and close modal
+    resetAddMemberForm();
+    setShowAddMemberModal(false);
+
+    console.log("New member added successfully");
+  } catch (error: any) {
+    console.error("Failed to add member:", error);
+    
+    if (error.response) {
+      console.error("Response data:", error.response.data);
+      console.error("Response status:", error.response.status);
+      
+      if (error.response.status === 500) {
+        const errorMessage = error.response.data?.message || 'Server error occurred';
+        
+        if (errorMessage.includes('email address is already in use')) {
+          setError(`Email "${newMemberForm.email}" is already registered. Please use a different email address.`);
+        } else if (errorMessage.includes('value too long')) {
+          setError("One of the fields is too long for the database. Please shorten your inputs, especially the avatar image.");
+        } else {
+          setError(`Server error: ${errorMessage}`);
+        }
+      } else {
+        setError(`Error ${error.response.status}: ${error.response.data?.message || 'Failed to add team member'}`);
+      }
+    } else if (error.request) {
+      console.error("No response received:", error.request);
+      setError("No response from server. Please check your connection.");
+    } else {
+      console.error("Error message:", error.message);
+      setError("Failed to add team member. Please try again.");
+    }
+  } finally {
+    setFormSubmitting(false);
+  }
+};
+
+const checkEmailExists = async (email: string): Promise<boolean> => {
+  try {
+    const response = await API.get('/adminmtmembers');
+    const members = response.data.data;
+    
+    // Check if any existing member has this email
+    const emailExists = members.some((member: any) => 
+      member.email === email || (member.user && member.user.email === email)
+    );
+    
+    return emailExists;
+  } catch (error) {
+    console.error("Error checking email:", error);
+    return false; // If we can't check, proceed anyway
+  }
+};
+
+  const handleEditMember = async () => {
+    if (!editingMember) return;
+    
     setFormSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Generate new ID
-      const newId = (Math.max(...teamMembers.map(m => parseInt(m.id))) + 1).toString();
-      
-      // Create new member
-      const newMember: TeamMember = {
-        ...newMemberForm,
-        id: newId,
-        avatar: newMemberForm.avatar || 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=150'
+      const payload = {
+        name: editingMember.name,
+        email: editingMember.email,
+        avatar: editingMember.avatar,
+        position: editingMember.position,
+        joinDate: editingMember.joinDate,
+        bio: editingMember.bio,
+        salary: editingMember.salary,
       };
+
+      await API.put(`/adminmtmembers/${editingMember._id || editingMember.id}`, payload);
       
-      // Add to team members
-      setTeamMembers(prev => [...prev, newMember]);
+      // Refresh the list
+      await fetchTeamMembers();
       
-      // Reset form and close modal
-      resetAddMemberForm();
-      setShowAddMemberModal(false);
+      // Close modal
+      setShowEditModal(false);
+      setEditingMember(null);
       
-      console.log('New member added successfully:', newMember);
+      console.log('Member updated successfully');
     } catch (error) {
-      console.error('Failed to add member:', error);
+      console.error('Failed to update member:', error);
+      setError('Failed to update team member. Please try again.');
     } finally {
       setFormSubmitting(false);
+    }
+  };
+
+  const handleDeleteMember = async (memberId: string) => {
+    if (!window.confirm('Are you sure you want to delete this team member?')) {
+      return;
+    }
+    
+    try {
+      await API.delete(`/adminmtmembers/${memberId}`);
+      
+      // Refresh the list
+      await fetchTeamMembers();
+      
+      console.log('Member deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete member:', error);
+      setError('Failed to delete team member. Please try again.');
     }
   };
 
@@ -393,6 +301,7 @@ function ManagementTeam() {
     setEmailSending(true);
     
     try {
+      // In a real implementation, you would call your email API here
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       console.log(`Sending rejection email to ${member.email}:`);
@@ -425,25 +334,28 @@ HR Management Team`);
     if (selectedMember && rejectionReason.trim()) {
       const emailSuccess = await sendRejectionEmail(selectedMember, rejectionReason.trim());
       
-      setTeamMembers(prev => 
-        prev.map(member => 
-          member.id === selectedMember.id 
-            ? { 
-                ...member, 
-                status: 'rejected' as const, 
-                rejectionReason: rejectionReason.trim(),
-                rejectionEmailSent: emailSuccess
-              }
-            : member
-        )
-      );
-      
-      setTimeout(() => {
-        setShowRejectModal(false);
-        setSelectedMember(null);
-        setRejectionReason('');
-        setEmailSent(false);
-      }, 2000);
+      // Update the member status
+      try {
+        await API.put(`/adminmtmembers/${selectedMember._id || selectedMember.id}`, {
+          ...selectedMember,
+          status: 'rejected',
+          rejectionReason: rejectionReason.trim(),
+          rejectionEmailSent: emailSuccess
+        });
+        
+        // Refresh the list
+        await fetchTeamMembers();
+        
+        setTimeout(() => {
+          setShowRejectModal(false);
+          setSelectedMember(null);
+          setRejectionReason('');
+          setEmailSent(false);
+        }, 2000);
+      } catch (error) {
+        console.error('Failed to update member status:', error);
+        setError('Failed to update member status. Please try again.');
+      }
     }
   };
 
@@ -456,45 +368,62 @@ HR Management Team`);
     }
   };
 
-  // Get unique departments for filter
-  const departments = ['all', ...Array.from(new Set(teamMembers.map(member => member.department)))];
-
   const filteredAndSortedMembers = teamMembers
-    .filter(member => {
-      // Search filter
-      const matchesSearch = searchTerm === '' || 
-        member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.department.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      // Department filter
-      const matchesDepartment = departmentFilter === 'all' || member.department === departmentFilter;
-      
-      return matchesSearch && matchesDepartment;
-    })
-    .sort((a, b) => {
-      let aValue: string | Date;
-      let bValue: string | Date;
+  .filter(member => {
+    // Safely normalize values for search
+    const name = member.name?.toLowerCase() ?? '';
+    const position = member.position?.toLowerCase() ?? '';
+    const email = member.email?.toLowerCase() ?? '';
 
-      switch (sortBy) {
-        case 'joinDate':
-          aValue = new Date(a.joinDate);
-          bValue = new Date(b.joinDate);
-          break;
-        default:
-          aValue = a[sortBy].toLowerCase();
-          bValue = b[sortBy].toLowerCase();
-      }
+    // Search filter
+    const matchesSearch =
+      searchTerm === '' ||
+      name.includes(searchTerm.toLowerCase()) ||
+      position.includes(searchTerm.toLowerCase()) ||
+      email.includes(searchTerm.toLowerCase());
 
-      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
-      return 0;
-    });
+    return matchesSearch;
+  })
+  .sort((a, b) => {
+    let aValue: string | Date;
+    let bValue: string | Date;
+
+    switch (sortBy) {
+      case 'joinDate':
+        aValue = a.joinDate ? new Date(a.joinDate) : new Date(0); // default to epoch if null
+        bValue = b.joinDate ? new Date(b.joinDate) : new Date(0);
+        break;
+      default:
+        const aField = (a[sortBy] ?? '').toString().toLowerCase();
+        const bField = (b[sortBy] ?? '').toString().toLowerCase();
+        aValue = aField;
+        bValue = bField;
+    }
+
+    if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+
 
   // Sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const closeSidebar = () => setSidebarOpen(false);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col h-screen">
+        <div className="flex flex-1 overflow-hidden">
+          <div className="flex-1 overflow-auto">
+            <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen">
@@ -508,170 +437,57 @@ HR Management Team`);
         <div className="flex-1 overflow-auto">
           <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
           
-          <div className="p-4 lg:p-6 ">
+          <div className="p-4 lg:p-6">
             {/* Header */}
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-4">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Management Team</h1>
+                  <h1 className="text-3xl font-bold text-gray-900">Management Team</h1>
                   <p className="text-gray-600">Manage and view management team members</p>
                 </div>
               </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
-              {/* Total Psychiatrists */}
-              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
-                <div className="flex items-center gap-3 w-full">
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <User className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{teamMembers.length}</p>
-                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Total Team Members</p>
-                  </div>
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+                  {error}
+                  <button 
+                    onClick={() => setError(null)} 
+                    className="float-right text-red-800 hover:text-red-900"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-              </div>
+              )}
 
-              {/* Pending
-              <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
-                <div className="flex items-center gap-3 w-full">
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-yellow-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Clock className="w-5 h-5 lg:w-6 lg:h-6 text-yellow-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{teamMembers.pending}</p>
-                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Pending</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Approved */}
-              {/* <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
-                <div className="flex items-center gap-3 w-full">
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <CheckCircle className="w-5 h-5 lg:w-6 lg:h-6 text-green-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{teamMembers.approved}</p>
-                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Approved</p>
-                  </div>
-                </div>
-              </div> */}
-
-              {/* Rejected */}
-              {/* <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-[120px] flex items-center">
-                <div className="flex items-center gap-3 w-full">
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <XCircle className="w-5 h-5 lg:w-6 lg:h-6 text-red-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xl lg:text-2xl font-bold text-gray-900">{teamMembers.rejected}</p>
-                    <p className="text-gray-600 text-xs lg:text-sm leading-tight">Rejected</p>
-                  </div>
-                </div>
-              </div> */}
-            </div>
-
-              {/* Search and Filters
-              <div className="flex flex-col lg:flex-row gap-4 mb-6"> */}
+              {/* Search and Filters */}
+              <div className="flex flex-col lg:flex-row gap-4 mb-6">
                 {/* Search Bar */}
-                {/* <div className="relative flex-1">
+                <div className="relative flex-1">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Search className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
                     type="text"
-                    placeholder="Search members by name, position, email, or department..."
+                    placeholder="Search members by name, position, or email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
-                </div> */}
-
-                {/* Department Filter */}
-                {/* <div className="flex items-center gap-2">
-                  <Filter className="h-5 w-5 text-gray-400" />
-                  <select
-                    value={departmentFilter}
-                    onChange={(e) => setDepartmentFilter(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                  >
-                    {departments.map(dept => (
-                      <option key={dept} value={dept}>
-                        {dept === 'all' ? 'All Departments' : dept}
-                      </option>
-                    ))}
-                  </select>
-                </div> 
-              </div>*/}
-
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
-                <button
-                  onClick={() => setShowAddMemberModal(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 shadow-sm"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Member
-                </button>
-              </div>
-            </div>
-
-            {/* Filters */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-6">
-              <div className="flex items-center gap-2">
-                <Filter className="w-5 h-5 text-gray-600" />
-                <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Filters</h2>
-              </div>
-              
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
-                {/* Search */}
-                <div className="relative md:col-span-1 lg:col-span-2">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="Search psychiatrists..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-                  />
                 </div>
 
-                {/* Category Filter */}
-                {/* <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
+                  <button
+                    onClick={() => setShowAddMemberModal(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 shadow-sm"
                   >
-                    <option value="All Categories">All Categories</option>
-                    <option value="Clinical">Clinical</option>
-                    <option value="Family">Family</option>
-                    <option value="Career">Career</option>
-                    <option value="Addiction">Addiction</option>
-                    <option value="Trauma">Trauma</option>
-                  </select>
-                </div> */}
-
-                {/* Status Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
-                  <select
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-                  >
-                    <option value="All Status">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
-                  </select>
+                    <Plus className="w-4 h-4" />
+                    Add Member
+                  </button>
                 </div>
               </div>
             </div>
+
             {/* Table */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="overflow-x-auto overflow-y-auto">
@@ -701,17 +517,6 @@ HR Management Team`);
                         </button>
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <button
-                          onClick={() => handleSort('department')}
-                          className="flex items-center gap-1 hover:text-gray-700 transition-colors"
-                        >
-                          Department
-                          {sortBy === 'department' && (
-                            sortOrder === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                          )}
-                        </button>
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Contact
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -732,7 +537,7 @@ HR Management Team`);
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredAndSortedMembers.map((member) => (
-                      <tr key={member.id} className="hover:bg-gray-50 transition-colors">
+                      <tr key={member._id || member.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <img
@@ -742,33 +547,42 @@ HR Management Team`);
                             />
                             <div className="ml-4">
                               <div className="text-sm font-medium text-gray-900">{member.name}</div>
-                              <div className="text-sm text-gray-500">{member.experience}</div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{member.position}</div>
-                          <div className="text-sm text-gray-500">Reports to {member.reportingTo}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{member.department}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{member.email}</div>
-                          <div className="text-sm text-gray-500">{member.phone}</div>
-                          <div className="text-sm text-gray-500">{member.location}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {new Date(member.joinDate).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button
-                            onClick={() => setViewingProfile(member)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
-                          >
-                            <Eye className="w-4 h-4" />
-                            View
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setViewingProfile(member)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingMember(member);
+                                setShowEditModal(true);
+                              }}
+                              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteMember(member._id || member.id)}
+                              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1.5"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -780,16 +594,16 @@ HR Management Team`);
                 <div className="text-center py-12">
                   <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No team members found</h3>
-                  <p className="text-gray-500">Try adjusting your filter to see more results.</p>
+                  <p className="text-gray-500">Try adjusting your search to see more results.</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Profile View Modal */}
+          {/* Profile View Modal - Simplified */}
           {viewingProfile && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-xl shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 {/* Modal Header */}
                 <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-xl">
                   <div className="flex items-center justify-between">
@@ -819,129 +633,24 @@ HR Management Team`);
                         className="w-32 h-32 rounded-full object-cover mx-auto md:mx-0"
                       />
                       <div className="flex-1 text-center md:text-left">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                          <div>
-                            <h1 className="text-3xl font-bold text-gray-900 mb-2">{viewingProfile.name}</h1>
-                            <p className="text-xl text-blue-600 font-medium mb-1">{viewingProfile.position}</p>
-                            <p className="text-gray-600">{viewingProfile.department} Department</p>
-                          </div>
+                        <div className="mb-4">
+                          <h1 className="text-3xl font-bold text-gray-900 mb-2">{viewingProfile.name}</h1>
+                          <p className="text-xl text-blue-600 font-medium mb-1">{viewingProfile.position}</p>
                         </div>
                         
                         <p className="text-gray-700 leading-relaxed mb-6">{viewingProfile.bio}</p>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                           <div className="flex items-center gap-2 text-gray-600">
                             <Mail className="w-4 h-4" />
                             <span>{viewingProfile.email}</span>
                           </div>
                           <div className="flex items-center gap-2 text-gray-600">
-                            <Phone className="w-4 h-4" />
-                            <span>{viewingProfile.phone}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <MapPin className="w-4 h-4" />
-                            <span>{viewingProfile.location}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-gray-600">
                             <Calendar className="w-4 h-4" />
                             <span>Joined {new Date(viewingProfile.joinDate).toLocaleDateString()}</span>
                           </div>
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <UserIcon className="w-4 h-4" />
-                            <span>Reports to {viewingProfile.reportingTo}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <Building className="w-4 h-4" />
-                            <span>{viewingProfile.experience} experience</span>
-                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Details Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    {/* Skills */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <Star className="w-5 h-5 text-blue-600" />
-                        Skills & Expertise
-                      </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {viewingProfile.skills.map((skill, index) => (
-                          <span
-                            key={index}
-                            className="px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Education */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <Award className="w-5 h-5 text-blue-600" />
-                        Education
-                      </h3>
-                      <div className="space-y-2">
-                        {viewingProfile.education.map((edu, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                            <span className="text-gray-700">{edu}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Certifications */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-blue-600" />
-                        Certifications
-                      </h3>
-                      <div className="space-y-2">
-                        {viewingProfile.certifications.map((cert, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                            <span className="text-gray-700">{cert}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Achievements */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <CheckCircle className="w-5 h-5 text-blue-600" />
-                        Key Achievements
-                      </h3>
-                      <div className="space-y-2">
-                        {viewingProfile.achievements.map((achievement, index) => (
-                          <div key={index} className="flex items-start gap-2">
-                            <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
-                            <span className="text-gray-700">{achievement}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Work History */}
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <Building className="w-5 h-5 text-blue-600" />
-                      Work History
-                    </h3>
-                    <div className="space-y-4">
-                      {viewingProfile.previousRoles.map((role, index) => (
-                        <div key={index} className="border-l-2 border-blue-200 pl-4">
-                          <h4 className="font-medium text-gray-900">{role.position}</h4>
-                          <p className="text-blue-600">{role.company}</p>
-                          <p className="text-sm text-gray-500">{role.duration}</p>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 </div>
@@ -949,10 +658,10 @@ HR Management Team`);
             </div>
           )}
 
-          {/* Add Member Modal */}
+          {/* Add Member Modal - Simplified */}
           {showAddMemberModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 {!formSubmitting ? (
                   <>
                     {/* Modal Header */}
@@ -977,7 +686,7 @@ HR Management Team`);
                     </div>
 
                     {/* Modal Content */}
-                    <div className="p-6 space-y-6">
+                    <div className="p-6">
                       {/* Basic Information */}
                       <div className="bg-gray-50 rounded-lg p-4">
                         <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
@@ -990,7 +699,7 @@ HR Management Team`);
                             <input
                               type="text"
                               value={newMemberForm.name}
-                              onChange={(e) => setNewMemberForm(prev => ({ ...prev, name: e.target.value }))}
+                              onChange={(e) => setNewMemberForm(prev => ({ ...prev, name: e.target.value, displayName: e.target.value }))}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                               placeholder="Enter full name"
                             />
@@ -1014,26 +723,29 @@ HR Management Team`);
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                               placeholder="Enter email address"
                             />
+                            {error && error.includes('already registered') && error.includes(newMemberForm.email) && (
+                              <p className="text-red-500 text-xs mt-1">This email is already in use. Please choose a different one.</p>
+                            )}
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                            <input
-                              type="tel"
-                              value={newMemberForm.phone}
-                              onChange={(e) => setNewMemberForm(prev => ({ ...prev, phone: e.target.value }))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="Enter phone number"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                            <input
-                              type="text"
-                              value={newMemberForm.location}
-                              onChange={(e) => setNewMemberForm(prev => ({ ...prev, location: e.target.value }))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="Enter location"
-                            />
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={newMemberForm.password}
+                                onChange={(e) => setNewMemberForm(prev => ({ ...prev, password: e.target.value }))}
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter password"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setNewMemberForm(prev => ({ ...prev, password: generatePassword() }))}
+                                className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                              >
+                                Generate
+                              </button>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">Default password is provided. Click "Generate" for a secure one.</p>
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Join Date</label>
@@ -1045,51 +757,13 @@ HR Management Team`);
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Department *</label>
-                            <select
-                              value={newMemberForm.department}
-                              onChange={(e) => setNewMemberForm(prev => ({ ...prev, department: e.target.value }))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            >
-                              <option value="">Select Department</option>
-                              <option value="Product">Product</option>
-                              <option value="Engineering">Engineering</option>
-                              <option value="Marketing">Marketing</option>
-                              <option value="Sales">Sales</option>
-                              <option value="Design">Design</option>
-                              <option value="Operations">Operations</option>
-                              <option value="Finance">Finance</option>
-                              <option value="HR">HR</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Experience</label>
-                            <input
-                              type="text"
-                              value={newMemberForm.experience}
-                              onChange={(e) => setNewMemberForm(prev => ({ ...prev, experience: e.target.value }))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="e.g., 5 years"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Reports To</label>
-                            <input
-                              type="text"
-                              value={newMemberForm.reportingTo}
-                              onChange={(e) => setNewMemberForm(prev => ({ ...prev, reportingTo: e.target.value }))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="Enter reporting manager"
-                            />
-                          </div>
-                          <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Salary</label>
                             <input
                               type="text"
                               value={newMemberForm.salary}
-                              onChange={(e) => setNewMemberForm(prev => ({ ...prev, salary: e.target.value }))}
+                              onChange={(e) => handleSalaryChange(e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="e.g., $120,000"
+                              placeholder="e.g., 250000"
                             />
                           </div>
                         </div>
@@ -1106,7 +780,7 @@ HR Management Team`);
                         </div>
 
                         {/* Avatar Upload */}
-                        <div className="mt-4">
+                        {/* <div className="mt-4">
                           <label className="block text-sm font-medium text-gray-700 mb-2">Profile Picture</label>
                           <div className="flex items-center gap-4">
                             {newMemberForm.avatar && (
@@ -1127,212 +801,8 @@ HR Management Team`);
                               />
                             </label>
                           </div>
-                        </div>
+                        </div> */}
                       </div>
-
-                      {/* Skills */}
-                      {/* <div className="bg-gray-50 rounded-lg p-4">
-                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
-                          <Star className="w-4 h-4" />
-                          Skills & Expertise
-                        </h4>
-                        <div className="flex gap-2 mb-3">
-                          <input
-                            type="text"
-                            value={newSkill}
-                            onChange={(e) => setNewSkill(e.target.value)}
-                            placeholder="Add a skill"
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            onKeyPress={(e) => e.key === 'Enter' && handleAddSkill()}
-                          />
-                          <button
-                            onClick={handleAddSkill}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            Add
-                          </button>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {newMemberForm.skills.map((skill, index) => (
-                            <span
-                              key={index}
-                              className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm flex items-center gap-1"
-                            >
-                              {skill}
-                              <button
-                                onClick={() => handleRemoveSkill(index)}
-                                className="hover:bg-blue-200 rounded-full p-0.5"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      </div> */}
-
-                      {/* Education */}
-                      {/* <div className="bg-gray-50 rounded-lg p-4">
-                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
-                          <Award className="w-4 h-4" />
-                          Education
-                        </h4>
-                        <div className="flex gap-2 mb-3">
-                          <input
-                            type="text"
-                            value={newEducation}
-                            onChange={(e) => setNewEducation(e.target.value)}
-                            placeholder="Add education (e.g., MBA - Harvard Business School)"
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            onKeyPress={(e) => e.key === 'Enter' && handleAddEducation()}
-                          />
-                          <button
-                            onClick={handleAddEducation}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            Add
-                          </button>
-                        </div>
-                        <div className="space-y-2">
-                          {newMemberForm.education.map((edu, index) => (
-                            <div key={index} className="flex items-center justify-between bg-white p-2 rounded">
-                              <span className="text-sm">{edu}</span>
-                              <button
-                                onClick={() => handleRemoveEducation(index)}
-                                className="text-red-600 hover:bg-red-50 rounded p-1"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div> */}
-
-                      {/* Certifications */}
-                      {/* <div className="bg-gray-50 rounded-lg p-4">
-                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
-                          <FileText className="w-4 h-4" />
-                          Certifications
-                        </h4>
-                        <div className="flex gap-2 mb-3">
-                          <input
-                            type="text"
-                            value={newCertification}
-                            onChange={(e) => setNewCertification(e.target.value)}
-                            placeholder="Add certification"
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            onKeyPress={(e) => e.key === 'Enter' && handleAddCertification()}
-                          />
-                          <button
-                            onClick={handleAddCertification}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            Add
-                          </button>
-                        </div>
-                        <div className="space-y-2">
-                          {newMemberForm.certifications.map((cert, index) => (
-                            <div key={index} className="flex items-center justify-between bg-white p-2 rounded">
-                              <span className="text-sm">{cert}</span>
-                              <button
-                                onClick={() => handleRemoveCertification(index)}
-                                className="text-red-600 hover:bg-red-50 rounded p-1"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div> */}
-
-                      {/* Previous Roles */}
-                      {/* <div className="bg-gray-50 rounded-lg p-4">
-                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
-                          <Building className="w-4 h-4" />
-                          Previous Roles
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3">
-                          <input
-                            type="text"
-                            value={newRole.company}
-                            onChange={(e) => setNewRole(prev => ({ ...prev, company: e.target.value }))}
-                            placeholder="Company"
-                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                          <input
-                            type="text"
-                            value={newRole.position}
-                            onChange={(e) => setNewRole(prev => ({ ...prev, position: e.target.value }))}
-                            placeholder="Position"
-                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                          <input
-                            type="text"
-                            value={newRole.duration}
-                            onChange={(e) => setNewRole(prev => ({ ...prev, duration: e.target.value }))}
-                            placeholder="Duration (e.g., 2020-2023)"
-                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                          <button
-                            onClick={handleAddRole}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            Add Role
-                          </button>
-                        </div>
-                        <div className="space-y-2">
-                          {newMemberForm.previousRoles.map((role, index) => (
-                            <div key={index} className="flex items-center justify-between bg-white p-3 rounded">
-                              <div>
-                                <div className="font-medium text-sm">{role.position}</div>
-                                <div className="text-xs text-gray-600">{role.company} • {role.duration}</div>
-                              </div>
-                              <button
-                                onClick={() => handleRemoveRole(index)}
-                                className="text-red-600 hover:bg-red-50 rounded p-1"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div> */}
-
-                      {/* Achievements */}
-                      {/* <div className="bg-gray-50 rounded-lg p-4">
-                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
-                          <CheckCircle className="w-4 h-4" />
-                          Key Achievements
-                        </h4>
-                        <div className="flex gap-2 mb-3">
-                          <input
-                            type="text"
-                            value={newAchievement}
-                            onChange={(e) => setNewAchievement(e.target.value)}
-                            placeholder="Add an achievement"
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            onKeyPress={(e) => e.key === 'Enter' && handleAddAchievement()}
-                          />
-                          <button
-                            onClick={handleAddAchievement}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            Add
-                          </button>
-                        </div>
-                        <div className="space-y-2">
-                          {newMemberForm.achievements.map((achievement, index) => (
-                            <div key={index} className="flex items-start justify-between bg-white p-2 rounded">
-                              <span className="text-sm flex-1">{achievement}</span>
-                              <button
-                                onClick={() => handleRemoveAchievement(index)}
-                                className="text-red-600 hover:bg-red-50 rounded p-1 ml-2"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div> */}
                     </div>
 
                     {/* Modal Footer */}
@@ -1349,11 +819,20 @@ HR Management Team`);
                         </button>
                         <button
                           onClick={handleSubmitNewMember}
-                          disabled={!newMemberForm.name || !newMemberForm.position || !newMemberForm.email || !newMemberForm.department}
+                          disabled={!newMemberForm.name || !newMemberForm.position || !newMemberForm.email || !newMemberForm.password || formSubmitting}
                           className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
                         >
-                          <Save className="w-4 h-4" />
-                          Add Member
+                          {formSubmitting ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              Adding...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="w-4 h-4" />
+                              Add Member
+                            </>
+                          )}
                         </button>
                       </div>
                     </div>
@@ -1363,6 +842,132 @@ HR Management Team`);
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Adding Team Member</h3>
                     <p className="text-gray-600">Please wait while we add the new team member...</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Edit Member Modal - Simplified */}
+          {showEditModal && editingMember && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                {!formSubmitting ? (
+                  <>
+                    {/* Modal Header */}
+                    <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-xl">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            <Edit className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <h3 className="text-xl font-semibold text-gray-900">Edit Team Member</h3>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setShowEditModal(false);
+                            setEditingMember(null);
+                          }}
+                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                          <X className="w-5 h-5 text-gray-500" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Modal Content - Simplified to only include necessary fields */}
+                    <div className="p-6">
+                      <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                          <UserIcon className="w-4 h-4" />
+                          Basic Information
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                            <input
+                              type="text"
+                              value={editingMember.name}
+                              onChange={(e) => setEditingMember(prev => prev ? {...prev, name: e.target.value} : null)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Position *</label>
+                            <input
+                              type="text"
+                              value={editingMember.position}
+                              onChange={(e) => setEditingMember(prev => prev ? {...prev, position: e.target.value} : null)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Email (Read Only) *</label>
+                            <input
+                              type="email"
+                              value={editingMember.email}
+                              onChange={(e) => setEditingMember(prev => prev ? {...prev, email: e.target.value} : null)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500" readOnly
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Join Date (Read Only)</label>
+                            <input
+                              type="date"
+                              value={editingMember.joinDate}
+                              onChange={(e) => setEditingMember(prev => prev ? {...prev, joinDate: e.target.value} : null)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            readOnly/>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Salary</label>
+                            <input
+                              type="text"
+                              value={editingMember.salary}
+                              onChange={(e) => setEditingMember(prev => prev ? {...prev, salary: e.target.value} : null)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+                          <textarea
+                            value={editingMember.bio}
+                            onChange={(e) => setEditingMember(prev => prev ? {...prev, bio: e.target.value} : null)}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 rounded-b-xl">
+                      <div className="flex gap-3 justify-end">
+                        <button
+                          onClick={() => {
+                            setShowEditModal(false);
+                            setEditingMember(null);
+                          }}
+                          className="px-6 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleEditMember}
+                          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                        >
+                          <Save className="w-4 h-4" />
+                          Save Changes
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="p-12 text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Updating Team Member</h3>
+                    <p className="text-gray-600">Please wait while we update the team member...</p>
                   </div>
                 )}
               </div>
