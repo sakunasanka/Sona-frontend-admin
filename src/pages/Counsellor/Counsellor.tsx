@@ -793,15 +793,17 @@ const Counselor: React.FC = () => {
                                 <p className="font-medium">{selectedCounselor.license_no}</p>
                               </div>
                             </div>
-                            {selectedCounselor.rating && (
-                              <div className="flex items-center gap-3">
-                                <div className="w-5 h-5 text-gray-400">⭐</div>
-                                <div>
-                                  <p className="text-sm text-gray-500">Rating</p>
-                                  <p className="font-medium">{selectedCounselor.rating}/5</p>
-                                </div>
+                            <div className="flex items-center gap-3">
+                              <div className="w-5 h-5 text-gray-400">⭐</div>
+                              <div>
+                                <p className="text-sm text-gray-500">Rating</p>
+                                <p className="font-medium">
+                                  {selectedCounselor.rating !== undefined && selectedCounselor.rating !== null 
+                                    ? `${selectedCounselor.rating}/5` 
+                                    : 'No rating'}
+                                </p>
                               </div>
-                            )}
+                            </div>
                           </div>
 
                           <div>
