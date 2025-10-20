@@ -699,11 +699,24 @@ const Client: React.FC = () => {
                   filteredClients.map((client) => (
                     <div key={client.id} className="px-6 py-4 grid grid-cols-12 gap-4 items-center hover:bg-gray-50 transition-colors">
                       <div className="col-span-3 flex items-center gap-3">
+                        {client.avatar ? (
+                          <img
+                            src={client.avatar}
+                            alt={client.name || 'Profile'}
+                            className="w-10 h-10 rounded-full object-cover"
+                            onError={() => {
+                              const target = document.querySelector(`img[alt="${client.name || 'Profile'}"]`) as HTMLImageElement;
+                              if (target) target.style.display = 'none';
+                              const fallback = target?.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
                           client.studentPackage.applied && client.studentPackage.status === 'approved' ? 'bg-green-500' :
                           client.studentPackage.applied && client.studentPackage.status === 'pending' ? 'bg-yellow-500' :
                           client.studentPackage.applied && client.studentPackage.status === 'rejected' ? 'bg-red-500' : 'bg-blue-500'
-                        }`}>
+                        } ${client.avatar ? 'hidden' : ''}`}>
                           {getInitials(client.name)}
                         </div>
                         <div>
@@ -784,11 +797,24 @@ const Client: React.FC = () => {
                       {/* Profile Info */}
                       <div className="lg:col-span-1">
                         <div className="text-center">
+                          {selectedClient.avatar ? (
+                            <img
+                              src={selectedClient.avatar}
+                              alt={selectedClient.name || 'Profile'}
+                              className="w-24 h-24 rounded-full mx-auto object-cover"
+                              onError={() => {
+                                const target = document.querySelector(`img[alt="${selectedClient.name || 'Profile'}"]`) as HTMLImageElement;
+                                if (target) target.style.display = 'none';
+                                const fallback = target?.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
                           <div className={`w-24 h-24 rounded-full mx-auto flex items-center justify-center text-white text-2xl font-bold ${
                             selectedClient.studentPackage.applied && selectedClient.studentPackage.status === 'approved' ? 'bg-green-500' :
                             selectedClient.studentPackage.applied && selectedClient.studentPackage.status === 'pending' ? 'bg-yellow-500' :
                             selectedClient.studentPackage.applied && selectedClient.studentPackage.status === 'rejected' ? 'bg-red-500' : 'bg-blue-500'
-                          }`}>
+                          } ${selectedClient.avatar ? 'hidden' : ''}`}>
                             {getInitials(selectedClient.name)}
                           </div>
                           <h3 className="mt-4 text-xl font-bold text-gray-900">{selectedClient.name}</h3>

@@ -113,7 +113,24 @@ const ManagementTeamTable: React.FC<ManagementTeamTableProps> = ({ counsellors, 
               >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <div className="h-10 w-10 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-full flex items-center justify-center mr-3 shadow-sm">
+                    {counsellor.avatar ? (
+                      <img
+                        src={counsellor.avatar}
+                        alt={counsellor.name || 'Profile'}
+                        className="h-10 w-10 rounded-full object-cover mr-3 shadow-sm"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const fallback = target.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className={`h-10 w-10 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-full flex items-center justify-center mr-3 shadow-sm ${
+                        counsellor.avatar ? 'hidden' : ''
+                      }`}
+                    >
                       <span className="text-white text-sm font-semibold">
                         {counsellor.name.split(' ').map(n => n.charAt(0)).join('').toUpperCase()}
                       </span>

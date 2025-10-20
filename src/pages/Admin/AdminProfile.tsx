@@ -25,6 +25,8 @@ const AdminProfile: React.FC = () => {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const [profile, setProfile] = useState<AdminProfileData>({
     id: '',
@@ -34,7 +36,7 @@ const AdminProfile: React.FC = () => {
     location: '',
     joinDate: '',
     role: '',
-    profilePicture: '/assets/images/profiles/default.jpg',
+    profilePicture: 'https://images.icon-icons.com/1378/PNG/512/avatardefault_92824.png',
     lastLogin: '',
   });
 
@@ -89,27 +91,78 @@ const AdminProfile: React.FC = () => {
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const newImageUrl = e.target?.result as string;
-        try {
-          const response = await API.put('/admin-profile/profile/picture', {
-            profilePicture: newImageUrl
-          });
-          if (response.data.success) {
-            setProfile(response.data.data);
-            setEditForm(response.data.data);
-          }
-        } catch (error) {
-          console.error('Failed to update profile picture:', error);
-          // Handle error
+    if (!file) return;
+
+    // Validate file type and size
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      alert('File size must be less than 5MB.');
+      return;
+    }
+
+    setSelectedFile(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleImageUpload = async () => {
+    if (!selectedFile) return;
+
+    setSaving(true);
+    try {
+      // Upload to Cloudinary
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('upload_preset', 'admin_images');
+
+      const cloudinaryResponse = await fetch(
+        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: 'POST',
+          body: formData,
         }
+      );
+
+      if (!cloudinaryResponse.ok) {
+        const errorData = await cloudinaryResponse.json();
+        throw new Error(`Cloudinary upload failed: ${errorData.error?.message || 'Unknown error'}`);
+      }
+
+      const cloudinaryData = await cloudinaryResponse.json();
+      const imageUrl = cloudinaryData.secure_url;
+
+            // Send the Cloudinary URL to backend
+      const response = await API.put('/admin-profile/profile/picture', {
+        profilePicture: imageUrl
+      });
+
+      if (response.data.success) {
+        setProfile(response.data.data);
+        setEditForm(response.data.data);
         setShowImageUpload(false);
-      };
-      reader.readAsDataURL(file);
+        setSelectedFile(null);
+        setImagePreview(null);
+        // Reset file input
+        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+      } else {
+        throw new Error('Failed to update profile picture');
+      }
+    } catch (error) {
+      console.error('Failed to upload profile picture:', error);
+      alert(`Failed to upload profile picture: ${error instanceof Error ? error.message : 'Please try again.'}`);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -122,7 +175,7 @@ const AdminProfile: React.FC = () => {
             <Sidebar isOpen={true} onClose={closeSidebar} />
           </div>
           <div className="flex-1 overflow-auto">
-            <NavBar onMenuClick={toggleSidebar} />
+            <NavBar onMenuClick={toggleSidebar} profilePicture={profile.profilePicture} />
             <div className="flex items-center justify-center h-64">
               <div className="text-lg text-gray-600">Loading profile...</div>
             </div>
@@ -163,7 +216,7 @@ const AdminProfile: React.FC = () => {
                   <div className="relative">
                     <div className="w-32 h-32 rounded-full border-4 border-white shadow-md overflow-hidden bg-gray-100">
                       <img 
-                        src={profile.profilePicture} 
+                        src={profile.profilePicture || 'https://images.icon-icons.com/1378/PNG/512/avatardefault_92824.png'} 
                         alt={profile.name}
                         className="w-full h-full object-cover"
                       />
@@ -389,25 +442,70 @@ const AdminProfile: React.FC = () => {
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold">Change Profile Picture</h3>
                   <button
-                    onClick={() => setShowImageUpload(false)}
+                    onClick={() => {
+                      setShowImageUpload(false);
+                      setSelectedFile(null);
+                      setImagePreview(null);
+                      // Reset file input
+                      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+                      if (fileInput) fileInput.value = '';
+                    }}
                     className="text-gray-500 hover:text-gray-700"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
                 <div className="space-y-4">
+                  {/* Image Preview */}
+                  {imagePreview && (
+                    <div className="flex justify-center mb-4">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
+                      />
+                    </div>
+                  )}
+
                   <label className="block">
                     <span className="sr-only">Choose profile photo</span>
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={handleImageUpload}
+                      onChange={handleFileSelect}
                       className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                     />
                   </label>
                   <p className="text-sm text-gray-500">
                     Choose a JPG, PNG, or GIF image. Maximum file size is 5MB.
                   </p>
+
+                  {/* Update Button */}
+                  {selectedFile && (
+                    <div className="flex justify-end space-x-3 pt-4">
+                      <button
+                        onClick={() => {
+                          setSelectedFile(null);
+                          setImagePreview(null);
+                          // Reset file input
+                          const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+                          if (fileInput) fileInput.value = '';
+                        }}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-lg transition-colors"
+                        disabled={saving}
+                      >
+                        Clear
+                      </button>
+                      <button
+                        onClick={handleImageUpload}
+                        disabled={saving}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50"
+                      >
+                        <Save className="w-4 h-4" />
+                        <span>{saving ? 'Uploading...' : 'Update Picture'}</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

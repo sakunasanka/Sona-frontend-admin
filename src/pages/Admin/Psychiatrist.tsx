@@ -565,10 +565,23 @@ const Psychiatrist: React.FC = () => {
                     return (
                       <div key={psychiatrist.id} className="px-4 py-4 grid grid-cols-12 gap-2 items-center hover:bg-gray-50 transition-colors">
                         <div className="col-span-3 flex items-center gap-2">
+                          {psychiatrist.avatar ? (
+                            <img
+                              src={psychiatrist.avatar}
+                              alt={name || 'Profile'}
+                              className="w-8 h-8 rounded-full object-cover"
+                              onError={() => {
+                                const target = document.querySelector(`img[alt="${name || 'Profile'}"]`) as HTMLImageElement;
+                                if (target) target.style.display = 'none';
+                                const fallback = target?.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold ${
                             status === 'approved' ? 'bg-green-500' :
                             status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
-                          }`}>
+                          } ${psychiatrist.avatar ? 'hidden' : ''}`}>
                             {getInitials(name)}
                           </div>
                           <div className="min-w-0 flex-1">
@@ -834,7 +847,7 @@ const Psychiatrist: React.FC = () => {
                                   </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                  {selectedPsychiatrist.eduQualifications.map((edu, index) => {
+                                  {selectedPsychiatrist.eduQualifications.map((edu) => {
                                     const documentUrl = getDocumentUrl(edu);
                                     return (
                                       <tr key={edu.id} className="hover:bg-gray-50">
@@ -951,7 +964,7 @@ const Psychiatrist: React.FC = () => {
                                   </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                  {selectedPsychiatrist.experiences.map((exp, index) => {
+                                  {selectedPsychiatrist.experiences.map((exp) => {
                                     const documentUrl = getDocumentUrl(exp);
                                     return (
                                       <tr key={exp.id} className="hover:bg-gray-50">
