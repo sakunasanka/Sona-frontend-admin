@@ -1146,47 +1146,44 @@ const UserEngagementReport = ({ data: _data, onBack }: { data: Report; onBack: (
 
             {/* Platform Overview Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
+              <div className="bg-gray-100 p-4 rounded-lg border border-gray-200">
+                <div>
+                  <div className="text-center">
+                    <Users className="w-8 h-8 text-purple-600 mx-auto mb-2" />
                     <p className="text-sm text-gray-600">Total Counselors</p>
-                    <p className="text-2xl font-bold text-gray-900">{engagementData.overview?.totalCounselors || 0}</p>
-                    <p className="text-xs text-gray-500 mt-1">Active counselors</p>
+                    <p className="text-2xl font-bold text-gray-900">{engagementData.overview?.totalCounselors || 0}</p> 
                   </div>
-                  <Users className="w-8 h-8 text-purple-600" />
+                  
                 </div>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
+              <div className="bg-gray-100 p-4 rounded-lg border border-gray-200">
+                <div>
+                  <div className="text-center">
+                    <UserCheck className="w-8 h-8 text-blue-600 mx-auto mb-2" />
                     <p className="text-sm text-gray-600">Total Psychiatrists</p>
-                    <p className="text-2xl font-bold text-gray-900">{engagementData.overview?.totalPsychiatrists || 0}</p>
-                    <p className="text-xs text-gray-500 mt-1">Active psychiatrists</p>
+                    <p className="text-2xl font-bold text-gray-900">{engagementData.overview?.totalPsychiatrists || 0}</p> 
                   </div>
-                  <UserCheck className="w-8 h-8 text-blue-600" />
                 </div>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
+              <div className="bg-gray-100 p-4 rounded-lg border border-gray-200">
+                <div>
+                  <div className="text-center">
+                    <Users className="w-8 h-8 text-green-600 mx-auto mb-2" />
                     <p className="text-sm text-gray-600">Total Clients</p>
-                    <p className="text-2xl font-bold text-gray-900">{engagementData.overview?.totalClients || 0}</p>
-                    <p className="text-xs text-gray-500 mt-1">Registered clients</p>
+                    <p className="text-2xl font-bold text-gray-900">{engagementData.overview?.totalClients || 0}</p> 
                   </div>
-                  <Users className="w-8 h-8 text-green-600" />
                 </div>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
+              <div className="bg-gray-100 p-4 rounded-lg border border-gray-200">
+                <div  >
+                  <div className="text-center">
+                    <Calendar className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
                     <p className="text-sm text-gray-600">Total Sessions</p>
-                    <p className="text-2xl font-bold text-gray-900">{engagementData.overview?.totalSessions || 0}</p>
-                    <p className="text-xs text-gray-500 mt-1">All counseling sessions</p>
+                    <p className="text-2xl font-bold text-gray-900">{engagementData.overview?.totalSessions || 0}</p>   
                   </div>
-                  <Calendar className="w-8 h-8 text-indigo-600" />
                 </div>
               </div>
             </div>
@@ -1194,32 +1191,33 @@ const UserEngagementReport = ({ data: _data, onBack }: { data: Report; onBack: (
             {/* Session Analytics Summary */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
               <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="grid gap-4">
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <Calendar className="w-8 h-8 text-blue-600 mx-auto mb-2"  />
                     <p className="text-sm text-gray-600">Scheduled Sessions</p>
-                    <p className="text-2xl font-bold text-gray-900">{engagementData.sessionAnalytics?.summary.scheduled || 0}</p>
+                    <p className="text-2xl font-bold text-blue-600">{engagementData.sessionAnalytics?.summary.scheduled || 0}</p>
                   </div>
-                  <Calendar className="w-8 h-8 text-blue-600" />
+                  
                 </div>
               </div>
 
               <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="grid gap-4">
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
                     <p className="text-sm text-gray-600">Completed Sessions</p>
                     <p className="text-2xl font-bold text-gray-900">{engagementData.sessionAnalytics?.summary.completed || 0}</p>
                   </div>
-                  <CheckCircle className="w-8 h-8 text-green-600" />
                 </div>
               </div>
 
               <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="grid gap-4">
+                  <div className="text-center p-4 bg-red-50 rounded-lg">
+                    <XCircle className="w-8 h-8 text-red-600 mx-auto mb-2" />
                     <p className="text-sm text-gray-600">Cancelled Sessions</p>
                     <p className="text-2xl font-bold text-gray-900">{engagementData.sessionAnalytics?.summary.cancelled || 0}</p>
                   </div>
-                  <XCircle className="w-8 h-8 text-red-600" />
                 </div>
               </div>
             </div>
@@ -1230,8 +1228,8 @@ const UserEngagementReport = ({ data: _data, onBack }: { data: Report; onBack: (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {engagementData.loginMetrics.map((metric, index) => (
                   <div key={index} className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-2 ${metric.color}`}>
-                      <span className="text-white text-sm">🔑</span>
+                    <div  >
+                      <span className="text-white text-medium">🔑</span>
                     </div>
                     <p className="text-xl font-bold text-gray-900">{metric.value}</p>
                     <p className="text-sm text-gray-600">{metric.label}</p>
@@ -1246,8 +1244,8 @@ const UserEngagementReport = ({ data: _data, onBack }: { data: Report; onBack: (
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {engagementData.sessionBreakdown.map((metric, index) => (
                   <div key={index} className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-2 ${metric.color}`}>
-                      <span className="text-white text-sm">📅</span>
+                    <div >
+                      <span className="text-white text-medium">📅</span>
                     </div>
                     <p className="text-xl font-bold text-gray-900">{metric.value}</p>
                     <p className="text-sm text-gray-600">{metric.label}</p>
@@ -1346,7 +1344,7 @@ const UserEngagementReport = ({ data: _data, onBack }: { data: Report; onBack: (
             </div>
 
             {/* Monthly Revenue */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+            {/* <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
               <h3 className="font-semibold mb-4">Monthly Revenue</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -1366,7 +1364,7 @@ const UserEngagementReport = ({ data: _data, onBack }: { data: Report; onBack: (
                   </tbody>
                 </table>
               </div>
-            </div>
+            </div> */}
 
             {/* Counselor Performance */}
             <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
